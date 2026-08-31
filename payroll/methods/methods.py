@@ -867,6 +867,19 @@ def calculate_employer_contribution(data):
                     ).first()
                     if object:
                         amount = pay_head_data.get(object.based_on)
+                        # CPF-style deductions may cap the employee share at a
+                        # statutory maximum. Derive the same capped wage base
+                        # for the employer share so both sides respect the
+                        # Ordinary Wage ceiling.
+                        if (
+                            object.has_max_limit
+                            and object.maximum_amount is not None
+                            and object.rate
+                        ):
+                            capped_base = (
+                                object.maximum_amount * 100
+                            ) / object.rate
+                            amount = min(amount or 0, capped_base)
                         employer_contribution_amount = (
                             amount * object.employer_rate
                         ) / 100
