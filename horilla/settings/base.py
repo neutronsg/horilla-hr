@@ -381,6 +381,19 @@ AUDITLOG_EXCLUDE_TRACKING_MODELS = (
 
 EMAIL_BACKEND = "base.backends.ConfiguredEmailBackend"
 
+# Outbound email can be configured through deployment secrets.  Horilla's
+# configured backend reads these Django settings when no database-level email
+# configuration has been created.
+EMAIL_HOST = env.str("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=25)
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
+EMAIL_FAIL_SILENTLY = env.bool("EMAIL_FAIL_SILENTLY", default=True)
+EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=10)
+DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
+
 # Payroll can be run from contract salary and approved leave alone for
 # organisations that do not use Horilla check-in/checkout.  Keep the upstream
 # attendance-driven behaviour as the default for existing installations.
