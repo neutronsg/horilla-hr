@@ -53,10 +53,19 @@ RUN apt-get update \
         libxslt1.1 \
         libffi8 \
         curl \
+        ca-certificates \
+        fontconfig \
+        libxrender1 \
+        libxext6 \
+        libx11-6 \
+        libxcb1 \
         netcat-openbsd \
         gettext \
-        wkhtmltopdf \
     && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL -o /tmp/wkhtmltox.deb \
+        https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bookworm_amd64.deb \
+    && dpkg -i /tmp/wkhtmltox.deb \
+    && rm -f /tmp/wkhtmltox.deb \
     && apt-get clean
 
 # Create non-root user FIRST
