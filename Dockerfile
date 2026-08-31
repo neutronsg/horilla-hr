@@ -59,6 +59,8 @@ RUN apt-get update \
         libxext6 \
         libx11-6 \
         libxcb1 \
+        xfonts-base \
+        xfonts-75dpi \
         netcat-openbsd \
         gettext \
     && rm -rf /var/lib/apt/lists/* \
