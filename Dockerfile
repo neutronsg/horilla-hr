@@ -63,7 +63,7 @@ RUN apt-get update \
         gettext \
     && rm -rf /var/lib/apt/lists/* \
     && curl -fsSL -o /tmp/wkhtmltox.deb \
-        https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bookworm_amd64.deb \
+        https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
     && dpkg -i /tmp/wkhtmltox.deb \
     && rm -f /tmp/wkhtmltox.deb \
     && apt-get clean
