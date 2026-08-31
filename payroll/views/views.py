@@ -584,6 +584,7 @@ def view_payslip_pdf(request, payslip_id):
             data["formatted_end_date"] = formatted_end_date
             data["employee"] = payslip.employee_id
             data["payslip"] = payslip
+            data["payment_date"] = payslip.payment_date
             data["json_data"] = data.copy()
             data["json_data"]["employee"] = payslip.employee_id.id
             data["json_data"]["payslip"] = payslip.id
@@ -1576,6 +1577,7 @@ def payslip_pdf(request, id):
                     "formatted_end_date": formatted_end_date,
                     "employee": payslip.employee_id,
                     "payslip": payslip,
+                    "payment_date": payslip.payment_date,
                     "json_data": data.copy(),
                     "currency": PayrollSettings.objects.first().currency_symbol,
                     "all_deductions": [],

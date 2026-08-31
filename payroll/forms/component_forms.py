@@ -425,6 +425,7 @@ class PayslipForm(ModelForm):
         "employee_id": 12,
         "start_date": 12,
         "end_date": 12,
+        "payment_date": 12,
     }
 
     def __init__(self, *args, **kwargs):
@@ -447,6 +448,9 @@ class PayslipForm(ModelForm):
         if self.instance.pk is None:
             self.initial["start_date"] = datetime.date.today().replace(day=1)
             self.initial["end_date"] = datetime.date.today()
+            self.initial["payment_date"] = payroll.models.models.Payslip.default_payment_date(
+                self.initial["end_date"]
+            )
 
     class Meta:
         """
@@ -458,6 +462,7 @@ class PayslipForm(ModelForm):
             "employee_id",
             "start_date",
             "end_date",
+            "payment_date",
         ]
         exclude = ["is_active"]
         widgets = {
@@ -472,6 +477,11 @@ class PayslipForm(ModelForm):
                 }
             ),
             "end_date": forms.DateInput(
+                attrs={
+                    "type": "date",
+                }
+            ),
+            "payment_date": forms.DateInput(
                 attrs={
                     "type": "date",
                 }

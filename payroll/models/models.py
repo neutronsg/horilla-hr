@@ -2077,6 +2077,12 @@ class Payslip(HorillaModel):
     )
     start_date = models.DateField()
     end_date = models.DateField()
+    payment_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name=_("Payment Date"),
+        help_text=_("Actual salary payment date; defaults to the 6th of the following month, moved to Monday when it falls on a weekend."),
+    )
     pay_head_data = models.JSONField()
     contract_wage = models.FloatField(null=True, default=0)
     basic_pay = models.FloatField(null=True, default=0)
@@ -2095,6 +2101,24 @@ class Payslip(HorillaModel):
             HorillaAuditInfo,
         ],
     )
+
+    @staticmethod
+    def default_payment_date(end_date):
+        """Return the scheduled payment date for a salary period."""
+        month = end_date.month + 1
+        year = end_date.year
+        if month == 13:
+            month = 1
+            year += 1
+        payment_date = date(year, month, 6)
+        while payment_date.weekday() >= 5:
+            payment_date += timedelta(days=1)
+        return payment_date
+
+    def save(self, *args, **kwargs):
+        if self.payment_date is None and self.end_date:
+            self.payment_date = self.default_payment_date(self.end_date)
+        return super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"Payslip for {self.employee_id} - Period: {self.start_date} to {self.end_date}"
