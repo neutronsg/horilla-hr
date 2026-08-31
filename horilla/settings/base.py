@@ -381,6 +381,11 @@ AUDITLOG_EXCLUDE_TRACKING_MODELS = (
 
 EMAIL_BACKEND = "base.backends.ConfiguredEmailBackend"
 
+# Payroll can be run from contract salary and approved leave alone for
+# organisations that do not use Horilla check-in/checkout.  Keep the upstream
+# attendance-driven behaviour as the default for existing installations.
+PAYROLL_USE_ATTENDANCE = env.bool("PAYROLL_USE_ATTENDANCE", default=True)
+
 """
 DB_INIT_PASSWORD: str
 

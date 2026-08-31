@@ -1025,12 +1025,20 @@ def generate_payslip(request):
             group_name = form.cleaned_data["group_name"]
             emp_count = employees.count()
 
-            from attendance.views.summary import build_monthly_summary
+            # Attendance is optional for contract-based monthly payroll.  The
+            # upstream default remains attendance-driven; when disabled, pass
+            # no attendance summary so payroll_calculation falls back to its
+            # normal working-day/approved-leave computation.
+            from horilla import settings as horilla_settings
 
-            att_rows, _total_working, _summary_totals = build_monthly_summary(
-                start_date, end_date, employees
-            )
-            att_summary = {row["employee"].pk: row for row in att_rows}
+            att_summary = {}
+            if horilla_settings.PAYROLL_USE_ATTENDANCE:
+                from attendance.views.summary import build_monthly_summary
+
+                att_rows, _total_working, _summary_totals = build_monthly_summary(
+                    start_date, end_date, employees
+                )
+                att_summary = {row["employee"].pk: row for row in att_rows}
 
             for employee in employees:
                 contract = Contract.objects.filter(
@@ -1050,7 +1058,11 @@ def generate_payslip(request):
                     employee,
                     start_date,
                     end_date,
-                    month_summary=att_summary.get(employee.pk, dict({})),
+                    month_summary=(
+                        att_summary.get(employee.pk, {})
+                        if horilla_settings.PAYROLL_USE_ATTENDANCE
+                        else None
+                    ),
                 )
                 payslips.append(payslip)
                 json_data.append(payslip["json_data"])
