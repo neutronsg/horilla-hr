@@ -1625,6 +1625,16 @@ def payslip_pdf(request, id):
             ]:
                 data["all_deductions"].extend(deduction_list)
 
+            data["employer_contributions"] = [
+                deduction
+                for deduction in data["all_deductions"]
+                if deduction.get("employer_contribution_amount")
+            ]
+            data["employer_contributions_total"] = sum(
+                float(item.get("employer_contribution_amount") or 0)
+                for item in data["employer_contributions"]
+            ) + float(payslip.sdl_display or 0)
+
             equalize_lists_length(data["allowances"], data["all_deductions"])
             data["zipped_data"] = zip(data["allowances"], data["all_deductions"])
             data["request"] = request
