@@ -600,6 +600,15 @@ def view_payslip_pdf(request, payslip_id):
                 data["net_deductions"],
             ]:
                 data["all_deductions"].extend(deduction_list)
+            data["employer_contributions"] = [
+                deduction
+                for deduction in data["all_deductions"]
+                if deduction.get("employer_contribution_amount")
+            ]
+            data["employer_contributions_total"] = sum(
+                float(item.get("employer_contribution_amount") or 0)
+                for item in data["employer_contributions"]
+            ) + float(payslip.sdl_display or 0)
 
             data["all_allowances"] = data["allowances"].copy()
             equalize_lists_length(data["allowances"], data["all_deductions"])
@@ -640,6 +649,15 @@ def view_created_payslip(request, payslip_id, **kwargs):
             data.get("tax_deductions", []), data.get("net_deductions", []),
         ]:
             data["all_deductions"].extend(deduction_list)
+        data["employer_contributions"] = [
+            deduction
+            for deduction in data["all_deductions"]
+            if deduction.get("employer_contribution_amount")
+        ]
+        data["employer_contributions_total"] = sum(
+            float(item.get("employer_contribution_amount") or 0)
+            for item in data["employer_contributions"]
+        ) + float(payslip.sdl_display or 0)
         return render(request, "payroll/payslip/individual_payslip.html", data)
     return render(request, "404.html")
 

@@ -11,18 +11,6 @@
                 {{ instance.contract_wage|currency_symbol_position }}
             </p>
         </div>
-        {% if partial_pay_days %}
-            <div class="grid sm:flex items-center text-sm justify-between mb-2 px-2">
-                <p class="text-sm">{% trans "Partially Paid Days" %}</p>
-                <p class="font-semibold">
-                    {{ partial_pay_days }}
-                    {% if custom_leave_breakdown %}
-                        ({% for entry in custom_leave_breakdown %}{{ entry.percentage|floatformat:0 }}%{% if not forloop.last %},
-                            {% endif %}{% endfor %})
-                    {% endif %}
-                </p>
-            </div>
-        {% endif %}
         <div class="grid sm:flex text-sm justify-between mb-2 px-2">
             <p class="text-sm flex items-center gap-3">
                 <span>{% trans "Updated Basic Pay" %}</span>
@@ -266,11 +254,12 @@
                 </p>
             </div>
         {% endfor %}
-        <div class="mt-3 pt-2 border-t text-xs text-gray-600"><p class="font-semibold">{% trans "Employer Contributions (display only)" %}</p>
-            {% for contribution in all_deductions %}{% if contribution.employer_contribution_amount %}
-                <div class="flex justify-between"><span>{{ contribution.title }}</span><span>{{ contribution.employer_contribution_amount|floatformat:2|currency_symbol_position }}</span></div>
-            {% endif %}{% endfor %}</div>
-        <div class="flex justify-between text-xs text-gray-600"><span>{% trans "SDL (Employer contribution, display only)" %}</span><span>{{ instance.sdl_display|floatformat:2|currency_symbol_position }}</span></div></div>
+        {% if employer_contributions or instance.sdl_display %}<div class="mt-4 p-3 rounded-md border border-blue-200 bg-blue-50 text-sm">
+            <div class="flex justify-between items-center font-semibold p-2 rounded-md bg-blue-100 mb-2"><span>{% trans "Employer Contributions" %}</span><span class="text-xs font-normal text-gray-600">{% trans "Not deducted from net pay" %}</span></div>
+            {% for contribution in employer_contributions %}<div class="flex justify-between py-2 px-2 border-b border-blue-100"><span>{% trans "Employer" %} {{ contribution.title }}</span><span class="font-medium">{{ contribution.employer_contribution_amount|floatformat:2|currency_symbol_position }}</span></div>{% endfor %}
+            {% if instance.sdl_display %}<div class="flex justify-between py-2 px-2 border-b border-blue-100"><span>{% trans "SDL" %}</span><span class="font-medium">{{ instance.sdl_display|floatformat:2|currency_symbol_position }}</span></div>{% endif %}
+            <div class="flex justify-between py-2 px-2 font-semibold"><span>{% trans "Total Employer Contributions" %}</span><span>{{ employer_contributions_total|floatformat:2|currency_symbol_position }}</span></div>
+        </div>{% endif %}
 
         <div class="flex gap-3 text-sm justify-between px-2">
             <p class="w-1/2 text-sm flex items-center gap-3 font-semibold">
