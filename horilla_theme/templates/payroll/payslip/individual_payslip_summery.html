@@ -109,7 +109,7 @@
                 {% endif %}
             </p>
         </div>
-        <div class="flex gap-3 text-sm justify-between mb-2 px-2">
+        {% if loss_of_pay %}<div class="flex gap-3 text-sm justify-between mb-2 px-2">
             <p class="w-1/2 text-sm flex">
                 {% trans "Basic Pay" %}
                 <img
@@ -122,7 +122,7 @@
             <p class="flex-1 font-medium">
                 {{ basic_pay|floatformat:2|currency_symbol_position }}
             </p>
-        </div>
+        </div>{% endif %}
 
         {% for allowance in allowances %}
             <div class="flex gap-3 text-sm justify-between mb-2 px-2">
@@ -170,12 +170,12 @@
                 {% endif %}
             </p>
         </div>
-        <div class="flex gap-3 text-sm justify-between mb-2 px-2">
+        {% if loss_of_pay %}<div class="flex gap-3 text-sm justify-between mb-2 px-2">
             <p class="w-1/2 text-sm">{% trans "Loss of Pay" %}</p>
             <p class="flex-1 font-medium">
                 {{ loss_of_pay|floatformat:2|currency_symbol_position }}
             </p>
-        </div>
+        </div>{% endif %}
         {% if custom_leave_deduction %}
             <div class="flex gap-3 text-sm justify-between mb-2 px-2" style="color: #c47d00">
                 <p class="w-1/2 text-sm flex flex-col">
@@ -236,12 +236,12 @@
                 </p>
             </div>
         {% endfor %}
-        <div class="flex gap-3 text-sm justify-between mb-2 px-2">
+        {% if federal_tax %}<div class="flex gap-3 text-sm justify-between mb-2 px-2">
             <p class="w-1/2 text-sm">{% trans "Income Tax" %}</p>
             <p class="flex-1 font-medium">
                 {{ federal_tax|floatformat:2|currency_symbol_position }}
             </p>
-        </div>
+        </div>{% endif %}
         {% for deduction in tax_deductions %}
             <div class="flex gap-3 text-sm justify-between mb-2 px-2">
                 <p class="w-1/2 text-sm">{{ deduction.title }}</p>
@@ -266,6 +266,12 @@
                 </p>
             </div>
         {% endfor %}
+        {% if all_deductions %}
+            <div class="mt-3 pt-2 border-t text-xs text-gray-600"><p class="font-semibold">{% trans "Employer Contributions (display only)" %}</p>
+            {% for contribution in all_deductions %}{% if contribution.employer_contribution_amount %}
+                <div class="flex justify-between"><span>{{ contribution.title }}</span><span>{{ contribution.employer_contribution_amount|floatformat:2|currency_symbol_position }}</span></div>
+            {% endif %}{% endfor %}</div>
+        {% endif %}
 
         <div class="flex gap-3 text-sm justify-between px-2">
             <p class="w-1/2 text-sm flex items-center gap-3 font-semibold">
