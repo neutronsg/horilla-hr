@@ -11,14 +11,6 @@
                 {{ instance.contract_wage|currency_symbol_position }}
             </p>
         </div>
-        <div class="grid sm:flex items-center text-sm justify-between mb-2 px-2">
-            <p class="text-sm">{% trans "Paid Days" %}</p>
-            <p class="font-semibold">{{ paid_days }}</p>
-        </div>
-        <div class="grid sm:flex items-center text-sm justify-between mb-2 px-2">
-            <p class="text-sm">{% trans "LOP Days" %}</p>
-            <p class="font-semibold">{{ unpaid_days }}</p>
-        </div>
         {% if partial_pay_days %}
             <div class="grid sm:flex items-center text-sm justify-between mb-2 px-2">
                 <p class="text-sm">{% trans "Partially Paid Days" %}</p>
@@ -69,6 +61,14 @@
         <div class="grid sm:flex text-sm justify-between mb-2 px-2">
             <p class="text-sm">{% trans "Badge ID" %}</p>
             <p class="font-semibold">{{ employee.badge_id }}</p>
+        </div>
+        <div class="grid sm:flex text-sm justify-between mb-2 px-2">
+            <p class="text-sm">{% trans "Payment Date" %}</p>
+            <p class="font-semibold">{{ instance.payment_date|date:"d M Y" }}</p>
+        </div>
+        <div class="grid sm:flex text-sm justify-between mb-2 px-2">
+            <p class="text-sm">{% trans "Salary Period" %}</p>
+            <p class="font-semibold">{{ start_date }} {% trans "to" %} {{ end_date }}</p>
         </div>
         <div class="grid sm:flex text-sm justify-between mb-2 px-2">
             <p class="text-sm">{% trans "Employee Name" %}</p>
