@@ -2120,6 +2120,14 @@ class Payslip(HorillaModel):
             self.payment_date = self.default_payment_date(self.end_date)
         return super().save(*args, **kwargs)
 
+    @property
+    def sdl_display(self):
+        """Indicative employer SDL; never included in employee deductions."""
+        remuneration = float(self.gross_pay or 0)
+        if remuneration <= 0:
+            return 0
+        return min(11.25, max(2.0, remuneration * 0.0025))
+
     def __str__(self) -> str:
         return f"Payslip for {self.employee_id} - Period: {self.start_date} to {self.end_date}"
 

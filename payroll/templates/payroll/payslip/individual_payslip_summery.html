@@ -285,6 +285,7 @@
     {% for contribution in all_deductions %}{% if contribution.employer_contribution_amount %}
     <div style="font-size:.85em;color:#666;text-align:right;">{% trans "Employer contribution" %} ({{ contribution.title }}): {{ contribution.employer_contribution_amount|floatformat:2|currency_symbol_position }}</div>
     {% endif %}{% endfor %}
+    <div style="font-size:.85em;color:#666;text-align:right;">{% trans "SDL (Employer contribution, display only)" %}: {{ instance.sdl_display|floatformat:2|currency_symbol_position }}</div>
 </div>
 <!-- End of Payslip Table -->
 
