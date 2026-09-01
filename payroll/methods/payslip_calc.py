@@ -463,9 +463,10 @@ def calculate_tax_deduction(*_args, **kwargs):
         specific_employees=employee, is_pretax=False, is_tax=True
     )
     active_employee_deduction = models.Deduction.objects.filter(
-        include_active_employees=True, is_pretax=False, is_tax=True
+        include_active_employees=True, is_pretax=False, is_tax=True,
+        specific_employees__isnull=True,
     ).exclude(exclude_employees=employee)
-    deductions = specific_deductions | active_employee_deduction
+    deductions = (specific_deductions | active_employee_deduction).distinct()
     deductions = (
         deductions.exclude(one_time_date__lt=start_date)
         .exclude(one_time_date__gt=end_date)
@@ -528,10 +529,11 @@ def calculate_pre_tax_deduction(*_args, **kwargs):
         is_condition_based=True, is_pretax=True, is_tax=False
     ).exclude(exclude_employees=employee)
     active_employee_deduction = models.Deduction.objects.filter(
-        include_active_employees=True, is_pretax=True, is_tax=False
+        include_active_employees=True, is_pretax=True, is_tax=False,
+        specific_employees__isnull=True,
     ).exclude(exclude_employees=employee)
 
-    deductions = specific_deductions | conditional_deduction | active_employee_deduction
+    deductions = (specific_deductions | conditional_deduction | active_employee_deduction).distinct()
     deductions = (
         deductions.exclude(one_time_date__lt=start_date)
         .exclude(one_time_date__gt=end_date)
@@ -636,9 +638,10 @@ def calculate_post_tax_deduction(*_args, **kwargs):
         is_condition_based=True, is_pretax=False, is_tax=False
     ).exclude(exclude_employees=employee)
     active_employee_deduction = models.Deduction.objects.filter(
-        include_active_employees=True, is_pretax=False, is_tax=False
+        include_active_employees=True, is_pretax=False, is_tax=False,
+        specific_employees__isnull=True,
     ).exclude(exclude_employees=employee)
-    deductions = specific_deductions | conditional_deduction | active_employee_deduction
+    deductions = (specific_deductions | conditional_deduction | active_employee_deduction).distinct()
     deductions = (
         deductions.exclude(one_time_date__lt=start_date)
         .exclude(one_time_date__gt=end_date)
