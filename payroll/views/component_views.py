@@ -1073,6 +1073,7 @@ def generate_payslip(request):
                 data["group_name"] = group_name
                 data["start_date"] = payslip["start_date"]
                 data["end_date"] = payslip["end_date"]
+                data["payment_date"] = payslip.get("payment_date")
                 data["status"] = "draft"
                 data["contract_wage"] = payslip["contract_wage"]
                 data["basic_pay"] = payslip["basic_pay"]
@@ -1204,6 +1205,7 @@ def create_payslip(request, new_post_data=None):
                 data["employee"] = employee
                 data["start_date"] = payslip_data["start_date"]
                 data["end_date"] = payslip_data["end_date"]
+                data["payment_date"] = form.cleaned_data["payment_date"]
                 data["status"] = (
                     "draft"
                     if request.GET.get("status") is None

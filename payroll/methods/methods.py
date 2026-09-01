@@ -904,6 +904,11 @@ def save_payslip(**kwargs):
     instance.group_name = kwargs.get("group_name")
     instance.start_date = kwargs["start_date"]
     instance.end_date = kwargs["end_date"]
+    # Preserve the user-selected payment date; model.save supplies the
+    # Singapore default (6th of following month, rolled forward from weekends)
+    # when omitted.
+    if kwargs.get("payment_date") is not None:
+        instance.payment_date = kwargs["payment_date"]
     instance.status = kwargs["status"]
     instance.basic_pay = round(kwargs["basic_pay"], 2)
     instance.contract_wage = round(kwargs["contract_wage"], 2)

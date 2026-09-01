@@ -325,12 +325,25 @@ def currency_symbol_position(amount):
 
     currency = symbol.currency_symbol if symbol else "$"
 
-    if symbol.position == "postfix":
-        currency_symbol = f"{amount} {currency}"
-    else:
-        currency_symbol = f"{currency} {amount}"
+    # Payslips are itemised Singapore salary records; keep their monetary
+    # values unambiguous by placing the symbol before every amount.
+    currency_symbol = f"{currency} {amount}"
 
     return currency_symbol
+
+
+@register.filter(name="payslip_currency")
+def payslip_currency(amount):
+    """Singapore payslips always render the currency symbol before amounts."""
+    if apps.is_installed("payroll"):
+        PayrollSettings = get_horilla_model_class(
+            app_label="payroll", model="payrollsettings"
+        )
+        settings_row = PayrollSettings.objects.first()
+        currency = settings_row.currency_symbol if settings_row else "$"
+    else:
+        currency = "$"
+    return f"{currency} {amount}"
 
 
 @register.filter(name="is_check_in_enabled")

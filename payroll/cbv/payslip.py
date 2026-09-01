@@ -405,6 +405,7 @@ class PayrollCreateFormView(HorillaFormView):
             data["employee"] = employee
             data["start_date"] = payslip_data["start_date"]
             data["end_date"] = payslip_data["end_date"]
+            data["payment_date"] = form.cleaned_data["payment_date"]
             data["status"] = (
                 "draft"
                 if self.request.GET.get("status") is None

@@ -262,16 +262,6 @@
                                     <span class="oh-payslip-td-value">{{ employee }}</span>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="w-50">
-                                    <span class="oh-payslip-td-head">{% trans "Paid Days :" %}</span>
-                                    <span class="oh-payslip-td-value">{{ paid_days }}</span>
-                                </td>
-                                <td class="w-50">
-                                    <span class="oh-payslip-td-head">{% trans "LOP Days :" %}</span>
-                                    <span class="oh-payslip-td-value">{{ unpaid_days }}</span>
-                                </td>
-                            </tr>
                             {% if partial_pay_days %}
                                 <tr>
                                     <td class="w-50">
@@ -324,6 +314,9 @@
                             </tr>
                         </tfoot>
                     </table>
+                    {% for contribution in all_deductions %}{% if contribution.employer_contribution_amount %}
+                    <div style="font-size:10px;color:#666;text-align:right;">{% trans "Employer contribution" %} ({{ contribution.title }}): {{ contribution.employer_contribution_amount|floatformat:2|currency_symbol_position }}</div>
+                    {% endif %}{% endfor %}
 
                     <table class="w-100 oh-allowance-table mt-4">
                         <thead>

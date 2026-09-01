@@ -632,6 +632,14 @@ def view_created_payslip(request, payslip_id, **kwargs):
         data["json_data"]["employee"] = payslip.employee_id.id
         data["json_data"]["payslip"] = payslip.id
         data["instance"] = payslip
+        data["payment_date"] = payslip.payment_date
+        data["all_deductions"] = []
+        for deduction_list in [
+            data.get("basic_pay_deductions", []), data.get("gross_pay_deductions", []),
+            data.get("pretax_deductions", []), data.get("post_tax_deductions", []),
+            data.get("tax_deductions", []), data.get("net_deductions", []),
+        ]:
+            data["all_deductions"].extend(deduction_list)
         return render(request, "payroll/payslip/individual_payslip.html", data)
     return render(request, "404.html")
 
