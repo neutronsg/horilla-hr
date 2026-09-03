@@ -2409,7 +2409,7 @@ if apps.is_installed("attendance"):
 
 
 class EmployeePastLeaveRestrict(HorillaModel):
-    enabled = models.BooleanField(default=True)
+    enabled = models.BooleanField(default=False)
     company_id = models.ForeignKey(
         Company, null=True, blank=True, on_delete=models.CASCADE
     )

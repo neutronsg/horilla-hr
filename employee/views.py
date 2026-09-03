@@ -208,6 +208,31 @@ def _check_reporting_manager(request, *args, **kwargs):
     return request.user.employee_get.reporting_manager.exists()
 
 
+def can_view_employee_profile(request, employee):
+    """Return whether the current user may view this employee's profile data."""
+    if request.user.has_perm("employee.view_employee"):
+        return True
+    viewer = getattr(request.user, "employee_get", None)
+    if viewer is None:
+        return False
+    if viewer.pk == employee.pk:
+        return True
+    work_info = getattr(employee, "employee_work_info", None)
+    return getattr(work_info, "reporting_manager_id_id", None) == viewer.pk
+
+
+def visible_employee_queryset(request, queryset):
+    """Limit employee directory data to authorised employees."""
+    if request.user.has_perm("employee.view_employee"):
+        return queryset
+    viewer = getattr(request.user, "employee_get", None)
+    if viewer is None:
+        return queryset.none()
+    return queryset.filter(
+        Q(pk=viewer.pk) | Q(employee_work_info__reporting_manager_id=viewer)
+    ).distinct()
+
+
 @login_required
 def employee_profile(request):
     """
@@ -335,6 +360,9 @@ def employee_view_individual(request, obj_id, **kwargs):
         except Exception as e:
             return render(request, "404.html", status=404)
 
+    if not can_view_employee_profile(request, employee):
+        return render(request, "403.html", status=403)
+
     # request_ids_str = json.dumps(
     #     [
     #         instance.id
@@ -397,6 +425,8 @@ def about_tab(request, pk, **kwargs):
     This method is used to view profile of an employee.
     """
     employee = Employee.objects.get(id=pk)
+    if not can_view_employee_profile(request, employee):
+        return HttpResponse(status=403)
     contracts = employee.contract_set.all() if apps.is_installed("payroll") else None
     employee_leaves = (
         employee.available_leave.all() if apps.is_installed("leave") else None
@@ -2024,6 +2054,7 @@ def employee_filter_view(request):
     field = request.GET.get("field")
     queryset = Employee.objects.filter()
     selected_company = request.session.get("selected_company")
+    queryset = visible_employee_queryset(request, queryset)
     employees = EmployeeFilter(request.GET, queryset=queryset).qs
     if request.GET.get("is_active") != "False":
         employees = employees.filter(is_active=True)

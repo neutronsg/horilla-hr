@@ -43,7 +43,7 @@
 
     {% if "recruitment"|app_installed %}
         $(document).ready(function () {
-            $("#buttonID").on("click", function () {
+            $("#buttonID").on("click", function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 var startDate = test.find("[name = start_date]").val();
@@ -91,6 +91,11 @@
                     } else {
                         test.find("[type=submit]").click();
                     }
+                },
+                error: function () {
+                    test.find("[type=submit]").show();
+                    $("#buttonID").hide();
+                    test.find("[type=submit]").click();
                 },
             });
             });

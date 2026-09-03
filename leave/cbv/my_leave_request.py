@@ -320,12 +320,12 @@ class MyLeaveRequestForm(HorillaFormView):
         emp = self.request.user.employee_get
         emp_id = emp.id
         form = self.form_class(
-            self.request.POST, instance=self.form.instance, employee=emp
+            self.request.POST,
+            self.request.FILES,
+            instance=self.form.instance,
+            employee=emp,
         )
         if form.is_valid():
-            self.form_class(
-                self.request.POST, self.request.FILES, instance=self.form.instance
-            )
             if form.instance.pk:
                 leave_request = form.save(commit=False)
 
@@ -461,7 +461,7 @@ class MyLeaveRequestForm(HorillaFormView):
                     messages.error(self.request, _("You don't have permission"))
 
             return _done()
-        return super().form_valid(form)
+        return self.form_invalid(form)
 
 
 @method_decorator(login_required, name="dispatch")

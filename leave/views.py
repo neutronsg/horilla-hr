@@ -4827,7 +4827,7 @@ def leave_rules_settings_view(request):
         ).first()
         if not enabled_restriction:
             enabled_restriction = EmployeePastLeaveRestrict.objects.create(
-                enabled=True, company_id_id=selected_company
+                enabled=False, company_id_id=selected_company
             )
     else:
         enabled_compensatory = (
@@ -4844,7 +4844,7 @@ def leave_rules_settings_view(request):
         ).first()
         if not enabled_restriction:
             enabled_restriction = EmployeePastLeaveRestrict.objects.create(
-                enabled=True, company_id=None
+                enabled=False, company_id=None
             )
     request.session["ordered_ids_leavetype"] = []
     context = {
@@ -5547,7 +5547,7 @@ def employee_past_leave_restriction(request):
         ).first()
         if not enabled_restriction:
             enabled_restriction = EmployeePastLeaveRestrict.objects.create(
-                enabled=True, company_id_id=selected_company
+                enabled=False, company_id_id=selected_company
             )
     else:
         enabled_restriction = EmployeePastLeaveRestrict.objects.filter(
@@ -5555,7 +5555,7 @@ def employee_past_leave_restriction(request):
         ).first()
         if not enabled_restriction:
             enabled_restriction = EmployeePastLeaveRestrict.objects.create(
-                enabled=True, company_id=None
+                enabled=False, company_id=None
             )
     if request.method == "POST":
         enabled_restriction.enabled = "enabled" in request.POST

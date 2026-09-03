@@ -25,7 +25,7 @@ from employee.filters import EmployeeFilter
 from employee.forms import BulkUpdateFieldForm, EmployeeExportExcelForm
 from employee.models import Employee, EmployeeBankDetails, EmployeeWorkInformation
 from employee.templatetags.employee_filter import edit_accessibility
-from employee.views import _check_reporting_manager
+from employee.views import _check_reporting_manager, visible_employee_queryset
 from horilla.horilla_middlewares import _thread_locals
 from horilla.signals import post_generic_delete, post_generic_import
 from horilla_auth.models import HorillaUser
@@ -357,7 +357,7 @@ class EmployeesList(HorillaListView):
         self.search_url = reverse("employees-list")
 
     def get_queryset(self, *args, **kwargs):
-        return (
+        queryset = (
             super()
             .get_queryset(*args, **kwargs)
             .select_related(
@@ -372,6 +372,7 @@ class EmployeesList(HorillaListView):
                 "employee_work_info__company_id",
             )
         )
+        return visible_employee_queryset(self.request, queryset)
 
     columns = [
         (_("Employee"), "employee_name_with_badge_id", "get_avatar"),

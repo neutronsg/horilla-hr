@@ -2781,4 +2781,13 @@ def dispatch_profile_tab(request, tab_key: str, pk: int, *args, **kwargs):
     view_func = HorillaProfileView._tab_view_registry.get(tab_key)
     if view_func is None:
         raise Http404(f"No profile tab registered for '{tab_key}'")
+    if tab_key.startswith(("employeeprofileview-", "userprofileview-")):
+        from employee.models import Employee
+        from employee.views import can_view_employee_profile
+
+        employee = Employee.objects.entire().filter(pk=pk).first()
+        if employee is None:
+            raise Http404("Employee not found")
+        if not can_view_employee_profile(request, employee):
+            return HttpResponse(status=403)
     return view_func(request, pk=pk, *args, **kwargs)

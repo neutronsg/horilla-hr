@@ -56,6 +56,10 @@ class EmployeeProfileView(HorillaProfileView):
 
         employee = request.user.employee_get
 
+        target_employee = Employee.objects.entire().get(id=obj_id)
+        if not views.can_view_employee_profile(request, target_employee):
+            return render(request, "403.html", status=403)
+
         if request.user.has_perm("employee.change_employee"):
             self.actions = [
                 {
