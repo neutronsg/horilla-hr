@@ -28,6 +28,7 @@ from horilla_views.generic.cbv.views import (
     TemplateView,
 )
 from notifications.signals import notify
+from payroll.access import visible_payslips
 from payroll.cbv.allowance_deduction import AllowanceDeductionTabView
 from payroll.filters import PayslipFilter
 from payroll.forms import component_forms as forms
@@ -83,9 +84,7 @@ class PayslipList(HorillaListView):
         Return the queryset of Payslip objects based on user permissions.
         """
         queryset = super().get_queryset()
-        if not self.request.user.has_perm("payroll.view_payslip"):
-            queryset = queryset.filter(employee_id__employee_user_id=self.request.user)
-        return queryset
+        return visible_payslips(self.request.user, queryset)
 
     model = Payslip
     filter_class = PayslipFilter
@@ -344,7 +343,7 @@ class PayslipBulkExport(TemplateView):
         Returns:
             Dict[str, Any]: Updated context dictionary containing export form and filter.
         """
-        payslip = Payslip.objects.all()
+        payslip = visible_payslips(self.request.user, Payslip.objects.all())
         export_column = forms.PayslipExportColumnForm
         export_filter = PayslipFilter(queryset=payslip)
         context = super().get_context_data(**kwargs)
@@ -449,7 +448,7 @@ class PayrollTab(PayslipList):
     def get_queryset(self):
         queryset = super().get_queryset()
         pk = self.kwargs.get("pk")
-        queryset = self.model.objects.filter(employee_id=pk)
+        queryset = queryset.filter(employee_id=pk)
         return queryset
 
     def __init__(self, **kwargs: Any) -> None:

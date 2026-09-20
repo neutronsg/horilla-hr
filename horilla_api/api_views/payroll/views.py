@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 
 from base.backends import ConfiguredEmailBackend
 from base.methods import eval_validate
+from payroll.access import can_view_payslip, visible_payslips
 from payroll.filters import (
     AllowanceFilter,
     ContractFilter,
@@ -50,19 +51,11 @@ class PayslipView(APIView):
             payslip = Payslip.objects.filter(id=id).first()
             if payslip is None:
                 return Response({"detail": "Not found."}, status=404)
-            if (
-                request.user.has_perm("payroll.view_payslip")
-                or payslip.employee_id == request.user.employee_get
-            ):
+            if can_view_payslip(request.user, payslip):
                 serializer = PayslipSerializer(payslip)
                 return Response(serializer.data, status=200)
             return Response({"detail": _("Permission denied.")}, status=403)
-        if request.user.has_perm("payroll.view_payslip"):
-            payslips = Payslip.objects.all()
-        else:
-            payslips = Payslip.objects.filter(
-                employee_id__employee_user_id=request.user
-            )
+        payslips = visible_payslips(request.user, Payslip.objects.all())
 
         payslip_filter_queryset = PayslipFilter(request.GET, payslips).qs
         # groupby workflow
@@ -81,13 +74,12 @@ class PayslipDownloadView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, id):
-        if request.user.has_perm("payroll.view_payslip"):
-            return payslip_pdf(request, id)
-
-        if Payslip.objects.filter(id=id, employee_id=request.user.employee_get):
-            return payslip_pdf(request, id)
-        else:
-            raise Response({"error": _("You don't have permission")})
+        payslip = Payslip.objects.filter(id=id).first()
+        if payslip is None:
+            return Response({"detail": "Not found."}, status=404)
+        if not can_view_payslip(request.user, payslip):
+            return Response({"detail": _("Permission denied.")}, status=403)
+        return payslip_pdf(request, id)
 
 
 class PayslipSendMailView(APIView):
@@ -443,10 +435,7 @@ class PayslipPDFAPIView(APIView):
 
         # authorization: same logic as your view
         user = request.user
-        if not (
-            user.has_perm("payroll.view_payslip")
-            or payslip.employee_id.employee_user_id == user
-        ):
+        if not can_view_payslip(user, payslip):
             return Response(
                 {"detail": _("You do not have permission to view this payslip.")},
                 status=status.HTTP_403_FORBIDDEN,

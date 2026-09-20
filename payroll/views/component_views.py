@@ -56,6 +56,7 @@ from horilla.methods import dynamic_attr, get_horilla_model_class, get_urlencode
 
 # from leave.models import AvailableLeave
 from notifications.signals import notify
+from payroll.access import visible_payslips
 from payroll.filters import (
     AllowanceFilter,
     DeductionFilter,
@@ -1389,10 +1390,7 @@ def view_payslip(request):
     """
     This method is used to render the template for viewing a payslip.
     """
-    if request.user.has_perm("payroll.view_payslip"):
-        payslips = Payslip.objects.all()
-    else:
-        payslips = Payslip.objects.filter(employee_id__employee_user_id=request.user)
+    payslips = visible_payslips(request.user, Payslip.objects.all())
     export_column = forms.PayslipExportColumnForm()
     filter_form = PayslipFilter(request.GET, payslips)
     payslips = filter_form.qs
@@ -1426,14 +1424,9 @@ def filter_payslip(request):
     Filter and retrieve a list of payslips based on the provided query parameters.
     """
     query_string = request.GET.urlencode()
-    if request.user.has_perm("payroll.view_payslip"):
-        payslips = PayslipFilter(request.GET).qs
-    else:
-        emp_request = request.GET.copy()
-        employee = Employee.objects.filter(employee_user_id=request.user.id).first()
-        employee_id = employee.id
-        emp_request["employee_id"] = str(employee_id)
-        payslips = PayslipFilter(emp_request).qs
+    payslips = PayslipFilter(
+        request.GET, queryset=visible_payslips(request.user, Payslip.objects.all())
+    ).qs
     template = "payroll/payslip/payslip_table.html"
     view = request.GET.get("view")
     if view == "card":

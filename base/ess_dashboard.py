@@ -14,6 +14,7 @@ from django.shortcuts import render
 from django.utils.translation import gettext as _
 
 from base.templatetags.horillafilters import is_check_in_enabled
+from payroll.access import EMPLOYEE_VISIBLE_STATUSES
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -158,7 +159,7 @@ def ess_kpi_data(request):
         ps = (
             Payslip.objects.filter(
                 employee_id=employee,
-                status__in=["confirmed", "paid"],
+                status__in=EMPLOYEE_VISIBLE_STATUSES,
             )
             .order_by("-end_date")
             .first()
@@ -496,7 +497,7 @@ def ess_payslips(request):
 
         qs = Payslip.objects.filter(
             employee_id=employee,
-            status__in=["confirmed", "paid"],
+            status__in=EMPLOYEE_VISIBLE_STATUSES,
             end_date__lte=to_date,
         ).order_by("-end_date")[:6]
         for ps in qs:

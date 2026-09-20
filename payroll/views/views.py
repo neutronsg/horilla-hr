@@ -15,7 +15,12 @@ import pdfkit
 from django.conf import settings as pay_settings
 from django.contrib import messages
 from django.db.models import ProtectedError, Q
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import (
+    HttpResponse,
+    HttpResponseForbidden,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -45,6 +50,7 @@ from horilla.decorators import (
 from horilla.group_by import group_by_queryset
 from horilla.http.response import HorillaRedirect
 from notifications.signals import notify
+from payroll.access import can_view_payslip, visible_payslips
 from payroll.context_processors import get_active_employees
 from payroll.filters import ContractFilter, ContractReGroup, PayslipFilter
 from payroll.forms.component_forms import (
@@ -531,15 +537,10 @@ def update_payslip_status_no_id(request):
 @login_required
 def view_payslip_pdf(request, payslip_id):
 
-    from .component_views import filter_payslip
-
     if Payslip.objects.filter(id=payslip_id).exists():
         payslip = Payslip.objects.get(id=payslip_id)
         company = Company.objects.filter(hq=True).first()
-        if (
-            request.user.has_perm("payroll.view_payslip")
-            or payslip.employee_id.employee_user_id == request.user
-        ):
+        if can_view_payslip(request.user, payslip):
             user = request.user
             employee = user.employee_get
 
@@ -618,7 +619,7 @@ def view_payslip_pdf(request, payslip_id):
             data["company"] = company
 
             return render(request, "payroll/payslip/payslip_pdf.html", context=data)
-        return redirect(filter_payslip)
+        return HttpResponseForbidden(_("You do not have permission to view this payslip."))
     return render(request, "405.html")
 
 
@@ -629,10 +630,9 @@ def view_created_payslip(request, payslip_id, **kwargs):
     This method is used to view the saved payslips
     """
     payslip = Payslip.objects.filter(id=payslip_id).first()
-    if payslip is not None and (
-        request.user.has_perm("payroll.view_payslip")
-        or payslip.employee_id.employee_user_id == request.user
-    ):
+    if payslip is not None and not can_view_payslip(request.user, payslip):
+        return HttpResponseForbidden(_("You do not have permission to view this payslip."))
+    if payslip is not None:
         # the data must be dictionary in the payslip model for the json field
         data = payslip.pay_head_data
         data["employee"] = payslip.employee_id
@@ -772,7 +772,7 @@ def dashboard_employee_chart(request):
     }
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     if is_ajax and request.method == "GET":
-        employee_list = Payslip.objects.filter(
+        employee_list = visible_payslips(request.user, Payslip.objects.all()).filter(
             Q(start_date__month=month) & Q(start_date__year=year)
         )
         labels = []
@@ -845,7 +845,7 @@ def payslip_details(request):
     date = request.GET.get("period", datetime.now().strftime("%Y-%m"))
     year, month = date.split("-")
     employee_list = []
-    employee_list = Payslip.objects.filter(
+    employee_list = visible_payslips(request.user, Payslip.objects.all()).filter(
         Q(start_date__month=month) & Q(start_date__year=year)
     )
     total_amount = 0
@@ -886,7 +886,7 @@ def dashboard_department_chart(request):
 
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     if is_ajax and request.method == "GET":
-        payslips = Payslip.objects.filter(
+        payslips = visible_payslips(request.user, Payslip.objects.all()).filter(
             start_date__month=month, start_date__year=year
         )
 
@@ -989,7 +989,7 @@ def payslip_export(request):
     table4_data = []
     table5_data = []
 
-    employee_payslip_list = Payslip.objects.all()
+    employee_payslip_list = visible_payslips(request.user, Payslip.objects.all())
 
     if start_date:
         employee_payslip_list = employee_payslip_list.filter(start_date__gte=start_date)
@@ -1004,13 +1004,15 @@ def payslip_export(request):
         employee_payslip_list = employee_payslip_list.filter(status=status)
 
     for employ in contributions:
-        payslips = Payslip.objects.filter(employee_id__id=employ)
+        payslips = visible_payslips(request.user, Payslip.objects.all()).filter(
+            employee_id__id=employ
+        )
         if end_date:
-            payslips = Payslip.objects.filter(
+            payslips = visible_payslips(request.user, Payslip.objects.all()).filter(
                 employee_id__id=employ, end_date__lte=end_date
             )
         if start_date:
-            payslips = Payslip.objects.filter(
+            payslips = visible_payslips(request.user, Payslip.objects.all()).filter(
                 employee_id__id=employ, start_date__gte=start_date
             )
             if end_date:
@@ -1552,15 +1554,10 @@ def payslip_pdf(request, id):
         HttpResponse: A response containing the PDF content.
     """
 
-    from .component_views import filter_payslip
-
     if Payslip.objects.filter(id=id).exists():
         payslip = Payslip.objects.get(id=id)
         company = Company.objects.filter(hq=True).first()
-        if (
-            request.user.has_perm("payroll.view_payslip")
-            or payslip.employee_id.employee_user_id == request.user
-        ):
+        if can_view_payslip(request.user, payslip):
             user = request.user
             employee = user.employee_get
 
@@ -1641,7 +1638,7 @@ def payslip_pdf(request, id):
             template_path = "payroll/payslip/payslip_pdf.html"
 
             return generate_payslip_pdf(template_path, context=data, html=False)
-        return redirect(filter_payslip)
+        return HttpResponseForbidden(_("You do not have permission to view this payslip."))
     return render(request, "405.html")
 
 
@@ -1692,10 +1689,7 @@ def payslip_select(request):
     payslip = Payslip.objects.none()
 
     if page_number == "all":
-        if request.user.has_perm("payroll.view_payslip"):
-            payslip = Payslip.objects.all()
-        else:
-            payslip = Payslip.objects.filter(employee_id__employee_user_id=request.user)
+        payslip = visible_payslips(request.user, Payslip.objects.all())
 
     payslip_ids = [str(emp.id) for emp in payslip]
     total_count = payslip.count()
@@ -1714,7 +1708,9 @@ def payslip_select_filter(request):
     context = {}
 
     if page_number == "all":
-        payslip_filter = PayslipFilter(filters, queryset=Payslip.objects.all())
+        payslip_filter = PayslipFilter(
+            filters, queryset=visible_payslips(request.user, Payslip.objects.all())
+        )
 
         # Get the filtered queryset
         filtered_employees = payslip_filter.qs
