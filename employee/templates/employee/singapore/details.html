@@ -1,7 +1,17 @@
 {% extends "index.html" %}
 {% load i18n %}
 {% block content %}
-<div class="oh-wrapper my-4">
+<style>
+  .sg-details h2 { font-size: 1.35rem; font-weight: 600; margin-bottom: .5rem; }
+  .sg-details h3 { font-size: 1rem; font-weight: 600; margin: 1.5rem 0 .75rem; }
+  .sg-details p { margin-bottom: .75rem; }
+  .sg-details dl { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr; gap: .8rem 1.5rem; margin: 1.5rem 0; }
+  .sg-details dt { color: #64748b; font-size: .875rem; }
+  .sg-details dd { margin: 0; overflow-wrap: anywhere; }
+  .sg-details li { font-size: .8rem; margin-bottom: .5rem; overflow-wrap: anywhere; }
+  @media (max-width: 600px) { .sg-details dl { grid-template-columns: 1fr; gap: .35rem; } .sg-details dd { margin-bottom: .75rem; } }
+</style>
+<div class="oh-wrapper my-4 sg-details">
   <div class="oh-card">
     <h2>{% trans "Singapore employment details" %}</h2>
     <p>{{ employee.get_full_name }} · {{ employee.badge_id }}</p>

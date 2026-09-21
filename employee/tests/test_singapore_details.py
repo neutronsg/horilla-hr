@@ -2,7 +2,7 @@ from datetime import date
 from pathlib import Path
 from unittest.mock import patch
 
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.http import HttpResponse
@@ -67,6 +67,18 @@ class SingaporeDetailsTests(TestCase):
         self.assertFalse(can_access_singapore_details(self.request(), self.other))
         self.assertEqual(singapore_details(self.request(query="?edit=1"), self.employee.pk).status_code, 403)
         self.assertEqual(singapore_details(self.request("post"), self.employee.pk).status_code, 403)
+
+    @override_settings(COMPANY_SCOPED_PERMISSIONS=True)
+    def test_role_in_one_company_cannot_reveal_details_in_another_allowed_company(self):
+        from base.models import CompanyGroupAssignment
+        hr_group = Group.objects.create(name="SG HR restricted test")
+        hr_group.permissions.add(Permission.objects.get(codename="view_singaporeemployeedetails"))
+        staff_group = Group.objects.create(name="SG basic test")
+        user = self.hr.employee_user_id
+        CompanyGroupAssignment.objects.create(user=user, group=hr_group, company_id=self.employee.employee_work_info.company_id_id)
+        CompanyGroupAssignment.objects.create(user=user, group=staff_group, company_id=self.other.employee_work_info.company_id_id)
+        self.assertTrue(can_access_singapore_details(self.request(), self.employee))
+        self.assertFalse(can_access_singapore_details(self.request(), self.other))
 
     def test_identifiers_are_encrypted_at_rest_and_support_key_rotation(self):
         with override_settings(SECRET_KEY="old-hr-key", SECRET_KEY_FALLBACKS=[]):
