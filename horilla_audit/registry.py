@@ -36,6 +36,9 @@ def _resolve_model(app_label, model_name):
 
 def _register(model, fields):
     """Register ``model`` with auditlog using optional include_fields."""
+    # Private HR records maintain their own value-free access/change log.
+    if getattr(model, "restricted_hr_model", False):
+        return
     kwargs = {"serialize_data": True}
     if fields:
         kwargs["include_fields"] = list(fields)

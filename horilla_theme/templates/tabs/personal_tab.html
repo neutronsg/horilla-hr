@@ -1,5 +1,12 @@
 {% load static i18n %}
 
+{% if employee.preferred_name %}
+<p class="mb-3 text-sm"><strong>{% trans "Preferred name" %}:</strong> {{ employee.preferred_name }}</p>
+{% endif %}
+{% if can_view_singapore_details %}
+<p class="mb-4"><a class="oh-btn oh-btn--secondary" href="{% url 'singapore-employee-details' employee.pk %}">{% trans "Singapore employment details" %}</a></p>
+{% endif %}
+
 <div class="grid gap-4 lg:grid-cols-12">
     <!-- Personal Information -->
     <section class="lg:col-span-4">

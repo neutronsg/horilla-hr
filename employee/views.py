@@ -424,6 +424,8 @@ def about_tab(request, pk, **kwargs):
     """
     This method is used to view profile of an employee.
     """
+    from employee.singapore import can_access_singapore_details
+
     employee = Employee.objects.get(id=pk)
     if not can_view_employee_profile(request, employee):
         return HttpResponse(status=403)
@@ -442,6 +444,7 @@ def about_tab(request, pk, **kwargs):
             "contracts": contracts,
             "bank_details": bank_details,
             "work_info": work_info,
+            "can_view_singapore_details": can_access_singapore_details(request, employee),
         },
     )
 

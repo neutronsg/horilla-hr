@@ -375,7 +375,7 @@ class EmployeesList(HorillaListView):
         return visible_employee_queryset(self.request, queryset)
 
     columns = [
-        (_("Employee"), "employee_name_with_badge_id", "get_avatar"),
+        (_("Employee"), "directory_name_with_badge_id", "get_avatar"),
         (_("Email"), "get_email"),
         (_("Phone"), "phone"),
         (_("Badge Id"), "badge_id"),
@@ -392,7 +392,7 @@ class EmployeesList(HorillaListView):
     ]
 
     default_columns = [
-        (_("Employee"), "employee_name_with_badge_id", "get_avatar"),
+        (_("Employee"), "directory_name_with_badge_id", "get_avatar"),
         (_("Email"), "get_email"),
         (_("Phone"), "phone"),
         (_("Department"), "employee_work_info__department_id"),

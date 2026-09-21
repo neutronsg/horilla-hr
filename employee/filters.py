@@ -238,7 +238,7 @@ class EmployeeFilter(HorillaFilterSet):
             return queryset
 
         def _icontains(instance):
-            result = str(getattribute(instance, "get_full_name")).lower()
+            result = f"{instance.get_full_name()} {instance.preferred_name}".lower()
             return instance.pk if value in result else None
 
         ids = list(filter(None, map(_icontains, queryset)))

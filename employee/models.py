@@ -91,6 +91,9 @@ class Employee(models.Model):
     employee_last_name = models.CharField(
         max_length=200, null=True, blank=True, verbose_name=_("Last Name")
     )
+    preferred_name = models.CharField(
+        max_length=200, blank=True, default="", verbose_name=_("Preferred Name")
+    )
     employee_profile = models.ImageField(
         upload_to=upload_path, null=True, blank=True, verbose_name=_("Profile Image")
     )
@@ -120,7 +123,7 @@ class Employee(models.Model):
         max_length=15, null=True, blank=True, verbose_name=_("Emergency Contact")
     )
     emergency_contact_name = models.CharField(
-        max_length=20, null=True, blank=True, verbose_name=_("Emergency Contact Name")
+        max_length=200, null=True, blank=True, verbose_name=_("Emergency Contact Name")
     )
     emergency_contact_relation = models.CharField(
         max_length=20,
@@ -189,6 +192,15 @@ class Employee(models.Model):
             if self.employee_last_name
             else self.employee_first_name
         )
+
+    def get_display_name(self):
+        return self.preferred_name or self.get_full_name()
+
+    def directory_name_with_badge_id(self):
+        name = self.get_full_name()
+        if self.preferred_name:
+            name = f"{self.preferred_name} — {name}"
+        return f"{name} ({self.badge_id})" if self.badge_id else name
 
     def get_company(self):
         """
@@ -1395,3 +1407,6 @@ ACCESSBILITY_FEATURE.append(("gender_chart", _("Can view Gender Chart")))
 ACCESSBILITY_FEATURE.append(("department_chart", _("Can view Department Chart")))
 ACCESSBILITY_FEATURE.append(("employees_chart", _("Can view Employees Chart")))
 ACCESSBILITY_FEATURE.append(("birthday_view", _("Can view Birthdays")))
+
+# Register private models without exposing a reverse relation on Employee.
+from employee.singapore_models import SingaporeDetailsAudit, SingaporeEmployeeDetails  # noqa: E402,F401

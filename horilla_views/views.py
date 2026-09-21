@@ -406,6 +406,8 @@ class HorillaDeleteConfirmationView(View):
         if not self.request.user.has_perm(app + ".delete_" + MODEL_NAME.lower()):
             return render(self.request, "no_perm.html")
         model = apps.get_model(app, MODEL_NAME)
+        if getattr(model, "restricted_hr_model", False):
+            return HttpResponse(status=403)
 
         delete_object = model.objects.filter(pk=pk).first()
         if not delete_object:
@@ -651,6 +653,8 @@ class HorillaDeleteConfirmationView(View):
         if not self.request.user.has_perm(app + ".delete_" + MODEL_NAME.lower()):
             return render(self.request, "no_perm.html")
         model = apps.get_model(app, MODEL_NAME)
+        if getattr(model, "restricted_hr_model", False):
+            return HttpResponse(status=403)
         delete_object = model.objects.get(pk=pk)
         objs = [delete_object]
         using = router.db_for_write(delete_object._meta.model)
@@ -736,6 +740,8 @@ def update_kanban_sequence(request):
     try:
         app_label, model_name = model_path.split(".")
         model = apps.get_model(app_label, model_name)
+        if getattr(model, "restricted_hr_model", False):
+            return HttpResponse(status=403)
     except Exception:
         return JsonResponse({"error": "Invalid model path."}, status=400)
 
@@ -809,6 +815,8 @@ def update_kanban_item_group(request):
 
     try:
         model = apps.get_model(*model_path.split("."))
+        if getattr(model, "restricted_hr_model", False):
+            return HttpResponse(status=403)
 
         # Get the group object from group_key
         group_field = get_nested_field(model, group_key)
@@ -885,6 +893,8 @@ def update_kanban_group_sequence(request):
         sequence = []
 
     model = apps.get_model(*model_path.split("."))
+    if getattr(model, "restricted_hr_model", False):
+        return HttpResponse(status=403)
     group_field = get_nested_field(model, group_key)
 
     group_model = group_field.related_model
@@ -920,6 +930,8 @@ def get_kanban_card_count(request):
         )
 
     model = apps.get_model(*model_path.split("."))
+    if getattr(model, "restricted_hr_model", False):
+        return HttpResponse(status=403)
     count = model.objects.filter(**{group_key: group_id}).count()
 
     return HttpResponse(f"{count}")
@@ -1036,6 +1048,8 @@ def export_data(request, *args, **kwargs):
     app_label = model_path.split(".")[0]
     model_name = model_path.split(".")[-1]
     model = apps.get_model(app_label, model_name)
+    if getattr(model, "restricted_hr_model", False):
+        return HttpResponse(status=403)
     base_table = model._meta.db_table
 
     # =====================================================

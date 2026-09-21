@@ -870,6 +870,9 @@ def has_export_access(request, model):
     export data. Otherwise access falls back to the per-module
     ``export_<model>`` permission.
     """
+    # Restricted HR records are available only through their audited views.
+    if getattr(model, "restricted_hr_model", False):
+        return False
     user = request.user
     if user.is_superuser:
         return True

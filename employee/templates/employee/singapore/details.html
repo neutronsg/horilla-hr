@@ -1,0 +1,44 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block content %}
+<div class="oh-wrapper my-4">
+  <div class="oh-card">
+    <h2>{% trans "Singapore employment details" %}</h2>
+    <p>{{ employee.get_full_name }} · {{ employee.badge_id }}</p>
+    <p><a href="{% url 'employee-view-individual' employee.pk %}">{% trans "Back to employee" %}</a></p>
+    {% if edit %}
+      <p>{% trans "Leave unknown information blank. Pass type alone does not establish permission to work. These details do not change CPF calculations automatically." %}</p>
+      <form method="post" autocomplete="off">
+        {% csrf_token %}
+        {{ form.non_field_errors }}{{ form.revision }}
+        <div class="row">
+        {% for field in form.visible_fields %}
+          <div class="col-md-6 mb-3">
+            <label class="oh-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}{{ field.errors }}
+          </div>
+        {% endfor %}
+        </div>
+        <button class="oh-btn oh-btn--secondary" type="submit">{% trans "Save" %}</button>
+        <a class="oh-btn" href="{% url 'singapore-employee-details' employee.pk %}">{% trans "Cancel" %}</a>
+      </form>
+    {% else %}
+      <dl>
+        <dt>{% trans "Identity type" %}</dt><dd>{{ details.identity_type|default:"—" }}</dd>
+        <dt>{% trans "NRIC / FIN" %}</dt><dd>{{ details.masked_identity_number|default:"—" }}</dd>
+        <dt>{% trans "Residency status" %}</dt><dd>{{ details.get_residency_status_display|default:"—" }}</dd>
+        <dt>{% trans "PR effective date" %}</dt><dd>{{ details.pr_effective_date|date:"d M Y"|default:"—" }}</dd>
+        <dt>{% trans "Pass type" %}</dt><dd>{{ details.get_work_pass_type_display|default:"—" }}</dd>
+        <dt>{% trans "Work-pass number" %}</dt><dd>{{ details.masked_work_pass_number|default:"—" }}</dd>
+        <dt>{% trans "Work-pass expiry" %}</dt><dd>{{ details.work_pass_expiry|date:"d M Y"|default:"—" }}</dd>
+        <dt>{% trans "Personal email" %}</dt><dd>{{ details.personal_email|default:"—" }}</dd>
+      </dl>
+      {% if can_edit %}<a class="oh-btn oh-btn--secondary" href="{% url 'singapore-employee-details' employee.pk %}?edit=1">{% trans "Edit / view full identifiers" %}</a>{% endif %}
+    {% endif %}
+    <h3 class="mt-4">{% trans "Recent access and changes" %}</h3>
+    <ul>{% for event in audit_events %}
+      <li>{{ event.occurred_at|date:"d M Y H:i" }} · {{ event.actor|default:"System" }} · {{ event.action }}{% if event.fields %} · {{ event.fields|join:", " }}{% endif %}</li>
+    {% empty %}<li>{% trans "No events yet." %}</li>{% endfor %}</ul>
+  </div>
+</div>
+{% endblock %}

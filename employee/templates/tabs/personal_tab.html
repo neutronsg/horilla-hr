@@ -1,4 +1,8 @@
 {% load i18n %} {% load static %} {% load horillafilters %}
+{% if employee.preferred_name %}<p><strong>{% trans "Preferred name" %}:</strong> {{ employee.preferred_name }}</p>{% endif %}
+{% if can_view_singapore_details %}
+<p><a class="oh-btn oh-btn--secondary" href="{% url 'singapore-employee-details' employee.pk %}">{% trans "Singapore employment details" %}</a></p>
+{% endif %}
 <div class="row">
 	<div class="col-sm-12 col-md-12 col-lg-4">
 		<div class="oh-card oh-card--margin">
