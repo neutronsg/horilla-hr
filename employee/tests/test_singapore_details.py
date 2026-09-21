@@ -49,6 +49,18 @@ class SingaporeDetailsTests(TestCase):
         self.assertEqual(singapore_details(self.request(), self.employee.pk).status_code, 403)
         self.assertEqual(singapore_details(self.request(user=self.employee.employee_user_id), self.employee.pk).status_code, 403)
 
+    def test_migration_default_groups_do_not_auto_grant_private_permissions(self):
+        from base.signals import _DEFAULT_HRMS_GROUPS, _resolve_group_permissions, _sync_export_permissions
+        for name, config in _DEFAULT_HRMS_GROUPS.items():
+            self.assertFalse(
+                _resolve_group_permissions(config).filter(content_type__model__in=[
+                    "singaporeemployeedetails", "singaporedetailsaudit",
+                ]).exists(), name
+            )
+        Permission.objects.filter(codename__in=["export_singaporeemployeedetails", "export_singaporedetailsaudit"]).delete()
+        _sync_export_permissions()
+        self.assertFalse(Permission.objects.filter(codename="export_singaporeemployeedetails").exists())
+
     def test_company_boundary_and_separate_edit_permission(self):
         self.grant("view_singaporeemployeedetails")
         self.assertTrue(can_access_singapore_details(self.request(), self.employee))

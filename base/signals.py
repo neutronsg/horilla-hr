@@ -359,6 +359,12 @@ def _resolve_group_permissions(config):
     for app_label in app_labels:
         actions = app_actions.get(app_label, default_actions)
         content_types = ContentType.objects.filter(app_label=app_label)
+        # Restricted HR data requires deliberate grants, never app-wide defaults.
+        restricted_ids = [
+            ct.pk for ct in content_types
+            if getattr(ct.model_class(), "restricted_hr_model", False)
+        ]
+        content_types = content_types.exclude(pk__in=restricted_ids)
         if not content_types.exists():
             continue
         if actions == "__all__":
@@ -419,7 +425,7 @@ def _sync_export_permissions():
             if content_type.model in no_permission_models:
                 continue
             model_class = content_type.model_class()
-            if model_class is None:
+            if model_class is None or getattr(model_class, "restricted_hr_model", False):
                 continue
             Permission.objects.get_or_create(
                 content_type=content_type,
