@@ -1,8 +1,10 @@
 # Singapore staff details
 
-The employee profile's About section links to Singapore employment details for
-users with `employee.view_singaporeemployeedetails`. Editing/revealing complete
-identifiers also requires `employee.change_singaporeemployeedetails`. Both are
+The employee profile's About section shows masked Singapore employment details
+and personal email for users with `employee.view_singaporeemployeedetails`.
+Opening the About section records a masked-view audit event and prevents caching.
+Editing or revealing complete identifiers also requires
+`employee.change_singaporeemployeedetails`. Both are
 explicit permissions: ordinary employee/profile/payroll permissions do not grant
 access. Non-superusers must also have access to the employee's company through
 their own work information or a company group assignment. No existing groups

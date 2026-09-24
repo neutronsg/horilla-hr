@@ -3,6 +3,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from django.contrib.auth.models import Group, Permission
+from django.contrib.sessions.backends.db import SessionStore
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.http import HttpResponse
@@ -14,6 +15,7 @@ from employee.forms import EmployeeForm
 from employee.models import Employee
 from employee.singapore import SingaporeDetailsForm, can_access_singapore_details, singapore_details
 from employee.singapore_models import SingaporeDetailsAudit, SingaporeEmployeeDetails
+from employee.views import about_tab
 from horilla.testkit import make_company, make_employee
 
 
@@ -42,6 +44,48 @@ class SingaporeDetailsTests(TestCase):
             employee=self.employee, identity_type="NRIC", identity_number="S1234567D",
             residency_status="pr", pr_effective_date=date(2020, 1, 15),
         )
+
+    def about_request(self):
+        request = RequestFactory().get("/employee/about-tab/1/", HTTP_HX_REQUEST="true")
+        request.user = self.hr.employee_user_id
+        request.session = SessionStore()
+        request.session.create()
+        return request
+
+    def test_about_tab_shows_masked_singapore_details_and_personal_email(self):
+        self.grant("view_employee", "view_singaporeemployeedetails")
+        record = self.details()
+        record.personal_email = "private@sg.test"
+        record.save(update_fields=["personal_email"])
+
+        response = about_tab(self.about_request(), self.employee.pk)
+        html = response.content.decode()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("no-store", response["Cache-Control"])
+        self.assertIn("Singapore Employment", html)
+        self.assertIn("Personal email", html)
+        self.assertIn("private@sg.test", html)
+        self.assertIn(record.masked_identity_number, html)
+        self.assertNotIn(record.identity_number, html)
+        self.assertNotIn("Edit details", html)
+        self.assertEqual(SingaporeDetailsAudit.objects.get().action, "view_masked")
+
+    def test_about_tab_hides_restricted_details_without_permission(self):
+        self.grant("view_employee")
+        record = self.details()
+        record.personal_email = "private@sg.test"
+        record.save(update_fields=["personal_email"])
+
+        response = about_tab(self.about_request(), self.employee.pk)
+        html = response.content.decode()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("Singapore Employment", html)
+        self.assertNotIn("Personal email", html)
+        self.assertNotIn("private@sg.test", html)
+        self.assertNotIn(record.masked_identity_number, html)
+        self.assertFalse(SingaporeDetailsAudit.objects.exists())
 
     def test_ordinary_employee_and_manager_permissions_do_not_grant_access(self):
         self.grant("view_employee", "change_employee")

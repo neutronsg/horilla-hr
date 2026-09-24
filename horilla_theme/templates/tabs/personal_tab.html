@@ -3,10 +3,6 @@
 {% if employee.preferred_name %}
 <p class="mb-3 text-sm"><strong>{% trans "Preferred name" %}:</strong> {{ employee.preferred_name }}</p>
 {% endif %}
-{% if can_view_singapore_details %}
-<p class="mb-4"><a class="oh-btn oh-btn--secondary" href="{% url 'singapore-employee-details' employee.pk %}">{% trans "Singapore employment details" %}</a></p>
-{% endif %}
-
 <div class="grid gap-4 lg:grid-cols-12">
     <!-- Personal Information -->
     <section class="lg:col-span-4">
@@ -33,6 +29,14 @@
                                 {{ employee.get_gender_display|default:_("Not set") }}
                             </dd>
                         </div>
+                        {% if can_view_singapore_details %}
+                        <div class="flex items-baseline justify-between gap-3 py-2">
+                            <dt class="text-xs font-medium text-color-600">{% trans "Personal email" %}</dt>
+                            <dd class="text-right text-sm {% if singapore_details.personal_email %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
+                                {{ singapore_details.personal_email|default:_("Not set") }}
+                            </dd>
+                        </div>
+                        {% endif %}
                         <div class="flex items-baseline justify-between gap-3 py-2">
                             <dt class="text-xs font-medium text-color-600">{% trans "Qualification" %}</dt>
                             <dd class="text-right text-sm {% if employee.qualification %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
@@ -441,6 +445,34 @@
                 </div>
             </div>
         </section>
+
+        {% if can_view_singapore_details %}
+        <section>
+            <div class="overflow-hidden rounded-xl border border-[#ebebeb]">
+                <div class="flex items-center justify-between bg-[#f3f3f3] px-3 py-3">
+                    <h3 class="text-sm font-semibold text-[#333]">{% trans "Singapore Employment" %}</h3>
+                    {% if can_edit_singapore_details %}
+                    <a class="oh-btn oh-btn--secondary" href="{% url 'singapore-employee-details' employee.pk %}?edit=1">{% trans "Edit details" %}</a>
+                    {% endif %}
+                </div>
+                <div class="bg-white px-3 py-3">
+                    <div class="grid gap-x-6 gap-y-1 sm:grid-cols-2">
+                        <dl>
+                            <div class="flex items-baseline justify-between gap-3 py-2"><dt class="text-xs font-medium text-color-600">{% trans "Identity type" %}</dt><dd class="text-right text-sm font-medium text-dark-500">{{ singapore_details.identity_type|default:"—" }}</dd></div>
+                            <div class="flex items-baseline justify-between gap-3 py-2"><dt class="text-xs font-medium text-color-600">{% trans "NRIC / FIN" %}</dt><dd class="text-right text-sm font-medium text-dark-500">{{ singapore_details.masked_identity_number|default:"—" }}</dd></div>
+                            <div class="flex items-baseline justify-between gap-3 py-2"><dt class="text-xs font-medium text-color-600">{% trans "Residency status" %}</dt><dd class="text-right text-sm font-medium text-dark-500">{{ singapore_details.get_residency_status_display|default:"—" }}</dd></div>
+                            <div class="flex items-baseline justify-between gap-3 py-2"><dt class="text-xs font-medium text-color-600">{% trans "PR effective date" %}</dt><dd class="text-right text-sm font-medium text-dark-500">{{ singapore_details.pr_effective_date|date:"d M Y"|default:"—" }}</dd></div>
+                        </dl>
+                        <dl>
+                            <div class="flex items-baseline justify-between gap-3 py-2"><dt class="text-xs font-medium text-color-600">{% trans "Pass type" %}</dt><dd class="text-right text-sm font-medium text-dark-500">{{ singapore_details.get_work_pass_type_display|default:"—" }}</dd></div>
+                            <div class="flex items-baseline justify-between gap-3 py-2"><dt class="text-xs font-medium text-color-600">{% trans "Work-pass number" %}</dt><dd class="text-right text-sm font-medium text-dark-500">{{ singapore_details.masked_work_pass_number|default:"—" }}</dd></div>
+                            <div class="flex items-baseline justify-between gap-3 py-2"><dt class="text-xs font-medium text-color-600">{% trans "Work-pass expiry" %}</dt><dd class="text-right text-sm font-medium text-dark-500">{{ singapore_details.work_pass_expiry|date:"d M Y"|default:"—" }}</dd></div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
 
         <!-- Bank Information -->
         {% if perms.employee.view_employeebankdetails or request.user == employee.employee_user_id %}

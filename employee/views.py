@@ -425,6 +425,7 @@ def about_tab(request, pk, **kwargs):
     This method is used to view profile of an employee.
     """
     from employee.singapore import can_access_singapore_details
+    from employee.singapore_models import SingaporeDetailsAudit, SingaporeEmployeeDetails
 
     employee = Employee.objects.get(id=pk)
     if not can_view_employee_profile(request, employee):
@@ -435,7 +436,16 @@ def about_tab(request, pk, **kwargs):
     )
     bank_details = EmployeeBankDetails.objects.filter(employee_id=employee).first()
     work_info = EmployeeWorkInformation.objects.filter(employee_id=employee).first()
-    return render(
+    can_view_singapore_details = can_access_singapore_details(request, employee)
+    singapore_details = None
+    can_edit_singapore_details = False
+    if can_view_singapore_details:
+        singapore_details = SingaporeEmployeeDetails.objects.filter(employee=employee).first()
+        can_edit_singapore_details = can_access_singapore_details(request, employee, edit=True)
+        SingaporeDetailsAudit.objects.create(
+            employee=employee, actor=request.user, action="view_masked", fields=[]
+        )
+    response = render(
         request,
         "tabs/personal_tab.html",
         {
@@ -444,9 +454,14 @@ def about_tab(request, pk, **kwargs):
             "contracts": contracts,
             "bank_details": bank_details,
             "work_info": work_info,
-            "can_view_singapore_details": can_access_singapore_details(request, employee),
+            "can_view_singapore_details": can_view_singapore_details,
+            "can_edit_singapore_details": can_edit_singapore_details,
+            "singapore_details": singapore_details,
         },
     )
+    if can_view_singapore_details:
+        response["Cache-Control"] = "private, no-store"
+    return response
 
 
 @login_required

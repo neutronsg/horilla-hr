@@ -278,12 +278,12 @@ class Employee(models.Model):
 
     def get_mail(self):
         """
-        This method is used to return the employee's email, checking work email first
-        then falling back to personal email.
+        Return the work email, falling back to the employee account email when
+        work information has no email.
         """
         work_info = getattr(self, "employee_work_info", None)
         work_email = getattr(work_info, "email", None)
-        return work_email if work_email is not None else self.email
+        return work_email or self.email
 
     def get_email(self):
         return self.get_mail()

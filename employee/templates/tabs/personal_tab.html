@@ -1,8 +1,5 @@
 {% load i18n %} {% load static %} {% load horillafilters %}
 {% if employee.preferred_name %}<p><strong>{% trans "Preferred name" %}:</strong> {{ employee.preferred_name }}</p>{% endif %}
-{% if can_view_singapore_details %}
-<p><a class="oh-btn oh-btn--secondary" href="{% url 'singapore-employee-details' employee.pk %}">{% trans "Singapore employment details" %}</a></p>
-{% endif %}
 <div class="row">
 	<div class="col-sm-12 col-md-12 col-lg-4">
 		<div class="oh-card oh-card--margin">
@@ -29,6 +26,16 @@
 						</span>
 						<span class="oh-profile__info-value">{{employee.get_gender_display}}</span>
 					</li>
+
+					{% if can_view_singapore_details %}
+					<li class="oh-profile__card-info-item">
+						<span class="oh-profile__info-label mb-1">
+							<ion-icon name="mail-outline"></ion-icon>
+							<span>{% trans "Personal email" %}</span>
+						</span>
+						<span class="oh-profile__info-value">{{ singapore_details.personal_email|default:_("None") }}</span>
+					</li>
+					{% endif %}
 
 					<li class="oh-profile__card-info-item">
 						<span class="oh-profile__info-label mb-1">
@@ -303,6 +310,35 @@
 				</div>
 			</div>
 		</div>
+		{% if can_view_singapore_details %}
+		<div class="oh-card oh-card--margin">
+			<div class="oh-card__header">
+				<span class="oh-card__title oh-card__title--sm fw-bold me-2">{% trans "Singapore Employment" %}</span>
+				{% if can_edit_singapore_details %}
+				<a class="oh-btn oh-btn--secondary" href="{% url 'singapore-employee-details' employee.pk %}?edit=1">{% trans "Edit details" %}</a>
+				{% endif %}
+			</div>
+			<div class="oh-card__body mt-4">
+				<div class="row">
+					<div class="col-12 col-sm-12 col-md-12 col-lg-6">
+						<ul class="oh-profile__card-info-list">
+							<li class="oh-profile__card-info-item"><span class="oh-profile__info-label mb-1">{% trans "Identity type" %}</span><span class="oh-profile__info-value">{{ singapore_details.identity_type|default:"—" }}</span></li>
+							<li class="oh-profile__card-info-item"><span class="oh-profile__info-label mb-1">{% trans "NRIC / FIN" %}</span><span class="oh-profile__info-value">{{ singapore_details.masked_identity_number|default:"—" }}</span></li>
+							<li class="oh-profile__card-info-item"><span class="oh-profile__info-label mb-1">{% trans "Residency status" %}</span><span class="oh-profile__info-value">{{ singapore_details.get_residency_status_display|default:"—" }}</span></li>
+							<li class="oh-profile__card-info-item"><span class="oh-profile__info-label mb-1">{% trans "PR effective date" %}</span><span class="oh-profile__info-value">{{ singapore_details.pr_effective_date|date:"d M Y"|default:"—" }}</span></li>
+						</ul>
+					</div>
+					<div class="col-12 col-sm-12 col-md-12 col-lg-6">
+						<ul class="oh-profile__card-info-list">
+							<li class="oh-profile__card-info-item"><span class="oh-profile__info-label mb-1">{% trans "Pass type" %}</span><span class="oh-profile__info-value">{{ singapore_details.get_work_pass_type_display|default:"—" }}</span></li>
+							<li class="oh-profile__card-info-item"><span class="oh-profile__info-label mb-1">{% trans "Work-pass number" %}</span><span class="oh-profile__info-value">{{ singapore_details.masked_work_pass_number|default:"—" }}</span></li>
+							<li class="oh-profile__card-info-item"><span class="oh-profile__info-label mb-1">{% trans "Work-pass expiry" %}</span><span class="oh-profile__info-value">{{ singapore_details.work_pass_expiry|date:"d M Y"|default:"—" }}</span></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		{% endif %}
 		{% if perms.employee.view_employeebankdetails or request.user == employee.employee_user_id %}
 			<div class="oh-card oh-card--margin">
 				<div class="oh-card__header">
