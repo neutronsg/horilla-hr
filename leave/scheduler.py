@@ -2,6 +2,7 @@ import sys
 from datetime import datetime
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from django.utils import timezone
 
 from horilla.signals import post_scheduler, pre_scheduler
 
@@ -9,10 +10,15 @@ from horilla.signals import post_scheduler, pre_scheduler
 def leave_reset():
     pre_scheduler.send(sender=leave_reset)
     from leave.models import LeaveType
+    from leave.annual_policy import sync_annual_leave
 
     today = datetime.now()
-    today_date = today.date()
-    leave_types = LeaveType.objects.filter(reset=True)
+    today_date = timezone.localdate()
+    for annual_type in LeaveType.objects.filter(auto_annual_leave=True):
+        for assignment in annual_type.employee_available_leave.all():
+            sync_annual_leave(assignment.employee_id, annual_type, today_date)
+
+    leave_types = LeaveType.objects.filter(reset=True, auto_annual_leave=False)
     # Looping through filtered leave types with reset is true
     for leave_type in leave_types:
         # Looping through all available leaves

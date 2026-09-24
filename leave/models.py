@@ -242,6 +242,14 @@ class LeaveType(HorillaModel):
     period_in = models.CharField(max_length=30, choices=TIME_PERIOD, default="day")
     limit_leave = models.BooleanField(default=True, verbose_name=_("Limit Leave Days"))
     total_days = models.FloatField(null=True, default=1)
+    auto_annual_leave = models.BooleanField(
+        default=False,
+        verbose_name=_("Auto Calculate Annual Leave"),
+        help_text=_(
+            "Use the assigned leave type's annual days, completed months of "
+            "service and MOM rounding after three months of service."
+        ),
+    )
     reset = models.BooleanField(default=False, verbose_name=_("Reset"))
     is_encashable = models.BooleanField(default=False, verbose_name=_("Is Encashable"))
     reset_based = models.CharField(
@@ -435,6 +443,25 @@ class LeaveType(HorillaModel):
         from base.auth_backends import stamp_company_on_create
 
         stamp_company_on_create(self)
+
+        if self.auto_annual_leave:
+            if self.period_in != "day":
+                raise ValidationError(
+                    {"period_in": _("Automatic annual leave must be configured in days.")}
+                )
+            if (
+                self.total_days is None
+                or not math.isfinite(self.total_days)
+                or self.total_days <= 0
+                or not float(self.total_days).is_integer()
+            ):
+                raise ValidationError(
+                    {"total_days": _("Annual leave days must be a positive whole number.")}
+                )
+            self.payment = "paid"
+            self.payment_type = "paid"
+            self.limit_leave = True
+            self.reset = False
 
         if (
             self.carryforward_type != "no carryforward"
@@ -640,6 +667,8 @@ class AvailableLeave(HorillaModel):
         default=0, verbose_name=_("Carryforward Days")
     )
     total_leave_days = models.FloatField(default=0, verbose_name=_("Total Leave Days"))
+    auto_service_year_start = models.DateField(null=True, blank=True)
+    auto_entitlement_days = models.FloatField(default=0)
     assigned_date = models.DateField(
         default=timezone.now, verbose_name=_("Assigned Date")
     )
@@ -831,6 +860,18 @@ class AvailableLeave(HorillaModel):
         """
         Reusable method to compute fields normally set in save().
         """
+        if self.pk is None and self.leave_type_id.auto_annual_leave:
+            from leave.annual_policy import entitlement_for_assignment
+
+            entitlement = entitlement_for_assignment(self)
+            if entitlement:
+                self.available_days = entitlement.earned_days
+                self.auto_entitlement_days = entitlement.earned_days
+                self.auto_service_year_start = entitlement.service_year_start
+            else:
+                self.available_days = 0
+            self.reset_date = None
+
         # Logic for reset_date
         if self.reset_date is None and self.leave_type_id.reset:
             self.reset_date = self.set_reset_date(
@@ -838,7 +879,10 @@ class AvailableLeave(HorillaModel):
             )
 
         # Logic for expired_date
-        if self.leave_type_id.carryforward_type == "carryforward expire":
+        if (
+            self.leave_type_id.carryforward_type == "carryforward expire"
+            and not self.leave_type_id.auto_annual_leave
+        ):
             expiry_date = self.assigned_date
             if self.leave_type_id.carryforward_expire_date:
                 expiry_date = self.leave_type_id.carryforward_expire_date
@@ -1533,6 +1577,29 @@ class LeaveRequest(HorillaModel):
         restricted_leaves = RestrictLeave.objects.all()
         request = getattr(horilla_middlewares._thread_locals, "request", None)
 
+        if leave_type.auto_annual_leave:
+            from leave.annual_policy import sync_annual_leave
+            from leave.annual_entitlement import add_months
+
+            work_info = getattr(self.employee_id, "employee_work_info", None)
+            joining_date = getattr(work_info, "date_joining", None)
+            if not joining_date:
+                raise ValidationError(_("Joining date is required for annual leave."))
+            eligible_date = add_months(joining_date, 3)
+            if timezone.localdate() < eligible_date or self.start_date < eligible_date:
+                raise ValidationError(
+                    _("Paid annual leave is available after three months of service.")
+                )
+            employment_end = getattr(work_info, "contract_end_date", None)
+            if employment_end and (
+                self.start_date > employment_end
+                or (self.end_date and self.end_date > employment_end)
+            ):
+                raise ValidationError(
+                    _("Annual leave cannot be taken after the employment end date.")
+                )
+            sync_annual_leave(self.employee_id, leave_type)
+
         # Check if leave type is assigned to employee
         if not AvailableLeave.objects.filter(
             employee_id=self.employee_id, leave_type_id=leave_type
@@ -1621,7 +1688,11 @@ class LeaveRequest(HorillaModel):
         if f"{today.month}-{today.year}" in unique_dates:
             unique_dates.remove(f"{today.strftime('%m')}-{today.year}")
 
-        forcated_days = available_leave.forcasted_leaves(self.start_date)
+        forcated_days = (
+            0
+            if leave_type.auto_annual_leave
+            else available_leave.forcasted_leaves(self.start_date)
+        )
 
         available_days = available_leave.available_days or 0
         carryforward_days = available_leave.carryforward_days or 0

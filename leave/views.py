@@ -1519,6 +1519,8 @@ def leave_assign_one(request, obj_id):
                     leave.available_days + leave.carryforward_days, 0
                 )
                 leave.carryforward_days = max(leave.carryforward_days, 0)
+                if leave_type.auto_annual_leave:
+                    leave.pre_save_processing()
                 available_leaves.append(leave)
 
             AvailableLeave.objects.bulk_create(available_leaves)
@@ -2026,6 +2028,8 @@ def assign_leave_type_import(request):
                 except Exception:
                     pass
 
+            if leave_type.auto_annual_leave:
+                available_leave.pre_save_processing()
             assign_leave_list.append(available_leave)
 
         # Bulk create available leaves

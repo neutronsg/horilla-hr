@@ -185,6 +185,24 @@ class LeaveTypeForm(ConditionForm):
         cleaned_data = super().clean()
         if "exceed_days" in self.errors:
             del self.errors["exceed_days"]
+        if cleaned_data.get("auto_annual_leave"):
+            cleaned_data["limit_leave"] = True
+            cleaned_data["reset"] = False
+            cleaned_data["payment"] = "paid"
+            cleaned_data["payment_type"] = "paid"
+            if cleaned_data.get("period_in") != "day":
+                self.add_error(
+                    "period_in",
+                    _("Automatic annual leave must be configured in days."),
+                )
+            annual_days = cleaned_data.get("count")
+            if annual_days is None or annual_days <= 0 or not float(annual_days).is_integer():
+                self.add_error(
+                    "count",
+                    _("Annual leave days must be a positive whole number."),
+                )
+            else:
+                cleaned_data["total_days"] = annual_days
         if not cleaned_data.get("limit_leave"):
             cleaned_data["total_days"] = LEAVE_MAX_LIMIT
             cleaned_data["reset"] = True
@@ -258,6 +276,24 @@ class UpdateLeaveTypeForm(ConditionForm):
         cleaned_data = super().clean()
         if "exceed_days" in self.errors:
             del self.errors["exceed_days"]
+        if cleaned_data.get("auto_annual_leave"):
+            cleaned_data["limit_leave"] = True
+            cleaned_data["reset"] = False
+            cleaned_data["payment"] = "paid"
+            cleaned_data["payment_type"] = "paid"
+            if cleaned_data.get("period_in") != "day":
+                self.add_error(
+                    "period_in",
+                    _("Automatic annual leave must be configured in days."),
+                )
+            annual_days = cleaned_data.get("count")
+            if annual_days is None or annual_days <= 0 or not float(annual_days).is_integer():
+                self.add_error(
+                    "count",
+                    _("Annual leave days must be a positive whole number."),
+                )
+            else:
+                cleaned_data["total_days"] = annual_days
         if not cleaned_data.get("limit_leave"):
             cleaned_data["total_days"] = LEAVE_MAX_LIMIT
             cleaned_data["reset"] = True

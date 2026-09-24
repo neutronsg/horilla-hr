@@ -75,6 +75,13 @@
                             {{form.total_days.errors}}
                         </div>
                     </div>
+                    <div class="col-sm-12 col-md-12">
+                        <div class="oh-input-group">
+                            <label for="id_auto_annual_leave" class="oh-label">{{ form.auto_annual_leave.label }}</label>
+                            {{ form.auto_annual_leave }} {{ form.auto_annual_leave.errors }}
+                        </div>
+                        <small>{{ form.auto_annual_leave.help_text }}</small>
+                    </div>
                     <div class="col-sm-12 col-md-12 ">
                         <div class="oh-input-group">
                             <label for="" class="oh-label">{% trans "Reset" %}</label>
@@ -278,7 +285,7 @@
         })
 
         function toggleFields() {
-            if ($("#id_reset").is(":checked")) {
+            if ($("#id_reset").is(":checked") || $("#id_auto_annual_leave").is(":checked")) {
                 $("#id_carryforward_type").parent().show();
                 if ($("#id_carryforward_type").val() == "carryforward") {
                     $("#id_carryforward_max").parent().show();

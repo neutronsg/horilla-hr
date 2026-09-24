@@ -87,6 +87,14 @@
                     </div>
                     <div class="col-sm-12 col-md-6 resetContainer">
                         <div class="oh-input-group oh-label__info justify-content-between">
+                            <label for="id_auto_annual_leave" class="oh-label">{{ form.auto_annual_leave.label }}</label>
+                            <div class="oh-switch p-3">{{ form.auto_annual_leave }}</div>
+                            {{ form.auto_annual_leave.errors }}
+                        </div>
+                        <small>{{ form.auto_annual_leave.help_text }}</small>
+                    </div>
+                    <div class="col-sm-12 col-md-6 resetContainer">
+                        <div class="oh-input-group oh-label__info justify-content-between">
                             <div class="d-flex align-items-center">
                                 <label for="id_reset" class="oh-label">{{ form.reset.label }}</label>
                                 <span class=" oh-info me-3"
@@ -450,7 +458,7 @@
         });
 
         function toggleFields() {
-            if ($("#id_reset").is(":checked")) {
+            if ($("#id_reset").is(":checked") || $("#id_auto_annual_leave").is(":checked")) {
                 $("#id_carryforward_type").parent().show();
                 if ($("#id_carryforward_type").val() == "carryforward") {
                     $("#id_carryforward_max").parent().show();

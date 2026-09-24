@@ -172,6 +172,13 @@
                         {{ form.total_days.errors }}
                     </div>
 
+                    <div class="flex items-center justify-between mb-2 form-input-items">
+                        <label class="text-xs font-medium" for="id_auto_annual_leave">{{ form.auto_annual_leave.label }}</label>
+                        <div class="oh-switch">{{ form.auto_annual_leave }}</div>
+                        {{ form.auto_annual_leave.errors }}
+                    </div>
+                    <p class="text-xs text-color-600">{{ form.auto_annual_leave.help_text }}</p>
+
                     <!-- Reset Leave Toggle -->
                     <div class="flex items-center justify-between mb-2 resetContainer form-input-items">
                         <div class="flex items-center gap-1 pb-2 overflow-visible relative" style="display: ruby">
@@ -441,10 +448,11 @@
                 function initializeResetFields() {
                     const $reset = $("[name='reset']");
                     const isResetChecked = $reset.is(":checked");
+                    const showCarryforward = isResetChecked || $("[name='auto_annual_leave']").is(":checked");
 
                     // Toggle reset-related fields
                     toggleInput($("[name='reset_based']"), isResetChecked);
-                    toggleInput($("[name='carryforward_type']"), isResetChecked);
+                    toggleInput($("[name='carryforward_type']"), showCarryforward);
 
                     // Handle dependent fields based on reset_based value
                     const resetBasedValue = $("[name='reset_based']").val();
@@ -454,10 +462,10 @@
 
                     // Handle carryforward fields
                     const carryforwardTypeValue = $("[name='carryforward_type']").val();
-                    toggleInput($("[name='carryforward_max']"), isResetChecked && (carryforwardTypeValue === "carryforward" || carryforwardTypeValue === "carryforward expire"));
-                    toggleInput($("[name='carryforward_expire_in']"), isResetChecked && carryforwardTypeValue === "carryforward expire");
-                    toggleInput($("[name='carryforward_expire_date']"), isResetChecked && carryforwardTypeValue === "carryforward expire");
-                    toggleInput($("[name='carryforward_expire_period']"), isResetChecked && carryforwardTypeValue === "carryforward expire");
+                    toggleInput($("[name='carryforward_max']"), showCarryforward && (carryforwardTypeValue === "carryforward" || carryforwardTypeValue === "carryforward expire"));
+                    toggleInput($("[name='carryforward_expire_in']"), showCarryforward && carryforwardTypeValue === "carryforward expire");
+                    toggleInput($("[name='carryforward_expire_date']"), showCarryforward && carryforwardTypeValue === "carryforward expire");
+                    toggleInput($("[name='carryforward_expire_period']"), showCarryforward && carryforwardTypeValue === "carryforward expire");
                 }
 
                 // Call initialization immediately
@@ -472,20 +480,7 @@
                     toggleInput($countInput, $(this).is(":checked"));
                 });
 
-                $("[name='reset']").on("change", function () {
-                    toggleInput($("[name='reset_based']"), $(this).is(":checked"));
-                    toggleInput($("[name='carryforward_type']"), $(this).is(":checked"));
-
-                    if (!$(this).is(":checked")) {
-                        toggleInput("[name='reset_month']", false);
-                        toggleInput("[name='reset_day']", false);
-                        toggleInput($("[name='reset_weekend']"), false);
-                        toggleInput($("[name='carryforward_max']"), false);
-                        toggleInput($("[name='carryforward_expire_in']"), false);
-                        toggleInput($("[name='carryforward_expire_date']"), false);
-                        toggleInput($("[name='carryforward_expire_period']"), false);
-                    }
-                });
+                $("[name='reset'], [name='auto_annual_leave']").on("change", initializeResetFields);
 
                 $("[name='reset_based']").on("change", function () {
                     const value = $(this).val();
