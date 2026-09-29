@@ -511,28 +511,23 @@ class GeneratePayslipForm(HorillaForm):
         required=True,
     )
     start_date = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
-    end_date = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
+    end_date = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date"}),
+        help_text=_(
+            "Payslips for future periods are saved as drafts. Regenerate them after the period ends to include actual attendance."
+        ),
+    )
 
     def clean(self):
         cleaned_data = super().clean()
         start_date = cleaned_data.get("start_date")
         end_date = cleaned_data.get("end_date")
 
-        today = datetime.date.today()
-        if end_date < start_date:
+        if start_date and end_date and end_date < start_date:
             raise forms.ValidationError(
                 {
                     "end_date": "The end date must be greater than or equal to the start date."
                 }
-            )
-        if start_date > today:
-            raise forms.ValidationError(
-                {"end_date": "The start date cannot be in the future."}
-            )
-
-        if end_date > today:
-            raise forms.ValidationError(
-                {"end_date": "The end date cannot be in the future."}
             )
         return cleaned_data
 

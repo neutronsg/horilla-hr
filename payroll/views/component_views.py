@@ -1037,7 +1037,10 @@ def generate_payslip(request):
                 from attendance.views.summary import build_monthly_summary
 
                 att_rows, _total_working, _summary_totals = build_monthly_summary(
-                    start_date, end_date, employees
+                    start_date,
+                    end_date,
+                    employees,
+                    assume_future_present=end_date > date.today(),
                 )
                 att_summary = {row["employee"].pk: row for row in att_rows}
 
@@ -1086,19 +1089,20 @@ def generate_payslip(request):
                 data["installments"] = payslip["installments"]
                 instance = save_payslip(**data)
                 instances.append(instance)
-                notify.send(
-                    request.user.employee_get,
-                    recipient=employee.employee_user_id,
-                    verb="Payslip has been generated for you.",
-                    verb_ar="تم إصدار كشف راتب لك.",
-                    verb_de="Gehaltsabrechnung wurde für Sie erstellt.",
-                    verb_es="Se ha generado la nómina para usted.",
-                    verb_fr="La fiche de paie a été générée pour vous.",
-                    redirect=reverse(
-                        "view-created-payslip", kwargs={"payslip_id": instance.id}
-                    ),
-                    icon="close",
-                )
+                if end_date <= date.today():
+                    notify.send(
+                        request.user.employee_get,
+                        recipient=employee.employee_user_id,
+                        verb="Payslip has been generated for you.",
+                        verb_ar="تم إصدار كشف راتب لك.",
+                        verb_de="Gehaltsabrechnung wurde für Sie erstellt.",
+                        verb_es="Se ha generado la nómina para usted.",
+                        verb_fr="La fiche de paie a été générée pour vous.",
+                        redirect=reverse(
+                            "view-created-payslip", kwargs={"payslip_id": instance.id}
+                        ),
+                        icon="close",
+                    )
             messages.success(
                 request,
                 _("%(emp_count)s payslip saved as draft") % {"emp_count": emp_count},
@@ -1224,19 +1228,20 @@ def create_payslip(request, new_post_data=None):
                 form = forms.PayslipForm()
                 messages.success(request, _("Payslip Saved"))
                 payslip = payslip_data["instance"]
-                notify.send(
-                    request.user.employee_get,
-                    recipient=employee.employee_user_id,
-                    verb="Payslip has been generated for you.",
-                    verb_ar="تم إصدار كشف راتب لك.",
-                    verb_de="Gehaltsabrechnung wurde für Sie erstellt.",
-                    verb_es="Se ha generado la nómina para usted.",
-                    verb_fr="La fiche de paie a été générée pour vous.",
-                    redirect=reverse(
-                        "view-created-payslip", kwargs={"payslip_id": payslip.pk}
-                    ),
-                    icon="close",
-                )
+                if end_date <= date.today():
+                    notify.send(
+                        request.user.employee_get,
+                        recipient=employee.employee_user_id,
+                        verb="Payslip has been generated for you.",
+                        verb_ar="تم إصدار كشف راتب لك.",
+                        verb_de="Gehaltsabrechnung wurde für Sie erstellt.",
+                        verb_es="Se ha generado la nómina para usted.",
+                        verb_fr="La fiche de paie a été générée pour vous.",
+                        redirect=reverse(
+                            "view-created-payslip", kwargs={"payslip_id": payslip.pk}
+                        ),
+                        icon="close",
+                    )
                 return HorillaRedirect(
                     request,
                     redirect_to=reverse(
@@ -1300,11 +1305,6 @@ def validate_start_date(request):
             _("The end date must be greater than or equal to the start date.")
         )
         valid = False
-
-    if end_datetime is not None:
-        if end_datetime > datetime.today().date():
-            errors.append(_("The end date cannot be in the future."))
-            valid = False
 
     return JsonResponse(
         {

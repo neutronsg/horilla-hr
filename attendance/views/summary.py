@@ -94,7 +94,9 @@ def _count_leave_days_in_range(leave_qs, from_date, to_date, off_dates):
 # ---------------------------------------------------------------------------
 
 
-def build_monthly_summary(from_date, to_date, employee_qs):
+def build_monthly_summary(
+    from_date, to_date, employee_qs, assume_future_present=False
+):
     """
     Compute per-employee attendance summary for [from_date, to_date].
 
@@ -102,6 +104,8 @@ def build_monthly_summary(from_date, to_date, employee_qs):
         from_date   : datetime.date  — range start (inclusive)
         to_date     : datetime.date  — range end   (inclusive)
         employee_qs : Employee queryset filtered to the relevant company/dept
+        assume_future_present : count future working days without activity as
+            expected attendance when preparing draft payroll
 
     Returns:
         rows            : list of dicts, one per employee
@@ -318,6 +322,7 @@ def build_monthly_summary(from_date, to_date, employee_qs):
     off_set = frozenset(off_dates)  # company leaves + public holidays
     company_off_dates = {d for d in raw_cl if from_date <= d <= to_date}
     all_dates_in_range = list(_iter_dates(from_date, to_date))
+    today = datetime.date.today()
 
     # Resolution → (bucket, value) for direct overrides
     _RES_BUCKET = {
@@ -430,7 +435,10 @@ def build_monthly_summary(from_date, to_date, employee_qs):
             elif d in _emp_off:
                 week_off += 1.0
             elif d not in off_set:
-                absent += 1.0  # working day with no activity
+                if assume_future_present and d > today:
+                    present += 1.0
+                else:
+                    absent += 1.0  # working day with no activity
 
         # Conflict detection (uses raw data, not overrides). Attendance on a
         # holiday/week-off is normal overtime work, not a data discrepancy —

@@ -22,7 +22,7 @@ djangorestframework-simplejwt==5.5.0
 drf-yasg
 
 # Data processing
-numpy
+numpy<2  # spaCy 3.7 / thinc binary wheels require the NumPy 1.x ABI
 openpyxl
 pandas
 XlsxWriter

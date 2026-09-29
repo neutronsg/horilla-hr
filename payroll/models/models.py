@@ -2209,7 +2209,6 @@ class Payslip(HorillaModel):
 
     def clean(self):
         super().clean()
-        today = date.today()
         if self.end_date < self.start_date:
             raise ValidationError(
                 {
@@ -2218,10 +2217,6 @@ class Payslip(HorillaModel):
                     )
                 }
             )
-        if self.end_date > today:
-            raise ValidationError(_("The end date cannot be in the future."))
-        if self.start_date > today:
-            raise ValidationError(_("The start date cannot be in the future."))
 
     def save(self, *args, **kwargs):
         if (

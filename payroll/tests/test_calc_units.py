@@ -122,11 +122,11 @@ class PayslipValidationTests(TestCase):
         with self.assertRaises(ValidationError):
             slip.clean()
 
-    def test_future_end_date_raises(self):
+    def test_future_period_is_allowed(self):
         today = date.today()
         slip = Payslip(
             employee_id=self.employee,
-            start_date=today - timedelta(days=5),
+            start_date=today + timedelta(days=1),
             end_date=today + timedelta(days=5),
             pay_head_data={},
             basic_pay=0,
@@ -134,8 +134,7 @@ class PayslipValidationTests(TestCase):
             deduction=0,
             net_pay=0,
         )
-        with self.assertRaises(ValidationError):
-            slip.clean()
+        slip.clean()
 
 
 class CalculateGrossPayTests(TestCase):
