@@ -173,11 +173,11 @@
                     </div>
 
                     <div class="flex items-center justify-between mb-2 form-input-items">
-                        <label class="text-xs font-medium" for="id_auto_annual_leave">{{ form.auto_annual_leave.label }}</label>
-                        <div class="oh-switch">{{ form.auto_annual_leave }}</div>
-                        {{ form.auto_annual_leave.errors }}
+                        <label class="text-xs font-medium" for="id_auto_leave_policy">{{ form.auto_leave_policy.label }}</label>
+                        <div>{{ form.auto_leave_policy }}</div>
+                        {{ form.auto_leave_policy.errors }}
                     </div>
-                    <p class="text-xs text-color-600">{{ form.auto_annual_leave.help_text }}</p>
+                    <p class="text-xs text-color-600">{{ form.auto_leave_policy.help_text }}</p>
 
                     <!-- Reset Leave Toggle -->
                     <div class="flex items-center justify-between mb-2 resetContainer form-input-items">
@@ -448,7 +448,7 @@
                 function initializeResetFields() {
                     const $reset = $("[name='reset']");
                     const isResetChecked = $reset.is(":checked");
-                    const showCarryforward = isResetChecked || $("[name='auto_annual_leave']").is(":checked");
+                    const showCarryforward = isResetChecked || $("[name='auto_leave_policy']").val() === "annual";
 
                     // Toggle reset-related fields
                     toggleInput($("[name='reset_based']"), isResetChecked);
@@ -480,7 +480,7 @@
                     toggleInput($countInput, $(this).is(":checked"));
                 });
 
-                $("[name='reset'], [name='auto_annual_leave']").on("change", initializeResetFields);
+                $("[name='reset'], [name='auto_leave_policy']").on("change", initializeResetFields);
 
                 $("[name='reset_based']").on("change", function () {
                     const value = $(this).val();

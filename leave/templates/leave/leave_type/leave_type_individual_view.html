@@ -80,8 +80,8 @@
                     </span>
                 </div>
                 <div class="oh-timeoff-modal__stat">
-                    <span class="oh-timeoff-modal__stat-title">{% trans "Auto Calculate Annual Leave" %}</span>
-                    <span class="oh-timeoff-modal__stat-count">{{ leave_type.auto_annual_leave|yes_no }}</span>
+                    <span class="oh-timeoff-modal__stat-title">{% trans "Automatic Leave Policy" %}</span>
+                    <span class="oh-timeoff-modal__stat-count">{{ leave_type.get_auto_leave_policy_display }}</span>
                 </div>
                 <div class="oh-timeoff-modal__stat">
                     <div class="oh-label__info">

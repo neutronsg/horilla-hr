@@ -1519,7 +1519,7 @@ def leave_assign_one(request, obj_id):
                     leave.available_days + leave.carryforward_days, 0
                 )
                 leave.carryforward_days = max(leave.carryforward_days, 0)
-                if leave_type.auto_annual_leave:
+                if leave_type.auto_leave_policy != "none":
                     leave.pre_save_processing()
                 available_leaves.append(leave)
 
@@ -2028,7 +2028,7 @@ def assign_leave_type_import(request):
                 except Exception:
                     pass
 
-            if leave_type.auto_annual_leave:
+            if leave_type.auto_leave_policy != "none":
                 available_leave.pre_save_processing()
             assign_leave_list.append(available_leave)
 
@@ -4191,6 +4191,18 @@ def employee_available_leave_count(request):
 
     if available_leave:
         leave_type = available_leave.leave_type_id
+        if leave_type.auto_leave_policy == "annual":
+            from leave.annual_policy import sync_annual_leave
+
+            available_leave = sync_annual_leave(
+                available_leave.employee_id, leave_type
+            ) or available_leave
+        elif leave_type.auto_leave_policy != "none":
+            from leave.sick_policy import sync_sick_leave
+
+            available_leave = sync_sick_leave(
+                available_leave.employee_id, leave_type
+            ) or available_leave
         total_leave_days = available_leave.total_leave_days
 
         next_reset = leave_type.leave_type_next_reset_date()

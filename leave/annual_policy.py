@@ -131,10 +131,13 @@ def sync_annual_leave(employee, leave_type, as_of=None):
     """
     from leave.models import AvailableLeave
 
-    if not leave_type.auto_annual_leave:
+    if leave_type.auto_leave_policy != "annual":
         return None
+    # The company-aware default manager adds DISTINCT to its queryset. PostgreSQL
+    # cannot combine that with FOR UPDATE, so lock the uniquely identified
+    # assignment through the unfiltered base manager instead.
     assignment = (
-        AvailableLeave.objects.select_for_update()
+        AvailableLeave._base_manager.select_for_update()
         .filter(employee_id=employee, leave_type_id=leave_type)
         .first()
     )

@@ -154,6 +154,7 @@ class LeaveTypeAdminForm(forms.ModelForm):
     class Meta:
         model = LeaveType
         fields = "__all__"
+        exclude = ["auto_annual_leave"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -171,7 +172,7 @@ class LeaveTypeForm(ConditionForm):
     class Meta:
         model = LeaveType
         fields = "__all__"
-        exclude = ["is_active", "conditions"]
+        exclude = ["is_active", "conditions", "auto_annual_leave"]
         labels = {
             "name": _("Name"),
         }
@@ -185,7 +186,7 @@ class LeaveTypeForm(ConditionForm):
         cleaned_data = super().clean()
         if "exceed_days" in self.errors:
             del self.errors["exceed_days"]
-        if cleaned_data.get("auto_annual_leave"):
+        if cleaned_data.get("auto_leave_policy") != "none":
             cleaned_data["limit_leave"] = True
             cleaned_data["reset"] = False
             cleaned_data["payment"] = "paid"
@@ -193,13 +194,13 @@ class LeaveTypeForm(ConditionForm):
             if cleaned_data.get("period_in") != "day":
                 self.add_error(
                     "period_in",
-                    _("Automatic annual leave must be configured in days."),
+                    _("Automatic leave must be configured in days."),
                 )
             annual_days = cleaned_data.get("count")
             if annual_days is None or annual_days <= 0 or not float(annual_days).is_integer():
                 self.add_error(
                     "count",
-                    _("Annual leave days must be a positive whole number."),
+                    _("Automatic leave days must be a positive whole number."),
                 )
             else:
                 cleaned_data["total_days"] = annual_days
@@ -238,7 +239,7 @@ class UpdateLeaveTypeForm(ConditionForm):
     class Meta:
         model = LeaveType
         fields = "__all__"
-        exclude = ["is_active", "conditions"]
+        exclude = ["is_active", "conditions", "auto_annual_leave"]
         widgets = {
             "period_in": forms.HiddenInput(),
             "total_days": forms.HiddenInput(),
@@ -276,7 +277,7 @@ class UpdateLeaveTypeForm(ConditionForm):
         cleaned_data = super().clean()
         if "exceed_days" in self.errors:
             del self.errors["exceed_days"]
-        if cleaned_data.get("auto_annual_leave"):
+        if cleaned_data.get("auto_leave_policy") != "none":
             cleaned_data["limit_leave"] = True
             cleaned_data["reset"] = False
             cleaned_data["payment"] = "paid"
@@ -284,13 +285,13 @@ class UpdateLeaveTypeForm(ConditionForm):
             if cleaned_data.get("period_in") != "day":
                 self.add_error(
                     "period_in",
-                    _("Automatic annual leave must be configured in days."),
+                    _("Automatic leave must be configured in days."),
                 )
             annual_days = cleaned_data.get("count")
             if annual_days is None or annual_days <= 0 or not float(annual_days).is_integer():
                 self.add_error(
                     "count",
-                    _("Annual leave days must be a positive whole number."),
+                    _("Automatic leave days must be a positive whole number."),
                 )
             else:
                 cleaned_data["total_days"] = annual_days
@@ -762,7 +763,7 @@ class UserLeaveRequestCreationForm(BaseModelForm):
         ]:
             self.fields[field_name].widget.attrs.update(
                 {
-                    "hx-include": "#myleaverequestForm",
+                    "hx-include": "closest form",
                     "hx-target": "#createTitle",
                     "hx-swap": "afterend",
                     "hx-trigger": "change",

@@ -11,14 +11,18 @@ def leave_reset():
     pre_scheduler.send(sender=leave_reset)
     from leave.models import LeaveType
     from leave.annual_policy import sync_annual_leave
+    from leave.sick_policy import sync_sick_leave
 
     today = datetime.now()
     today_date = timezone.localdate()
-    for annual_type in LeaveType.objects.filter(auto_annual_leave=True):
-        for assignment in annual_type.employee_available_leave.all():
-            sync_annual_leave(assignment.employee_id, annual_type, today_date)
+    for auto_type in LeaveType.objects.exclude(auto_leave_policy="none"):
+        for assignment in auto_type.employee_available_leave.all():
+            if auto_type.auto_leave_policy == "annual":
+                sync_annual_leave(assignment.employee_id, auto_type, today_date)
+            else:
+                sync_sick_leave(assignment.employee_id, auto_type, today_date)
 
-    leave_types = LeaveType.objects.filter(reset=True, auto_annual_leave=False)
+    leave_types = LeaveType.objects.filter(reset=True, auto_leave_policy="none")
     # Looping through filtered leave types with reset is true
     for leave_type in leave_types:
         # Looping through all available leaves

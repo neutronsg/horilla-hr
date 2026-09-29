@@ -106,7 +106,7 @@ class AnnualBalanceIntegrationTests(TestCase):
         self.leave_type = LeaveType.objects.create(
             name="Annual Leave",
             total_days=14,
-            auto_annual_leave=True,
+            auto_leave_policy="annual",
             carryforward_type="carryforward",
             carryforward_max=14,
         )
@@ -137,6 +137,26 @@ class AnnualBalanceIntegrationTests(TestCase):
             self.employee, self.leave_type, date(2025, 5, 1)
         )
         self.assertEqual(assignment.available_days, 3)  # Five earned, two used.
+
+    def test_sync_with_selected_company_can_lock_assignment(self):
+        from leave.annual_policy import sync_annual_leave
+        from leave.models import AvailableLeave
+
+        with patch("leave.annual_policy.timezone.localdate", return_value=date(2025, 4, 1)):
+            assignment = AvailableLeave.objects.create(
+                employee_id=self.employee,
+                leave_type_id=self.leave_type,
+            )
+        company_id = self.employee.employee_work_info.company_id_id
+        with patch(
+            "base.horilla_company_manager.get_selected_company",
+            return_value=company_id,
+        ):
+            synced = sync_annual_leave(
+                self.employee, self.leave_type, date(2025, 5, 1)
+            )
+        self.assertEqual(synced.pk, assignment.pk)
+        self.assertEqual(synced.available_days, 5)
 
     def test_approved_unpaid_requests_reduce_credited_service_months(self):
         from leave.models import AvailableLeave, LeaveRequest, LeaveType

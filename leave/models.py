@@ -242,6 +242,18 @@ class LeaveType(HorillaModel):
     period_in = models.CharField(max_length=30, choices=TIME_PERIOD, default="day")
     limit_leave = models.BooleanField(default=True, verbose_name=_("Limit Leave Days"))
     total_days = models.FloatField(null=True, default=1)
+    auto_leave_policy = models.CharField(
+        max_length=24,
+        choices=[
+            ("none", _("Manual")),
+            ("annual", _("Annual leave")),
+            ("outpatient_sick", _("Outpatient sick leave")),
+            ("hospitalisation", _("Hospitalisation leave")),
+        ],
+        default="none",
+        verbose_name=_("Automatic Leave Policy"),
+        help_text=_("Use MOM service-based entitlement for this paid leave type."),
+    )
     auto_annual_leave = models.BooleanField(
         default=False,
         verbose_name=_("Auto Calculate Annual Leave"),
@@ -443,11 +455,12 @@ class LeaveType(HorillaModel):
         from base.auth_backends import stamp_company_on_create
 
         stamp_company_on_create(self)
+        self.auto_annual_leave = self.auto_leave_policy == "annual"
 
-        if self.auto_annual_leave:
+        if self.auto_leave_policy != "none":
             if self.period_in != "day":
                 raise ValidationError(
-                    {"period_in": _("Automatic annual leave must be configured in days.")}
+                    {"period_in": _("Automatic leave must be configured in days.")}
                 )
             if (
                 self.total_days is None
@@ -456,12 +469,15 @@ class LeaveType(HorillaModel):
                 or not float(self.total_days).is_integer()
             ):
                 raise ValidationError(
-                    {"total_days": _("Annual leave days must be a positive whole number.")}
+                    {"total_days": _("Automatic leave days must be a positive whole number.")}
                 )
             self.payment = "paid"
             self.payment_type = "paid"
             self.limit_leave = True
             self.reset = False
+            if self.auto_leave_policy != "annual":
+                self.carryforward_type = "no carryforward"
+                self.carryforward_max = None
 
         if (
             self.carryforward_type != "no carryforward"
@@ -860,14 +876,29 @@ class AvailableLeave(HorillaModel):
         """
         Reusable method to compute fields normally set in save().
         """
-        if self.pk is None and self.leave_type_id.auto_annual_leave:
-            from leave.annual_policy import entitlement_for_assignment
+        if self.pk is None and self.leave_type_id.auto_leave_policy != "none":
+            if self.leave_type_id.auto_leave_policy == "annual":
+                from leave.annual_policy import entitlement_for_assignment
 
-            entitlement = entitlement_for_assignment(self)
+                entitlement = entitlement_for_assignment(self)
+                earned_days = entitlement.earned_days if entitlement else 0
+                period_start = entitlement.service_year_start if entitlement else None
+            else:
+                from leave.sick_policy import (
+                    approved_sick_days,
+                    entitlement_for_assignment,
+                )
+
+                entitlement = entitlement_for_assignment(self)
+                earned_days = (
+                    max(0, entitlement.earned_days - approved_sick_days(self, entitlement))
+                    if entitlement else 0
+                )
+                period_start = entitlement.usage_start if entitlement else None
             if entitlement:
-                self.available_days = entitlement.earned_days
+                self.available_days = earned_days
                 self.auto_entitlement_days = entitlement.earned_days
-                self.auto_service_year_start = entitlement.service_year_start
+                self.auto_service_year_start = period_start
             else:
                 self.available_days = 0
             self.reset_date = None
@@ -881,7 +912,7 @@ class AvailableLeave(HorillaModel):
         # Logic for expired_date
         if (
             self.leave_type_id.carryforward_type == "carryforward expire"
-            and not self.leave_type_id.auto_annual_leave
+            and self.leave_type_id.auto_leave_policy == "none"
         ):
             expiry_date = self.assigned_date
             if self.leave_type_id.carryforward_expire_date:
@@ -1577,18 +1608,19 @@ class LeaveRequest(HorillaModel):
         restricted_leaves = RestrictLeave.objects.all()
         request = getattr(horilla_middlewares._thread_locals, "request", None)
 
-        if leave_type.auto_annual_leave:
+        if leave_type.auto_leave_policy != "none":
             from leave.annual_policy import sync_annual_leave
             from leave.annual_entitlement import add_months
+            from leave.sick_policy import sync_sick_leave
 
             work_info = getattr(self.employee_id, "employee_work_info", None)
             joining_date = getattr(work_info, "date_joining", None)
             if not joining_date:
-                raise ValidationError(_("Joining date is required for annual leave."))
+                raise ValidationError(_("Joining date is required for automatic leave."))
             eligible_date = add_months(joining_date, 3)
             if timezone.localdate() < eligible_date or self.start_date < eligible_date:
                 raise ValidationError(
-                    _("Paid annual leave is available after three months of service.")
+                    _("Paid leave is available after three months of service.")
                 )
             employment_end = getattr(work_info, "contract_end_date", None)
             if employment_end and (
@@ -1596,9 +1628,12 @@ class LeaveRequest(HorillaModel):
                 or (self.end_date and self.end_date > employment_end)
             ):
                 raise ValidationError(
-                    _("Annual leave cannot be taken after the employment end date.")
+                    _("Paid leave cannot be taken after the employment end date.")
                 )
-            sync_annual_leave(self.employee_id, leave_type)
+            if leave_type.auto_leave_policy == "annual":
+                sync_annual_leave(self.employee_id, leave_type)
+            else:
+                sync_sick_leave(self.employee_id, leave_type)
 
         # Check if leave type is assigned to employee
         if not AvailableLeave.objects.filter(
@@ -1690,7 +1725,7 @@ class LeaveRequest(HorillaModel):
 
         forcated_days = (
             0
-            if leave_type.auto_annual_leave
+            if leave_type.auto_leave_policy != "none"
             else available_leave.forcasted_leaves(self.start_date)
         )
 

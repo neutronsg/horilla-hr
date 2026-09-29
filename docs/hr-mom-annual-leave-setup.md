@@ -1,12 +1,12 @@
-# HR guide: Singapore annual leave in Horilla
+# HR guide: Singapore annual and sick leave in Horilla
 
-Use this guide for full-time employees whose annual leave is measured in days. Ask your system administrator to enable the updated annual leave feature and set the application time zone to **Asia/Singapore** before using it.
+Use this guide for full-time employees whose leave is measured in days. Set the application time zone to **Asia/Singapore**.
 
 ## Set up the leave type
 
 1. Open **Leave → Leave Types** and create or edit the annual leave type.
 2. Set **Limit Leave Days** on. In **Total Days**, enter the yearly allowance from the employment contract, such as **14**. This is the allowance from year one; it is not a balance credited upfront.
-3. Turn on **Auto Calculate Annual Leave**. Set the payment field to **Paid** and leave **Reset** off. The form saves automatic annual leave as paid leave without a fixed reset.
+3. Set **Automatic Leave Policy** to **Annual leave**. The form saves automatic annual leave as paid leave without a fixed reset.
 4. Set **Carryforward Type** according to your policy. For employees covered by Part 4 of the Employment Act, select **Carryforward** and set **Carryforward Max** high enough to preserve all unused statutory days. A max of **14** preserves the full balance for a 14-day type. MOM requires unused statutory leave to remain available for the next 12 months; check the contract for treatment of days above the statutory minimum.
 5. Save the leave type, then choose **Assign Leave** on that leave type and select the employees. The displayed balance is calculated from their service dates, so do not enter 14 days manually into each balance.
 
@@ -35,4 +35,28 @@ The calculation uses **completed months ÷ 12 × the leave type's yearly days**,
 
 **Scope:** This setup is for full-time, day-based annual leave. Part-time employees need MOM's hours-based calculation.
 
-Sources: [MOM annual leave eligibility and entitlement](https://www.mom.gov.sg/employment-practices/leave/annual-leave/eligibility-and-entitlement), [MOM treatment of unused leave](https://www.mom.gov.sg/employment-practices/leave/annual-leave/special-situations), [MOM part-time leave](https://www.mom.gov.sg/employment-practices/part-time-employment/leave).
+## Set up paid sick leave
+
+1. Create or edit an **Outpatient Sick Leave** type. Set **Automatic Leave Policy** to **Outpatient sick leave** and yearly **Total Days** to the company allowance. MOM's minimum is **14 days** after six months, so a lower figure such as 12 is automatically raised to 14.
+2. Create a separate **Hospitalisation Leave** type. Set **Automatic Leave Policy** to **Hospitalisation leave** and yearly **Total Days** to the company allowance, at least **60 days** for the MOM minimum. Assign **both** sick leave types to eligible employees. The 60-day hospitalisation cap includes outpatient sick leave days; outpatient days reduce both remaining balances.
+3. Leave **Reset** off and **Carryforward Type** at **No Carryforward** for both. Automatic sick leave uses the calendar year and does not carry unused days forward.
+4. Set **Require Attachment** to **Yes** if HR requires an MC upload with the application. HR must check medical certification and the employee's 48-hour notice; the balance calculation does not verify these documents or notice timing.
+5. Set **Exclude Holidays** and **Exclude Company Holidays** to **Yes**, and configure the company's non-working days, so sick leave is charged for working days only. For leave crossing 31 December, submit separate requests for each calendar year so each part uses that year's balance.
+
+## Quick check: MOM sick leave minimum
+
+For an employee who joins on **13 February 2023**:
+
+| Date | Outpatient entitlement | Hospitalisation entitlement (including outpatient) |
+| --- | ---: | ---: |
+| 12 May 2023 | 0 | 0 |
+| 13 May 2023 | 5 | 15 |
+| 13 June 2023 | 8 | 30 |
+| 13 July 2023 | 11 | 45 |
+| 13 August 2023 | 14 | 60 |
+
+The balances shown are before approved sick leave is deducted. After six months, the full entitlement resets each **1 January**. During a new hire's first six months, sick leave taken since joining still counts across New Year; the full calendar-year reset begins at six completed months. An employee who has used two outpatient days after six months has **12 outpatient days** and **58 hospitalisation days** remaining.
+
+**Scope:** Automatic sick leave uses day-based allowances for full-time employees. For part-time staff, use MOM's hours-based calculation separately. HR remains responsible for checking each employee's Employment Act coverage and medical eligibility.
+
+Sources: [MOM annual leave](https://www.mom.gov.sg/employment-practices/leave/annual-leave/eligibility-and-entitlement), [MOM sick leave](https://www.mom.gov.sg/employment-practices/leave/sick-leave/eligibility-and-entitlement), [MOM calendar-year rule](https://www.mom.gov.sg/faq/sick-leave/how-is-sick-leave-and-hospitalisation-leave-calculated), [MOM first-six-month cross-year example](https://www.mom.gov.sg/faq/sick-leave/how-do-i-compute-my-sl-entitlement-if-my-1st-6-months-of-employment-spans-across-2-calendar-years), [MOM treatment of unused annual leave](https://www.mom.gov.sg/employment-practices/leave/annual-leave/special-situations), [MOM part-time leave](https://www.mom.gov.sg/employment-practices/part-time-employment/leave).

@@ -49,8 +49,20 @@ class MyLeaveRequestView(TemplateView):
         context data
         """
         context = super().get_context_data(**kwargs)
+        from leave.annual_policy import sync_annual_leave
+        from leave.sick_policy import sync_sick_leave
+
+        employee = self.request.user.employee_get
+        for assignment in AvailableLeave.objects.filter(
+            employee_id=employee
+        ).select_related("leave_type_id"):
+            policy = assignment.leave_type_id.auto_leave_policy
+            if policy == "annual":
+                sync_annual_leave(employee, assignment.leave_type_id)
+            elif policy != "none":
+                sync_sick_leave(employee, assignment.leave_type_id)
         user_leave = AvailableLeave.objects.filter(
-            employee_id=self.request.user.employee_get
+            employee_id=employee
         )
         context["user_leaves"] = user_leave
         return context
