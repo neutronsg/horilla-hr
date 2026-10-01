@@ -210,6 +210,18 @@ class Contract(HorillaModel):
         verbose_name=_("Pay Frequency"),
     )
     wage = models.FloatField(verbose_name=_("Basic Salary"), null=True, default=0)
+    payroll_workweek = models.CharField(
+        max_length=16, blank=True, default="",
+        choices=[("", _("Use shift / company weekly off days")),
+                 ("five_day", _("Monday–Friday")), ("six_day", _("Monday–Saturday")),
+                 ("seven_day", _("Every day"))],
+        verbose_name=_("Payroll Workweek"),
+        help_text=_("Used for incomplete-month salary. For half-day schedules, select a shift instead."),
+    )
+    cpf_exempt = models.BooleanField(default=False, verbose_name=_("CPF Exempt"))
+    cpf_exemption_reason = models.CharField(max_length=255, blank=True, default="", verbose_name=_("CPF Exemption Basis"))
+    sdl_exempt = models.BooleanField(default=False, verbose_name=_("SDL Exempt"))
+    sdl_exemption_reason = models.CharField(max_length=255, blank=True, default="", verbose_name=_("SDL Exemption Basis"))
     filing_status = models.ForeignKey(
         FilingStatus,
         on_delete=models.PROTECT,
@@ -446,6 +458,9 @@ class Contract(HorillaModel):
         return f"{self.contract_name} -{self.contract_start_date} - {self.contract_end_date}"
 
     def clean(self):
+        for flag, reason in (("cpf_exempt", "cpf_exemption_reason"), ("sdl_exempt", "sdl_exemption_reason")):
+            if getattr(self, flag) and not getattr(self, reason).strip():
+                raise ValidationError({reason: _("Record the exemption basis and supporting document reference.")})
         if self.contract_end_date is not None:
             if self.contract_end_date < self.contract_start_date:
                 raise ValidationError(
@@ -1426,6 +1441,13 @@ class Deduction(HorillaModel):
         ("max_amount", _("Provide max amount")),
     ]
 
+    statutory_type = models.CharField(
+        max_length=8, default="none",
+        choices=[("none", _("Other deduction")), ("cpf", _("CPF")),
+                 ("cdac", _("CDAC")), ("ecf", _("ECF")), ("sinda", _("SINDA")), ("mbmf", _("MBMF"))],
+        verbose_name=_("Statutory Deduction Type"),
+        help_text=_("CPF-exempt internships also exclude CDAC, ECF and SINDA. MBMF follows separate eligibility rules."),
+    )
     title = models.CharField(max_length=255)
     one_time_date = models.DateField(
         null=True,
@@ -2047,6 +2069,16 @@ class SalaryStructure(HorillaModel):
             context={"instance": self},
         )
 
+    def get_additional_deductions_detail_col(self):
+        employees = [c.employee_id for c in self._active_contracts().select_related("employee_id")]
+        rows = []
+        for employee in employees:
+            deductions = Deduction.objects.filter(specific_employees=employee).exclude(pk__in=self.deductions.values("pk"))
+            contract = employee.contract_set.filter(contract_status="active").first()
+            if deductions.exists() or (contract and (contract.cpf_exempt or contract.sdl_exempt)):
+                rows.append({"employee": employee, "deductions": deductions, "contract": contract})
+        return render_template(path="cbv/salary_structure/additional_deductions.html", context={"rows": rows})
+
     def salary_structure_detail_actions(self):
         """
         Footer actions for the detail view
@@ -2123,6 +2155,8 @@ class Payslip(HorillaModel):
     @property
     def sdl_display(self):
         """Indicative employer SDL; never included in employee deductions."""
+        if self.pay_head_data.get("sdl_exempt", False):
+            return 0
         remuneration = float(self.gross_pay or 0)
         if remuneration <= 0:
             return 0

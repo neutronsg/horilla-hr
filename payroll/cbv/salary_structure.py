@@ -277,12 +277,14 @@ class SalaryStructureDetailView(HorillaDetailedView):
         (_("Employees"), "get_employees_detail_col"),
         (_("Allowances"), "get_allowances_detail_col", True),
         (_("Deductions"), "get_deductions_detail_col", True),
+        (_("Additional Employee Deductions / Exemptions"), "get_additional_deductions_detail_col", True),
     ]
 
     cols = {
         "get_employees_detail_col": 12,
         "get_allowances_detail_col": 6,
         "get_deductions_detail_col": 6,
+        "get_additional_deductions_detail_col": 12,
     }
 
     action_method = "salary_structure_detail_actions"

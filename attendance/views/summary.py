@@ -95,7 +95,7 @@ def _count_leave_days_in_range(leave_qs, from_date, to_date, off_dates):
 
 
 def build_monthly_summary(
-    from_date, to_date, employee_qs, assume_future_present=False
+    from_date, to_date, employee_qs, assume_future_present=False, payroll_schedule=False
 ):
     """
     Compute per-employee attendance summary for [from_date, to_date].
@@ -275,6 +275,7 @@ def build_monthly_summary(
     # Per-employee per-date leave tracking (paid / unpaid, for conflict detection)
     leave_dates_per_emp = defaultdict(set)
     paid_day_dates_per_emp = defaultdict(set)  # {emp_pk: set(paid-leave dates)}
+    unpaid_day_fractions = defaultdict(dict)
     unpaid_day_dates_per_emp = defaultdict(set)  # {emp_pk: set(unpaid-leave dates)}
     for _lr in all_leaves:
         _s = max(_lr.start_date, from_date)
@@ -285,6 +286,9 @@ def build_monthly_summary(
                 paid_day_dates_per_emp[_lr.employee_id_id].add(_d)
             else:
                 unpaid_day_dates_per_emp[_lr.employee_id_id].add(_d)
+                half = ((_d == _lr.start_date and _lr.start_date_breakdown != "full_day")
+                        or (_d == (_lr.end_date or _lr.start_date) and _lr.end_date_breakdown != "full_day"))
+                unpaid_day_fractions[_lr.employee_id_id][_d] = 0.5 if half else 1.0
 
     # -- 4. Roster-based week-off per employee (single DB hit) ---------------
     roster_qs = Roster.objects.filter(
@@ -351,6 +355,14 @@ def build_monthly_summary(
             if emp.pk in roster_has
             else company_off_dates
         )
+        _payroll_weights = {}
+        if payroll_schedule:
+            from payroll.calendar import working_day_weights
+            from payroll.models.models import Contract
+            _contract = Contract.objects.filter(employee_id=emp, contract_status="active").first()
+            if _contract and _contract.wage_type == "monthly":
+                _payroll_weights = working_day_weights(emp, _contract, from_date, to_date)
+                _emp_off = {day for day, weight in _payroll_weights.items() if weight == 0}
         _resolutions = resolutions_per_emp.get(emp.pk, {})
         _shift_pk = emp_shift_map.get(emp.pk)
         _shift_sched = shift_day_secs.get(_shift_pk, {}) if _shift_pk else {}
@@ -361,11 +373,14 @@ def build_monthly_summary(
 
         for d in all_dates_in_range:
             res = _resolutions.get(d)
+            day_weight = _payroll_weights.get(d, 1.0)
 
             # Direct HR override — use as-is
             bucket_info = _RES_BUCKET.get(res)
             if bucket_info is not None:
                 bucket, val = bucket_info
+                if _payroll_weights and bucket not in ("week_off", "holiday"):
+                    val *= day_weight
                 if bucket == "present":
                     present += val
                 elif bucket == "paid_leave":
@@ -401,9 +416,9 @@ def build_monthly_summary(
                     if _full_secs > 0
                     else (1.0 if _actual_secs > 0 else 0.0)
                 )
-                present += val
+                present += val * day_weight
                 if val < 1.0:
-                    absent += 1.0 - val
+                    absent += (1.0 - val) * day_weight
                 _day_manual = _daily_hrs.get(d)
                 hours_second += _day_manual if _day_manual is not None else _actual_secs
                 continue
@@ -417,28 +432,28 @@ def build_monthly_summary(
                 elif d in _emp_off:
                     week_off += 1.0  # WO — attendance on week-off
                 else:
-                    present += val
+                    present += val * day_weight
                     # Half-day (0.5) or zero-hour: remaining fraction is absent
                     if val < 1.0:
-                        absent += 1.0 - val
+                        absent += (1.0 - val) * day_weight
                 # Actual hours (per-day manual override wins)
                 _day_manual = _daily_hrs.get(d)
                 hours_second += (
                     _day_manual if _day_manual is not None else _att_secs.get(d, 0)
                 )
             elif d in _paid_dates:
-                paid_leave += 1.0
+                paid_leave += day_weight
             elif d in _unpaid_dates:
-                unpaid_leave += 1.0
+                unpaid_leave += day_weight
             elif d in holiday_dates_set:
                 holiday_c += 1.0
             elif d in _emp_off:
                 week_off += 1.0
             elif d not in off_set:
                 if assume_future_present and d > today:
-                    present += 1.0
+                    present += day_weight
                 else:
-                    absent += 1.0  # working day with no activity
+                    absent += day_weight  # working day with no activity
 
         # Conflict detection (uses raw data, not overrides). Attendance on a
         # holiday/week-off is normal overtime work, not a data discrepancy —
@@ -501,10 +516,10 @@ def build_monthly_summary(
             {
                 "employee": emp,
                 "present": present,
-                "paid_leave": int(paid_leave),
-                "unpaid_leave": int(unpaid_leave),
+                "paid_leave": paid_leave if _payroll_weights else int(paid_leave),
+                "unpaid_leave": unpaid_leave if _payroll_weights else int(unpaid_leave),
                 "absent": absent,
-                "total_working": total_working,
+                "total_working": sum(_payroll_weights.values()) if _payroll_weights else total_working,
                 "week_off": int(week_off),
                 "holiday": int(holiday_c),
                 "conflict_days": conflict_days,

@@ -151,7 +151,7 @@ class AnnualBalanceIntegrationTests(TestCase):
         )
         self.assertEqual(assignment.available_days, 3)  # Five earned, two used.
 
-    def test_new_assignment_after_anniversary_credits_earned_days(self):
+    def test_new_assignment_uses_january_in_subsequent_year(self):
         from leave.models import AvailableLeave
 
         self.employee.employee_work_info.date_joining = date(2025, 8, 11)
@@ -160,9 +160,9 @@ class AnnualBalanceIntegrationTests(TestCase):
             assignment = AvailableLeave.objects.create(
                 employee_id=self.employee, leave_type_id=self.leave_type
             )
-        self.assertEqual(assignment.auto_service_year_start, date(2026, 8, 11))
-        self.assertEqual(assignment.auto_entitlement_days, 1)
-        self.assertEqual(assignment.available_days, 1)
+        self.assertEqual(assignment.auto_service_year_start, date(2026, 1, 1))
+        self.assertEqual(assignment.auto_entitlement_days, 11)
+        self.assertEqual(assignment.available_days, 11)
 
     def test_sync_with_selected_company_can_lock_assignment(self):
         from leave.annual_policy import sync_annual_leave

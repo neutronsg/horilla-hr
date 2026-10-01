@@ -1,3 +1,4 @@
+{% if proration and wage_type == "monthly" %}<div class="p-3 text-sm">{% load i18n %}{% for month in proration %}<p>{% trans "Salary proration" %}: {{ month.working_days_on_period }} / {{ month.working_days_on_month }} {% trans "working days" %} ({{ month.start_date }} – {{ month.end_date }})</p>{% endfor %}</div>{% endif %}
 {% load static i18n horillafilters %}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
     <div class="bg-primary-300 p-3 rounded-md">
@@ -6,14 +7,14 @@
             <p>{{ net_pay|floatformat:2|currency_symbol_position }}</p>
         </div>
         <div class="grid sm:flex text-sm justify-between mb-2 px-2">
-            <p class="text-sm">{% trans "Actual Basic Pay" %}</p>
+            <p class="text-sm">{% trans "Contract Basic Pay" %}</p>
             <p class="font-semibold">
                 {{ instance.contract_wage|currency_symbol_position }}
             </p>
         </div>
         <div class="grid sm:flex text-sm justify-between mb-2 px-2">
             <p class="text-sm flex items-center gap-3">
-                <span>{% trans "Updated Basic Pay" %}</span>
+                <span>{% trans "Earned Basic Pay" %}</span>
                 <button>
                     <img
                         src="{% static 'horilla_theme/assets/img/icons/info.svg' %}"

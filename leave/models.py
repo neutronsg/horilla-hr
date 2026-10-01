@@ -685,6 +685,7 @@ class AvailableLeave(HorillaModel):
     total_leave_days = models.FloatField(default=0, verbose_name=_("Total Leave Days"))
     auto_service_year_start = models.DateField(null=True, blank=True)
     auto_entitlement_days = models.FloatField(default=0)
+    auto_period_basis = models.CharField(max_length=16, blank=True, default="", editable=False)
     assigned_date = models.DateField(
         default=timezone.now, verbose_name=_("Assigned Date")
     )
@@ -878,11 +879,12 @@ class AvailableLeave(HorillaModel):
         """
         if self.pk is None and self.leave_type_id.auto_leave_policy != "none":
             if self.leave_type_id.auto_leave_policy == "annual":
-                from leave.annual_policy import entitlement_for_assignment
+                from leave.annual_policy import entitlement_for_assignment, _approved_current_year_days
 
                 entitlement = entitlement_for_assignment(self)
-                earned_days = entitlement.earned_days if entitlement else 0
+                earned_days = (entitlement.earned_days - _approved_current_year_days(self, entitlement.service_year_start, timezone.localdate())) if entitlement else 0
                 period_start = entitlement.service_year_start if entitlement else None
+                self.auto_period_basis = "calendar_year"
             else:
                 from leave.sick_policy import (
                     approved_sick_days,

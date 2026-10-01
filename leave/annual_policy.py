@@ -78,20 +78,30 @@ def entitlement_for_assignment(assignment, as_of=None):
         return calculate_entitlement(
             joining_date,
             as_of,
-            configured_annual_days=int(assignment.leave_type_id.total_days or 0),
+            configured_annual_days=float(assignment.leave_type_id.total_days or 0),
             employment_end_date=work_info.contract_end_date,
+            period_basis="calendar_year",
         )
-    from leave.annual_entitlement import service_year_start
-
-    year_start = service_year_start(joining_date, effective_end)
+    calendar_unpaid = {
+        year: _unpaid_days(assignment.employee_id, max(joining_date, date(year, 1, 1)),
+                          min(effective_end, date(year, 12, 31)))
+        for year in range(joining_date.year, effective_end.year + 1)
+    }
+    service_unpaid = {}
+    for index in range(effective_end.year - joining_date.year + 1):
+        start = add_months(joining_date, index * 12)
+        if start <= effective_end:
+            service_unpaid[index] = _unpaid_days(
+                assignment.employee_id, start, min(effective_end, add_months(start, 12) - date.resolution)
+            )
     return calculate_entitlement(
         joining_date,
         as_of,
-        configured_annual_days=int(assignment.leave_type_id.total_days or 0),
+        configured_annual_days=float(assignment.leave_type_id.total_days or 0),
         employment_end_date=work_info.contract_end_date,
-        unpaid_days_in_service_year=_unpaid_days(
-            assignment.employee_id, year_start, effective_end
-        ),
+        period_basis="calendar_year",
+        unpaid_by_calendar_year=calendar_unpaid,
+        unpaid_by_service_year=service_unpaid,
     )
 
 
@@ -104,7 +114,7 @@ def _approved_current_year_days(assignment, start, end):
         leave_type_id=assignment.leave_type_id,
         status="approved",
         start_date__gte=start,
-        start_date__lte=end,
+        start_date__lte=date(start.year, 12, 31),
     )
     return sum(float(request.approved_available_days or 0) for request in requests)
 
@@ -147,7 +157,7 @@ def sync_annual_leave(employee, leave_type, as_of=None):
     if entitlement is None:
         return assignment
     as_of = as_of or timezone.localdate()
-    if assignment.auto_service_year_start is None:
+    if assignment.auto_period_basis != "calendar_year" or assignment.auto_service_year_start is None:
         assignment.available_days = entitlement.earned_days - _approved_current_year_days(
             assignment, entitlement.service_year_start, as_of
         )
@@ -160,7 +170,7 @@ def sync_annual_leave(employee, leave_type, as_of=None):
             )
         else:
             while assignment.auto_service_year_start < entitlement.service_year_start:
-                next_year_start = add_months(assignment.auto_service_year_start, 12)
+                next_year_start = date(assignment.auto_service_year_start.year + 1, 1, 1)
                 prior_year = entitlement_for_assignment(
                     assignment, next_year_start - date.resolution
                 )
@@ -174,12 +184,13 @@ def sync_annual_leave(employee, leave_type, as_of=None):
                 assignment.auto_service_year_start = next_year_start
             assignment.available_days = entitlement.earned_days
             if assignment.carryforward_days:
-                assignment.expired_date = add_months(entitlement.service_year_start, 12)
+                assignment.expired_date = date(entitlement.service_year_start.year + 1, 1, 1)
     else:
         assignment.available_days += (
             entitlement.earned_days - assignment.auto_entitlement_days
         )
     assignment.auto_entitlement_days = entitlement.earned_days
     assignment.auto_service_year_start = entitlement.service_year_start
+    assignment.auto_period_basis = "calendar_year"
     assignment.save()
     return assignment

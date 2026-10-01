@@ -116,3 +116,26 @@ class FuturePayslipDateTests(TestCase):
         self.assertEqual(slip.status, "draft")
         self.assertEqual(summary.call_args.kwargs["assume_future_present"], True)
         notify.assert_not_called()
+
+    def test_batch_does_not_reuse_another_employees_joining_date(self):
+        start, end = date(2030, 1, 1), date(2030, 1, 31)
+        self.employee.employee_first_name = "A Midmonth"
+        self.employee.save()
+        Contract.objects.filter(employee_id=self.employee).update(contract_start_date=date(2030, 1, 15))
+        other = make_employee(company=self.employee.employee_work_info.company_id, email="full-month@payroll.test", first_name="Z Fullmonth")
+        Contract.objects.filter(employee_id=other).delete()
+        Contract.objects.create(contract_name="Full month", employee_id=other, contract_start_date=start, contract_status="active", wage=3000)
+        data = self.form_data(start, end)
+        data.setlist("employee_id", [str(self.employee.pk), str(other.pk)])
+        def calculate(employee, first, last, **kwargs):
+            return {"start_date": first, "end_date": last, "contract_wage": 3000,
+                    "basic_pay": 3000, "gross_pay": 3000, "net_pay": 3000, "total_deductions": 0,
+                    "json_data": json.dumps({"start_date": str(first), "end_date": str(last)}), "installments": []}
+        self.client.force_login(self.user)
+        with patch("horilla.settings.PAYROLL_USE_ATTENDANCE", False), patch("payroll.views.component_views.payroll_calculation", side_effect=calculate) as calculation, patch("payroll.views.component_views.calculate_employer_contribution"):
+            response = self.client.post(reverse("generate-payslip"), {key: data.getlist(key) if key == "employee_id" else data[key] for key in data})
+        self.assertEqual(response.status_code, 302)
+        starts = {call.args[0].pk: call.args[1] for call in calculation.call_args_list}
+        self.assertEqual(len(starts), 2, (response.url, [str(m) for m in response.wsgi_request._messages], list(Contract.objects.values("employee_id", "contract_status", "contract_start_date"))))
+        self.assertEqual(starts[self.employee.pk], date(2030, 1, 15))
+        self.assertEqual(starts[other.pk], start)

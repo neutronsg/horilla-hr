@@ -474,6 +474,8 @@ def calculate_tax_deduction(*_args, **kwargs):
     )
     deductions_amt = []
     serialized_deductions = []
+    from payroll.statutory import eligible_deductions
+    deductions = eligible_deductions(deductions, employee)
     for deduction in deductions:
         calculation_function = calculation_mapping.get(deduction.based_on)
         amount = calculation_function(
@@ -546,6 +548,8 @@ def calculate_pre_tax_deduction(*_args, **kwargs):
     pre_tax_deductions_amt = []
     serialized_deductions = []
 
+    from payroll.statutory import eligible_deductions
+    deductions = eligible_deductions(deductions, employee)
     for deduction in deductions:
         if deduction.is_condition_based:
             conditions = list(
@@ -655,6 +659,8 @@ def calculate_post_tax_deduction(*_args, **kwargs):
     serialized_deductions = []
     serialized_net_pay_deductions = []
 
+    from payroll.statutory import eligible_deductions
+    deductions = eligible_deductions(deductions, employee)
     for deduction in deductions:
         if deduction.is_condition_based:
             condition_field = deduction.field

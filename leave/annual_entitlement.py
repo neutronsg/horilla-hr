@@ -63,6 +63,9 @@ def calculate_entitlement(
     configured_annual_days: int,
     employment_end_date: date | None = None,
     unpaid_days_in_service_year: float = 0,
+    period_basis: str = "service_year",
+    unpaid_by_calendar_year: dict | None = None,
+    unpaid_by_service_year: dict | None = None,
 ) -> AnnualEntitlement:
     """Calculate earned whole days for the employee's current service year.
 
@@ -78,8 +81,20 @@ def calculate_entitlement(
     if effective_date < joining_date:
         return AnnualEntitlement(joining_date, eligible_date, 0, 0, 0)
 
-    year_start = service_year_start(joining_date, effective_date)
-    completed_years = year_start.year - joining_date.year
+    if period_basis == "calendar_year":
+        return calendar_entitlement(
+            joining_date, effective_date, configured_annual_days,
+            unpaid_by_calendar_year or {effective_date.year: unpaid_days_in_service_year},
+            unpaid_by_service_year if unpaid_by_service_year is not None else {
+                service_year_start(joining_date, effective_date).year - joining_date.year: unpaid_days_in_service_year
+            },
+        )
+
+    anniversary = service_year_start(joining_date, effective_date)
+    completed_years = anniversary.year - joining_date.year
+    if period_basis not in ("service_year", "calendar_year"):
+        raise ValueError("Unknown annual leave period basis")
+    year_start = anniversary
     annual_days = max(configured_annual_days, min(7 + completed_years, 14))
     months = min(
         12,
@@ -93,7 +108,7 @@ def calculate_entitlement(
     # first completed month.
     earned_days = (
         int(
-            (Decimal(months) * Decimal(annual_days) / Decimal(12)).quantize(
+            (Decimal(months) * Decimal(str(annual_days)) / Decimal(12)).quantize(
                 Decimal("1"), rounding=ROUND_HALF_UP
             )
         )
@@ -103,3 +118,35 @@ def calculate_entitlement(
     return AnnualEntitlement(
         year_start, eligible_date, months, annual_days, earned_days
     )
+
+
+def calendar_entitlement(joined, effective_date, configured_days, calendar_unpaid, service_unpaid):
+    """Calendar-year accrual with a cumulative service-entitlement safeguard.
+
+    The safeguard preserves initial service spanning January and prevents
+    discarded partial months / separate rounding from reducing entitlement.
+    Historical credits are used only to check entitlement, never to invent
+    an employee's unused opening balance.
+    """
+    def rounded(months, days):
+        return int((Decimal(months) * Decimal(str(days)) / 12).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+    credited = 0
+    for year in range(joined.year, effective_date.year + 1):
+        first = max(joined, date(year, 1, 1))
+        last = min(effective_date, date(year, 12, 31))
+        anniversary = service_year_start(joined, last)
+        tenure = anniversary.year - joined.year
+        annual_days = max(configured_days, min(7 + tenure, 14))
+        months = min(12, completed_months(first, last, calendar_unpaid.get(year, 0)))
+        earned = 0
+        if completed_months(joined, last) >= 3:
+            service_total = 0
+            for service_year in range(tenure + 1):
+                service_start = add_months(joined, service_year * 12)
+                service_end = min(last, add_months(service_start, 12) - date.resolution)
+                service_months = min(12, completed_months(service_start, service_end, service_unpaid.get(service_year, 0)))
+                service_total += rounded(service_months, max(configured_days, min(7 + service_year, 14)))
+            earned = max(rounded(months, annual_days), service_total - credited)
+        credited += earned
+    return AnnualEntitlement(first, add_months(joined, 3), months, annual_days, earned)

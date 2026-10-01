@@ -18,6 +18,7 @@ import pandas as pd
 from django.apps import apps
 from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, QueryDict
 from django.shortcuts import redirect, render
@@ -173,6 +174,8 @@ def payroll_calculation(employee, start_date, end_date, month_summary=None):
 
     if not basic_pay_details:
         return None
+    start_date = basic_pay_details["effective_start_date"]
+    end_date = basic_pay_details["effective_end_date"]
     contract = basic_pay_details["contract"]
     contract_wage = basic_pay_details["contract_wage"]
     basic_pay = basic_pay_details["basic_pay"]
@@ -274,7 +277,7 @@ def payroll_calculation(employee, start_date, end_date, month_summary=None):
         + total_post_tax_deduction
         + total_tax_deductions
         + federal_tax
-        + loss_of_pay  # 1022
+        + loss_of_pay_amount
     )
 
     net_pay = gross_pay - total_deductions
@@ -306,8 +309,12 @@ def payroll_calculation(employee, start_date, end_date, month_summary=None):
     for deduction in update_net_pay_deductions:
         net_pay_deduction_list.append(deduction)
     net_pay = net_pay - net_pay_deductions["net_deduction"]
+    total_deductions = gross_pay - net_pay
     payslip_data = {
         "employee": employee,
+        "wage_type": contract.wage_type,
+        "sdl_exempt": contract.sdl_exempt,
+        "proration": working_days_details,
         "contract_wage": contract_wage,
         "basic_pay": basic_pay,
         "gross_pay": gross_pay,
@@ -1032,42 +1039,36 @@ def generate_payslip(request):
             # normal working-day/approved-leave computation.
             from horilla import settings as horilla_settings
 
-            att_summary = {}
             if horilla_settings.PAYROLL_USE_ATTENDANCE:
                 from attendance.views.summary import build_monthly_summary
-
-                att_rows, _total_working, _summary_totals = build_monthly_summary(
-                    start_date,
-                    end_date,
-                    employees,
-                    assume_future_present=end_date > date.today(),
-                )
-                att_summary = {row["employee"].pk: row for row in att_rows}
 
             for employee in employees:
                 contract = Contract.objects.filter(
                     employee_id=employee, contract_status="active"
                 ).first()
-                if start_date < contract.contract_start_date:
-                    start_date = contract.contract_start_date
+                from payroll.calendar import employment_period
+                employee_start, employee_end = employment_period(employee, contract, start_date, end_date)
 
-                if end_date < start_date:
+                if employee_end < employee_start:
                     messages.error(
                         request, _(f"{employee}'s contract has not started yet.")
                     )
                     emp_count -= 1
                     continue
 
-                payslip = payroll_calculation(
-                    employee,
-                    start_date,
-                    end_date,
-                    month_summary=(
-                        att_summary.get(employee.pk, {})
-                        if horilla_settings.PAYROLL_USE_ATTENDANCE
-                        else None
-                    ),
-                )
+                try:
+                    summary = None
+                    if horilla_settings.PAYROLL_USE_ATTENDANCE:
+                        rows, _working_total, _attendance_totals = build_monthly_summary(
+                            employee_start, employee_end, Employee.objects.filter(pk=employee.pk),
+                            assume_future_present=employee_end > date.today(), payroll_schedule=True,
+                        )
+                        summary = rows[0] if rows else None
+                    payslip = payroll_calculation(employee, employee_start, employee_end, month_summary=summary)
+                except ValidationError as error:
+                    messages.error(request, "; ".join(error.messages))
+                    emp_count -= 1
+                    continue
                 payslips.append(payslip)
                 json_data.append(payslip["json_data"])
 
@@ -1204,7 +1205,12 @@ def create_payslip(request, new_post_data=None):
                 employee = form.cleaned_data["employee_id"]
                 start_date = form.cleaned_data["start_date"]
                 end_date = form.cleaned_data["end_date"]
-                payslip_data = payroll_calculation(employee, start_date, end_date)
+                try:
+                    payslip_data = payroll_calculation(employee, start_date, end_date)
+                except ValidationError as error:
+                    form.add_error(None, error)
+                    return render(request, "payroll/payslip/create_payslip.html", {"individual_form": form})
+                start_date, end_date = payslip_data["start_date"], payslip_data["end_date"]
                 payslip_data["payslip"] = payslip
                 data = {}
                 data["employee"] = employee
