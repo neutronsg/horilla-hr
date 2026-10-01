@@ -168,3 +168,19 @@ class MomPayrollTests(TestCase):
         slip = Payslip.objects.create(employee_id=self.employee, start_date=date(2026, 9, 7), end_date=date(2026, 9, 30), pay_head_data={}, status="paid")
         with self.assertRaisesMessage(CommandError, "Only draft"):
             call_command("recalculate_draft_payslip", id=slip.pk, apply=True)
+
+
+class ExistingHistorySchemaTests(TestCase):
+    def test_migration_preserves_existing_payment_date_column(self):
+        from importlib import import_module
+        from django.apps import apps
+        from django.db import connection
+        migration = import_module("payroll.migrations.0009_contract_cpf_exempt_contract_cpf_exemption_reason_and_more")
+        model = apps.get_model("payroll", "HistoricalPayslip")
+        with connection.cursor() as cursor:
+            before = connection.introspection.get_table_description(cursor, model._meta.db_table)
+        migration.ensure_history_payment_date(apps, connection.schema_editor())
+        with connection.cursor() as cursor:
+            after = connection.introspection.get_table_description(cursor, model._meta.db_table)
+        self.assertEqual([column.name for column in before], [column.name for column in after])
+        self.assertEqual(sum(column.name == "payment_date" for column in after), 1)

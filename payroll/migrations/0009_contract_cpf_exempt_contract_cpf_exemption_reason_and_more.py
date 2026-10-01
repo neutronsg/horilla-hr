@@ -14,6 +14,20 @@ def classify_statutory_deductions(apps, schema_editor):
                 break
 
 
+def ensure_history_payment_date(apps, schema_editor):
+    model = apps.get_model("payroll", "HistoricalPayslip")
+    with schema_editor.connection.cursor() as cursor:
+        columns = schema_editor.connection.introspection.get_table_description(cursor, model._meta.db_table)
+    existing = next((column for column in columns if column.name == "payment_date"), None)
+    if existing:
+        if schema_editor.connection.introspection.get_field_type(existing.type_code, existing) != "DateField":
+            raise RuntimeError("Existing historical payment_date must be a date column")
+        return
+    field = models.DateField(blank=True, null=True)
+    field.set_attributes_from_name("payment_date")
+    schema_editor.add_field(model, field)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -76,10 +90,15 @@ class Migration(migrations.Migration):
             name='sdl_exemption_reason',
             field=models.CharField(blank=True, default='', max_length=255, verbose_name='SDL Exemption Basis'),
         ),
-        migrations.AddField(
-            model_name='historicalpayslip',
-            name='payment_date',
-            field=models.DateField(blank=True, help_text='Actual salary payment date; defaults to the 6th of the following month, moved to Monday when it falls on a weekend.', null=True, verbose_name='Payment Date'),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[migrations.RunPython(ensure_history_payment_date, migrations.RunPython.noop)],
+            state_operations=[
+                migrations.AddField(
+                    model_name='historicalpayslip',
+                    name='payment_date',
+                    field=models.DateField(blank=True, help_text='Actual salary payment date; defaults to the 6th of the following month, moved to Monday when it falls on a weekend.', null=True, verbose_name='Payment Date'),
+                ),
+            ],
         ),
         migrations.RunPython(classify_statutory_deductions, migrations.RunPython.noop),
     ]
