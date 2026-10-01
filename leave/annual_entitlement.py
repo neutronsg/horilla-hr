@@ -88,13 +88,16 @@ def calculate_entitlement(
     # The last day of month three completes three months of service (for
     # example, 1 January through 31 March). Leave can be booked from the next
     # day, but a contract ending today has already earned its pro-rated days.
+    # Three months of service is an initial eligibility gate. It must not
+    # restart at each work anniversary: later service years accrue from their
+    # first completed month.
     earned_days = (
         int(
             (Decimal(months) * Decimal(annual_days) / Decimal(12)).quantize(
                 Decimal("1"), rounding=ROUND_HALF_UP
             )
         )
-        if months >= 3
+        if months >= 3 or year_start > joining_date
         else 0
     )
     return AnnualEntitlement(

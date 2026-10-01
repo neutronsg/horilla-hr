@@ -93,6 +93,19 @@ class AnnualEntitlementExamples(SimpleTestCase):
         self.assertEqual(new_year.service_year_start, date(2025, 3, 14))
         self.assertEqual(new_year.earned_days, 0)
 
+    def test_three_month_wait_does_not_restart_after_anniversary(self):
+        examples = (
+            (date(2025, 8, 11), date(2026, 10, 1), 1, 1),
+            (date(2024, 8, 1), date(2026, 10, 1), 2, 2),
+        )
+        for joined, as_of, months, earned in examples:
+            with self.subTest(joined=joined):
+                entitlement = calculate_entitlement(
+                    joined, as_of, configured_annual_days=14
+                )
+                self.assertEqual(entitlement.completed_months, months)
+                self.assertEqual(entitlement.earned_days, earned)
+
 
 class AnnualBalanceIntegrationTests(TestCase):
     def setUp(self):
@@ -137,6 +150,19 @@ class AnnualBalanceIntegrationTests(TestCase):
             self.employee, self.leave_type, date(2025, 5, 1)
         )
         self.assertEqual(assignment.available_days, 3)  # Five earned, two used.
+
+    def test_new_assignment_after_anniversary_credits_earned_days(self):
+        from leave.models import AvailableLeave
+
+        self.employee.employee_work_info.date_joining = date(2025, 8, 11)
+        self.employee.employee_work_info.save()
+        with patch("leave.annual_policy.timezone.localdate", return_value=date(2026, 10, 1)):
+            assignment = AvailableLeave.objects.create(
+                employee_id=self.employee, leave_type_id=self.leave_type
+            )
+        self.assertEqual(assignment.auto_service_year_start, date(2026, 8, 11))
+        self.assertEqual(assignment.auto_entitlement_days, 1)
+        self.assertEqual(assignment.available_days, 1)
 
     def test_sync_with_selected_company_can_lock_assignment(self):
         from leave.annual_policy import sync_annual_leave
