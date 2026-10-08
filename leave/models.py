@@ -1063,7 +1063,13 @@ class LeaveRequest(HorillaModel):
         ordering = ["-id"]
         verbose_name = _("Leave Request")
         verbose_name_plural = _("Leave Requests")
-        permissions = (("can_view_on_leave", "Can View On Leave"),)
+        permissions = (
+            ("can_view_on_leave", "Can View On Leave"),
+            (
+                "override_service_gate",
+                "Can record paid leave within the first three months of service",
+            ),
+        )
 
     def comment_action(self):
         """
@@ -1603,17 +1609,24 @@ class LeaveRequest(HorillaModel):
     def can_override_service_gate(self, request):
         """
         HR may record paid leave inside the first three months of service,
-        for example back-dated leave. Employees applying for themselves, and
-        reporting managers without add or change permission, may not.
+        for example back-dated leave. This needs the dedicated
+        leave.override_service_gate permission in the employee's company;
+        general leave permissions (such as the Leave Manager role) and
+        requests for one's own leave never qualify.
         """
+        from base.auth_backends import get_effective_permission_codenames
+
         user = getattr(request, "user", None)
         if not user or not user.is_authenticated:
             return False
         if user.is_superuser:
             return True
-        return getattr(user, "employee_get", None) != self.employee_id and (
-            user.has_perm("leave.add_leaverequest")
-            or user.has_perm("leave.change_leaverequest")
+        if getattr(user, "employee_get", None) == self.employee_id:
+            return False
+        work_info = getattr(self.employee_id, "employee_work_info", None)
+        company_id = getattr(work_info, "company_id_id", None)
+        return "override_service_gate" in get_effective_permission_codenames(
+            user, company_id
         )
 
     def clean(self):
@@ -1625,6 +1638,16 @@ class LeaveRequest(HorillaModel):
         requ_days = set(self.requested_dates())
         restricted_leaves = RestrictLeave.objects.all()
         request = getattr(horilla_middlewares._thread_locals, "request", None)
+
+        # Separate from the three-month rule, which HR may override.
+        employee_work_info = getattr(
+            getattr(self, "employee_id", None), "employee_work_info", None
+        )
+        employment_start = getattr(employee_work_info, "date_joining", None)
+        if employment_start and self.start_date and self.start_date < employment_start:
+            raise ValidationError(
+                _("Leave cannot start before the employee's joining date.")
+            )
 
         if leave_type.auto_leave_policy != "none":
             from leave.annual_policy import sync_annual_leave

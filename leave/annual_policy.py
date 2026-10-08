@@ -161,42 +161,33 @@ def sync_annual_leave(employee, leave_type, as_of=None):
         assignment.available_days = entitlement.earned_days - _approved_current_year_days(
             assignment, entitlement.service_year_start, as_of
         )
-    elif assignment.auto_service_year_start != entitlement.service_year_start:
-        if not (
-            entitlement.service_year_start.year
-            > assignment.auto_service_year_start.year
-            and entitlement.service_year_start <= as_of
-        ):
-            # Only a new calendar year is a rollover. Any other change means
-            # the joining date was corrected (earlier or later), so rebuild
-            # the year from approved usage since 1 January instead of
-            # carrying forward a projected, never-earned year.
-            assignment.available_days = entitlement.earned_days - _approved_current_year_days(
-                assignment,
-                date(entitlement.service_year_start.year, 1, 1),
-                as_of,
-            )
-        else:
-            while assignment.auto_service_year_start < entitlement.service_year_start:
-                next_year_start = date(assignment.auto_service_year_start.year + 1, 1, 1)
-                prior_year = entitlement_for_assignment(
-                    assignment, next_year_start - date.resolution
-                )
-                if prior_year:
-                    assignment.available_days += (
-                        prior_year.earned_days - assignment.auto_entitlement_days
-                    )
-                _carryforward(assignment)
-                assignment.available_days = 0
-                assignment.auto_entitlement_days = 0
-                assignment.auto_service_year_start = next_year_start
-            assignment.available_days = entitlement.earned_days
-            if assignment.carryforward_days:
-                assignment.expired_date = date(entitlement.service_year_start.year + 1, 1, 1)
     else:
+        # A rollover is exactly a change of calendar year. Close each year
+        # crossed since the last sync, never a year after ``as_of``. Earned
+        # days for the closing year use the current joining date, so a
+        # corrected date cannot carry forward service that never happened.
+        rolled_over = False
+        last_year = min(entitlement.service_year_start.year, as_of.year)
+        while assignment.auto_service_year_start.year < last_year:
+            year_end = date(assignment.auto_service_year_start.year, 12, 31)
+            prior_year = entitlement_for_assignment(assignment, year_end)
+            if prior_year:
+                assignment.available_days += (
+                    prior_year.earned_days - assignment.auto_entitlement_days
+                )
+            _carryforward(assignment)
+            assignment.available_days = 0
+            assignment.auto_entitlement_days = 0
+            assignment.auto_service_year_start = year_end + date.resolution
+            rolled_over = True
+        # Credit only the change in earned days. This covers monthly accrual
+        # and joining-date corrections alike, while keeping approved
+        # deductions and manual HR adjustments already in the balance.
         assignment.available_days += (
             entitlement.earned_days - assignment.auto_entitlement_days
         )
+        if rolled_over and assignment.carryforward_days:
+            assignment.expired_date = date(entitlement.service_year_start.year + 1, 1, 1)
     assignment.auto_entitlement_days = entitlement.earned_days
     assignment.auto_service_year_start = entitlement.service_year_start
     assignment.auto_period_basis = "calendar_year"
