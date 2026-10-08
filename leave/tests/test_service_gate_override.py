@@ -37,15 +37,15 @@ class ServiceGateOverrideTests(TestCase):
         """Grant a role the way production does: per company, not user.groups."""
         from base.models import CompanyGroupAssignment
 
-        group = Group.objects.create(name=name)
+        group, _ = Group.objects.get_or_create(name=name)
         group.permissions.set(permissions)
         CompanyGroupAssignment.objects.create(
             user=employee.employee_user_id, company=company, group=group
         )
 
-    def override_permission(self):
+    def hr_permissions(self):
         return Permission.objects.filter(
-            content_type__app_label="leave", codename="override_service_gate"
+            codename__in=("add_leaverequest", "change_employeeworkinformation")
         )
 
     def clean_as(self, employee, start=date(2026, 7, 17)):
@@ -69,9 +69,44 @@ class ServiceGateOverrideTests(TestCase):
         ):
             request.clean()
 
-    def test_hr_with_override_permission_can_record_early_leave(self):
-        self.assign_role(self.hr, self.company, self.override_permission(), "HR override")
+    def test_hr_with_existing_permissions_can_record_early_leave(self):
+        self.assign_role(self.hr, self.company, self.hr_permissions(), "HR Manager")
         self.clean_as(self.hr)
+
+    def test_default_hr_manager_can_override_without_an_extra_permission(self):
+        from base.signals import _DEFAULT_HRMS_GROUPS, _resolve_group_permissions
+
+        permissions = _resolve_group_permissions(_DEFAULT_HRMS_GROUPS["HR Manager"])
+        self.assign_role(self.hr, self.company, permissions, "HR Manager")
+        self.clean_as(self.hr)
+
+    def test_company_admin_can_override_without_being_superuser(self):
+        from base.signals import _DEFAULT_HRMS_GROUPS, _resolve_group_permissions
+
+        permissions = _resolve_group_permissions(_DEFAULT_HRMS_GROUPS["Admin"])
+        self.assign_role(self.hr, self.company, permissions, "Admin")
+        self.assertFalse(self.hr.employee_user_id.is_superuser)
+        self.clean_as(self.hr)
+
+    def test_non_hr_role_with_both_permissions_cannot_override(self):
+        self.assign_role(self.hr, self.company, self.hr_permissions(), "Custom role")
+        with self.assertRaisesMessage(ValidationError, "three months"):
+            self.clean_as(self.hr)
+
+    def test_combining_leave_and_payroll_or_recruiter_roles_cannot_override(self):
+        from base.signals import _DEFAULT_HRMS_GROUPS, _resolve_group_permissions
+        from base.models import CompanyGroupAssignment
+
+        for other_role in ("Payroll Manager", "Recruiter"):
+            with self.subTest(other_role=other_role):
+                CompanyGroupAssignment.objects.filter(user=self.hr.employee_user_id).delete()
+                for role in ("Leave Manager", other_role):
+                    self.assign_role(
+                        self.hr, self.company,
+                        _resolve_group_permissions(_DEFAULT_HRMS_GROUPS[role]), role,
+                    )
+                with self.assertRaisesMessage(ValidationError, "three months"):
+                    self.clean_as(self.hr)
 
     def test_leave_manager_role_cannot_override(self):
         from base.signals import _DEFAULT_HRMS_GROUPS, _resolve_group_permissions
@@ -82,18 +117,55 @@ class ServiceGateOverrideTests(TestCase):
         with self.assertRaisesMessage(ValidationError, "three months"):
             self.clean_as(self.hr)
 
-    def test_default_hr_and_leave_roles_do_not_include_override(self):
+    def test_payroll_manager_role_cannot_override(self):
         from base.signals import _DEFAULT_HRMS_GROUPS, _resolve_group_permissions
 
-        for name in ("HR Manager", "Leave Manager", "Payroll Manager"):
-            permissions = _resolve_group_permissions(_DEFAULT_HRMS_GROUPS[name])
-            self.assertFalse(
-                permissions.filter(codename="override_service_gate").exists(), name
-            )
+        permissions = _resolve_group_permissions(_DEFAULT_HRMS_GROUPS["Payroll Manager"])
+        self.assign_role(self.hr, self.company, permissions, "Scoped Payroll Manager")
+        with self.assertRaisesMessage(ValidationError, "three months"):
+            self.clean_as(self.hr)
+
+    def test_work_information_permission_alone_cannot_override(self):
+        self.assign_role(
+            self.hr, self.company,
+            self.hr_permissions().filter(codename="change_employeeworkinformation"),
+            "Work information editor",
+        )
+        with self.assertRaisesMessage(ValidationError, "three months"):
+            self.clean_as(self.hr)
 
     def test_override_granted_for_another_company_does_not_apply(self):
         self.assign_role(
-            self.hr, self.other_company, self.override_permission(), "Other override"
+            self.hr, self.other_company, self.hr_permissions(), "HR Manager"
+        )
+        with self.assertRaisesMessage(ValidationError, "three months"):
+            self.clean_as(self.hr)
+
+    def test_company_admin_in_another_company_cannot_override(self):
+        self.assign_role(self.hr, self.other_company, self.hr_permissions(), "Admin")
+        with self.assertRaisesMessage(ValidationError, "three months"):
+            self.clean_as(self.hr)
+
+    def test_employee_without_company_does_not_use_union_of_hr_roles(self):
+        from employee.models import EmployeeWorkInformation
+
+        self.assign_role(self.hr, self.company, self.hr_permissions(), "HR Manager")
+        EmployeeWorkInformation._base_manager.filter(employee_id=self.employee).update(
+            company_id=None,
+        )
+        self.employee.employee_work_info.refresh_from_db()
+        with self.assertRaisesMessage(ValidationError, "three months"):
+            self.clean_as(self.hr)
+
+    def test_permissions_in_different_companies_cannot_be_combined(self):
+        self.assign_role(
+            self.hr, self.company,
+            self.hr_permissions().filter(codename="add_leaverequest"), "Leave creator",
+        )
+        self.assign_role(
+            self.hr, self.other_company,
+            self.hr_permissions().filter(codename="change_employeeworkinformation"),
+            "Other company editor",
         )
         with self.assertRaisesMessage(ValidationError, "three months"):
             self.clean_as(self.hr)
@@ -102,12 +174,32 @@ class ServiceGateOverrideTests(TestCase):
         with self.assertRaisesMessage(ValidationError, "three months"):
             self.clean_as(self.employee)
 
-    def test_override_permission_does_not_cover_own_leave(self):
+    def test_hr_permissions_do_not_cover_own_leave(self):
         self.assign_role(
-            self.employee, self.company, self.override_permission(), "Self override"
+            self.employee, self.company, self.hr_permissions(), "HR Manager"
         )
         with self.assertRaisesMessage(ValidationError, "three months"):
             self.clean_as(self.employee)
+
+    def test_superuser_can_record_another_employees_early_leave(self):
+        user = self.hr.employee_user_id
+        user.is_superuser = True
+        user.save()
+        self.clean_as(self.hr)
+
+    def test_superuser_own_leave_is_still_blocked(self):
+        user = self.employee.employee_user_id
+        user.is_superuser = True
+        user.save()
+        with self.assertRaisesMessage(ValidationError, "three months"):
+            self.clean_as(self.employee)
+
+    def test_global_hr_group_works_when_company_scoping_is_disabled(self):
+        with override_settings(COMPANY_SCOPED_PERMISSIONS=False):
+            group, _ = Group.objects.get_or_create(name="HR Manager")
+            group.permissions.set(self.hr_permissions())
+            self.hr.employee_user_id.groups.add(group)
+            self.clean_as(self.hr)
 
     def test_override_still_requires_leave_balance(self):
         from leave.models import AvailableLeave
@@ -116,7 +208,7 @@ class ServiceGateOverrideTests(TestCase):
             available_days=0, auto_entitlement_days=6, auto_period_basis="calendar_year",
             auto_service_year_start=date(2026, 5, 1),
         )
-        self.assign_role(self.hr, self.company, self.override_permission(), "HR override")
+        self.assign_role(self.hr, self.company, self.hr_permissions(), "HR Manager")
         with self.assertRaisesMessage(ValidationError, "sufficient leave balance"):
             self.clean_as(self.hr)
 
@@ -132,6 +224,6 @@ class ServiceGateOverrideTests(TestCase):
             auto_service_year_start=date(2026, 8, 1),
         )
         self.employee.employee_work_info.refresh_from_db()
-        self.assign_role(self.hr, self.company, self.override_permission(), "HR override")
+        self.assign_role(self.hr, self.company, self.hr_permissions(), "HR Manager")
         with self.assertRaisesMessage(ValidationError, "before the employee's joining date"):
             self.clean_as(self.hr)

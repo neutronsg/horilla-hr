@@ -3,6 +3,7 @@
 import json
 from datetime import date
 from io import StringIO
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pandas as pd
@@ -133,6 +134,162 @@ class JoinDateResyncTests(TestCase):
         self.set_joining_date(date(2026, 5, 1))
         self.assertEqual(self.assignment().available_days, 7)  # 6 - 2 + 3
 
+    def test_stale_previous_year_correction_keeps_current_year_approved_usage(self):
+        from leave.annual_policy import sync_annual_leave
+        from leave.models import AvailableLeave
+
+        self.approve_september_leave(2)
+        AvailableLeave._base_manager.filter(pk=self.assignment().pk).update(
+            auto_service_year_start=date(2025, 1, 1), auto_entitlement_days=14,
+            available_days=12, carryforward_days=0,
+        )
+        self.set_joining_date(date(2026, 5, 1))
+        self.assertEqual(self.assignment().available_days, 4)  # 6 earned - 2 used
+        self.assertEqual(self.assignment().carryforward_days, 0)
+        for _ in range(2):
+            sync_annual_leave(self.employee, self.leave_type, TODAY)
+        self.assertEqual(self.assignment().available_days, 4)
+
+    def test_stale_previous_year_correction_preserves_manual_credit(self):
+        from leave.models import AvailableLeave
+
+        self.approve_september_leave(2)
+        AvailableLeave._base_manager.filter(pk=self.assignment().pk).update(
+            auto_service_year_start=date(2025, 1, 1), auto_entitlement_days=14,
+            available_days=15, carryforward_days=0,  # 14 - 2 used + 3 manual
+        )
+        self.set_joining_date(date(2026, 5, 1))
+        assignment = self.assignment()
+        # The +3 adjustment and -2 deduction remain in their booked year;
+        # its remaining +1 is carried forward under the existing policy.
+        self.assertEqual(assignment.available_days, 6)
+        self.assertEqual(assignment.carryforward_days, 1)
+
+    def test_rollover_keeps_future_leave_charged_to_its_booked_balance(self):
+        from leave.annual_policy import sync_annual_leave
+        from leave.models import AvailableLeave
+
+        self.set_joining_date(date(2025, 1, 1))
+        self.approve_september_leave(2)
+        AvailableLeave._base_manager.filter(pk=self.assignment().pk).update(
+            auto_service_year_start=date(2025, 1, 1), auto_entitlement_days=14,
+            available_days=12, carryforward_days=0,
+        )
+        assignment = sync_annual_leave(self.employee, self.leave_type, TODAY)
+        self.assertEqual(assignment.available_days, 11)
+        self.assertEqual(assignment.carryforward_days, 12)  # 14 - 2 already booked
+
+    def test_rollover_keeps_future_approved_carryforward_deductions(self):
+        from leave.annual_policy import sync_annual_leave
+        from leave.models import AvailableLeave, LeaveRequest
+
+        self.set_joining_date(date(2025, 1, 1))
+        self.approve_september_leave(2)
+        LeaveRequest.objects.filter(employee_id=self.employee).update(
+            approved_available_days=0, approved_carryforward_days=2,
+        )
+        AvailableLeave._base_manager.filter(pk=self.assignment().pk).update(
+            auto_service_year_start=date(2025, 1, 1), auto_entitlement_days=14,
+            available_days=14, carryforward_days=1,
+        )
+        assignment = sync_annual_leave(self.employee, self.leave_type, TODAY)
+        self.assertEqual(assignment.available_days, 11)
+        self.assertEqual(assignment.carryforward_days, 14)
+        again = sync_annual_leave(self.employee, self.leave_type, TODAY)
+        self.assertEqual((again.available_days, again.carryforward_days), (11, 14))
+
+    def test_multiple_unsynced_years_deduct_future_leave_only_once(self):
+        from leave.annual_policy import sync_annual_leave
+        from leave.models import AvailableLeave, LeaveRequest
+
+        self.set_joining_date(date(2025, 1, 1))
+        self.approve_september_leave(2)
+        LeaveRequest.objects.filter(employee_id=self.employee).update(
+            start_date=date(2027, 9, 7), end_date=date(2027, 9, 8),
+        )
+        AvailableLeave._base_manager.filter(pk=self.assignment().pk).update(
+            auto_service_year_start=date(2025, 1, 1), auto_entitlement_days=14,
+            available_days=12, carryforward_days=0,
+        )
+        assignment = sync_annual_leave(self.employee, self.leave_type, date(2027, 10, 8))
+        self.assertEqual((assignment.available_days, assignment.carryforward_days), (11, 14))
+
+    def test_january_prebooking_keeps_approved_deduction_and_caps_unused_balance(self):
+        from horilla.testkit import make_employee, make_user
+        from leave.annual_policy import sync_annual_leave
+        from leave.models import AvailableLeave, LeaveRequest
+        from leave.views import leave_request_approve
+
+        self.set_joining_date(date(2025, 1, 1))
+        self.leave_type.carryforward_max = 2
+        self.leave_type.save()
+        admin = make_employee(
+            company=self.employee.employee_work_info.company_id,
+            email="approval-admin@test.horilla",
+            user=make_user("approval-admin", is_superuser=True),
+        )
+
+        def approve(leave_request):
+            http_request = RequestFactory().post(
+                "/leave/request-approve", HTTP_HX_REQUEST="true"
+            )
+            http_request.user = admin.employee_user_id
+            http_request.session = {}
+            http_request._messages = FallbackStorage(http_request)
+            with patch("leave.views.LeaveMailSendThread"), patch("leave.views.notify.send"):
+                response = leave_request_approve(http_request, leave_request.pk)
+            self.assertEqual(response.status_code, 200)
+            leave_request.refresh_from_db()
+            self.assertEqual(leave_request.status, "approved")
+
+        request = LeaveRequest.objects.create(
+            employee_id=self.employee, leave_type_id=self.leave_type,
+            start_date=date(2026, 1, 5), end_date=date(2026, 1, 7),
+            description="Approved in December",
+        )
+        AvailableLeave._base_manager.filter(pk=self.assignment().pk).update(
+            auto_service_year_start=date(2025, 1, 1), auto_entitlement_days=14,
+            available_days=10, carryforward_days=0,
+        )
+        approve(request)
+        self.assertEqual(self.assignment().available_days, 7)
+        assignment = sync_annual_leave(self.employee, self.leave_type, date(2026, 1, 2))
+        self.assertEqual((assignment.available_days, assignment.carryforward_days), (0, 2))
+        request.refresh_from_db()
+        self.assertEqual((request.approved_available_days, request.approved_carryforward_days), (3, 0))
+        # Subsequent approval consumes the two carried days without taking
+        # extra current-year days or recording a negative carry deduction.
+        next_request = LeaveRequest.objects.create(
+            employee_id=self.employee, leave_type_id=self.leave_type,
+            start_date=date(2026, 1, 12), end_date=date(2026, 1, 13),
+            description="Approved after rollover",
+        )
+        approve(next_request)
+        self.assertEqual((next_request.approved_available_days, next_request.approved_carryforward_days), (0, 2))
+        self.assertEqual((self.assignment().available_days, self.assignment().carryforward_days), (0, 0))
+
+    def test_preview_and_apply_match_when_cap_is_below_booked_carryforward(self):
+        from leave.models import AvailableLeave, LeaveRequest
+
+        self.set_joining_date(date(2025, 1, 1))
+        self.leave_type.carryforward_max = 1
+        self.leave_type.save()
+        self.approve_september_leave(2)
+        LeaveRequest.objects.filter(employee_id=self.employee).update(
+            approved_available_days=0, approved_carryforward_days=2,
+        )
+        AvailableLeave._base_manager.filter(pk=self.assignment().pk).update(
+            auto_service_year_start=date(2025, 1, 1), auto_entitlement_days=14,
+            available_days=14, carryforward_days=1,
+        )
+        preview = self.reconcile()
+        applied = self.reconcile("--apply")
+        self.assertEqual((preview["new_available"], preview["carryforward"]), (11, 1))
+        self.assertEqual(
+            (preview["new_available"], preview["carryforward"]),
+            (applied["new_available"], applied["carryforward"]),
+        )
+
     def test_repeated_sync_after_correction_is_idempotent(self):
         from leave.annual_policy import sync_annual_leave
 
@@ -178,6 +335,44 @@ class JoinDateResyncTests(TestCase):
             (preview["new_available"], preview["carryforward"]),
         )
         self.assertEqual(self.assignment().available_days, 6)
+
+    def test_reconcile_preview_does_not_trigger_mail_automation(self):
+        from django.db.models.signals import pre_save
+        from horilla_automations import signals as automation_signals
+        from horilla_automations.models import MailAutomation
+
+        self.store_unsynced_previous_year()
+        automation = MailAutomation.objects.create(
+            title="Leave balance update", model="leave.models.AvailableLeave",
+            trigger="on_update", mail_to="['employee_id__email']",
+            mail_details="employee_id", condition="",
+            condition_querystring="condition=available_days&condition=%21%3D&condition=-999",
+            is_active=False,
+        )
+        MailAutomation.objects.filter(pk=automation.pk).update(is_active=True)
+        automation_signals.start_automation()
+
+        def cleanup():
+            automation_signals.REFRESH_METHODS["clear_connection"]()
+            for handler in automation_signals.INSTANCE_HANDLERS:
+                pre_save.disconnect(handler, sender=handler.model_class)
+            automation_signals.INSTANCE_HANDLERS.clear()
+
+        self.addCleanup(cleanup)
+
+        def immediate_thread(*args, target=None, **kwargs):
+            return SimpleNamespace(start=lambda: target())
+
+        with patch("horilla_automations.signals.send_mail") as send_mail, patch(
+            "horilla_automations.signals.threading.Thread", side_effect=immediate_thread
+        ):
+            preview = self.reconcile()
+            self.assertEqual(preview["new_available"], 6)
+            self.assertEqual(self.assignment().available_days, 0)
+            send_mail.assert_not_called()
+            # The same active automation still runs for the actual apply.
+            self.reconcile("--apply")
+            send_mail.assert_called_once()
 
     def test_bulk_update_of_joining_date_resyncs_leave(self):
         from employee.views import save_employee_bulk_update

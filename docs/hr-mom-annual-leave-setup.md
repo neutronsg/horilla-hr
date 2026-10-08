@@ -29,11 +29,21 @@ For an employee who joins on **1 January 2025**:
 | 30 June 2025, after six completed months | 7 days |
 | 31 December 2025, after twelve completed months | 14 days |
 
-Paid annual leave can be requested from **1 April 2025**. During the first three months, an annual leave absence should be recorded as approved unpaid leave if granted. If the contract ends on **31 March 2025**, the employee has earned **4 days** even though paid annual leave could not be taken during probation. The system calculates the balance; HR must handle [payment for unused leave](https://www.mom.gov.sg/employment-practices/termination-of-employment/termination-with-notice) in the final settlement.
+Employees can request paid annual leave from **1 April 2025**. HR can manually record early paid leave for another employee when authorized as described below. If the contract ends on **31 March 2025**, the employee has earned **4 days** even though paid annual leave could not be taken during probation. The system calculates the balance; HR must handle [payment for unused leave](https://www.mom.gov.sg/employment-practices/termination-of-employment/termination-with-notice) in the final settlement.
 
 The calculation uses **completed months ÷ 12 × the leave type's yearly days**, rounded to the nearest whole day with half a day rounded up. The joining year starts on the actual joining date; subsequent years start on **1 January**. January rollover carries eligible unused days according to the configured carryforward policy. A service-entitlement safeguard prevents split periods and rounding from reducing contractual/MOM entitlement, including probation spanning January. If the leave type's allowance is below MOM's statutory minimum for a service year, the statutory minimum applies.
 
 **Scope:** This setup is for full-time, day-based annual leave. Part-time employees need MOM's hours-based calculation.
+
+## Manual HR entries and joining-date corrections
+
+HR can record paid leave inside the first three months for another employee when assigned the **HR Manager** or **Admin** role in that employee's company, with the existing **Add Leave Request** and **Change Employee Work Information** permissions. No additional permission is needed. Combining other roles, including Leave Manager with Payroll Manager or Recruiter, does not qualify. These role names are explicit; a renamed or custom role is not automatically treated as HR. Superusers can record leave for another employee. Self-service requests still follow the three-month rule, and HR entries still require sufficient leave balance and cannot start before joining. An employee without a company must have their company assigned before company HR/Admin can use this override.
+
+Saving a change to Joining Date or Contract End Date recalculates automatic leave, including changes made through bulk update or import. Annual leave recalculation preserves approved deductions and manual adjustments. January rollover applies the configured carryforward policy.
+
+This fix keeps existing approved leave charged to the balances used at approval. January rollover does not move those deductions to another year based on the leave dates. A correction that reduces credited entitlement can reduce the remaining balance below zero; this deficit is retained rather than refunding previously booked leave. Requests spanning New Year continue to use the existing accounting behavior; this change does not split them by year or introduce advance-leave rules.
+
+To review annual balances, run `python manage.py reconcile_calendar_annual_leave --as-of YYYY-MM-DD`, optionally adding `--employee BADGE_ID`. The default preview does not save balances or trigger save automations. Add `--apply` to save the calculated balances.
 
 ## Set up paid sick leave
 

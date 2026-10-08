@@ -1063,13 +1063,7 @@ class LeaveRequest(HorillaModel):
         ordering = ["-id"]
         verbose_name = _("Leave Request")
         verbose_name_plural = _("Leave Requests")
-        permissions = (
-            ("can_view_on_leave", "Can View On Leave"),
-            (
-                "override_service_gate",
-                "Can record paid leave within the first three months of service",
-            ),
-        )
+        permissions = (("can_view_on_leave", "Can View On Leave"),)
 
     def comment_action(self):
         """
@@ -1607,27 +1601,34 @@ class LeaveRequest(HorillaModel):
                     )
 
     def can_override_service_gate(self, request):
+        """Allow company HR/Admin to record early leave for another employee.
+
+        Require an explicit HR Manager or Admin role in the employee's company
+        as well as the existing operation permissions. Combining non-HR roles
+        must not grant this exception.
         """
-        HR may record paid leave inside the first three months of service,
-        for example back-dated leave. This needs the dedicated
-        leave.override_service_gate permission in the employee's company;
-        general leave permissions (such as the Leave Manager role) and
-        requests for one's own leave never qualify.
-        """
-        from base.auth_backends import get_effective_permission_codenames
+        from base.auth_backends import (
+            get_effective_permission_codenames,
+            get_user_groups_for_company,
+        )
 
         user = getattr(request, "user", None)
-        if not user or not user.is_authenticated:
+        if not user or not user.is_authenticated or not user.is_active:
+            return False
+        if getattr(user, "employee_get", None) == self.employee_id:
             return False
         if user.is_superuser:
             return True
-        if getattr(user, "employee_get", None) == self.employee_id:
-            return False
         work_info = getattr(self.employee_id, "employee_work_info", None)
         company_id = getattr(work_info, "company_id_id", None)
-        return "override_service_gate" in get_effective_permission_codenames(
-            user, company_id
-        )
+        if company_id is None:
+            return False
+        if not get_user_groups_for_company(user, company_id).filter(
+            name__in=("HR Manager", "Admin")
+        ).exists():
+            return False
+        permissions = set(get_effective_permission_codenames(user, company_id))
+        return {"add_leaverequest", "change_employeeworkinformation"} <= permissions
 
     def clean(self):
         cleaned_data = super().clean()

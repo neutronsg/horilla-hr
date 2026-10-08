@@ -4,10 +4,13 @@ import json
 from datetime import date
 
 from django.core.management.base import BaseCommand
-from django.db import transaction
 from django.utils import timezone
 
-from leave.annual_policy import entitlement_for_assignment, sync_annual_leave
+from leave.annual_policy import (
+    calculate_annual_balance,
+    entitlement_for_assignment,
+    sync_annual_leave,
+)
 from leave.models import AvailableLeave
 
 
@@ -34,12 +37,12 @@ class Command(BaseCommand):
                    "new_period": result.service_year_start, "old_available": assignment.available_days,
                    "earned": result.earned_days,
                    "existing_carryforward": assignment.carryforward_days, "applied": options["apply"]}
-            # Preview runs the real sync and rolls it back, so it always
-            # matches what --apply writes.
-            with transaction.atomic():
-                updated = sync_annual_leave(assignment.employee_id, assignment.leave_type_id, as_of)
-                if not options["apply"]:
-                    transaction.set_rollback(True)
+            if options["apply"]:
+                updated = sync_annual_leave(
+                    assignment.employee_id, assignment.leave_type_id, as_of
+                )
+            else:
+                updated = calculate_annual_balance(assignment, as_of)
             row["new_available"] = updated.available_days
             row["carryforward"] = updated.carryforward_days
             self.stdout.write(json.dumps(row, default=str))

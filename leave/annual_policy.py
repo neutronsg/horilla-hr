@@ -1,6 +1,7 @@
 """Keep auto-calculated annual leave balances in step with service time."""
 
 import math
+from copy import copy
 from datetime import date
 
 from django.db import transaction
@@ -132,30 +133,13 @@ def _carryforward(assignment):
     )
 
 
-@transaction.atomic
-def sync_annual_leave(employee, leave_type, as_of=None):
-    """Credit completed-month entitlement without repeating previous credits.
-
-    Approved leave continues to deduct from the usual Horilla balance fields.
-    We store the last credited entitlement and apply only the difference.
-    """
-    from leave.models import AvailableLeave
-
-    if leave_type.auto_leave_policy != "annual":
-        return None
-    # The company-aware default manager adds DISTINCT to its queryset. PostgreSQL
-    # cannot combine that with FOR UPDATE, so lock the uniquely identified
-    # assignment through the unfiltered base manager instead.
-    assignment = (
-        AvailableLeave._base_manager.select_for_update()
-        .filter(employee_id=employee, leave_type_id=leave_type)
-        .first()
-    )
-    if assignment is None:
+def _update_annual_balance(assignment, as_of=None):
+    """Update balance fields in memory, preserving existing booked deductions."""
+    if assignment.leave_type_id.auto_leave_policy != "annual":
         return None
     entitlement = entitlement_for_assignment(assignment, as_of)
     if entitlement is None:
-        return assignment
+        return None
     as_of = as_of or timezone.localdate()
     if assignment.auto_period_basis != "calendar_year" or assignment.auto_service_year_start is None:
         assignment.available_days = entitlement.earned_days - _approved_current_year_days(
@@ -175,8 +159,13 @@ def sync_annual_leave(employee, leave_type, as_of=None):
                 assignment.available_days += (
                     prior_year.earned_days - assignment.auto_entitlement_days
                 )
+            # Keep approved leave charged to the balances used at approval;
+            # its dates do not move those deductions into a different year.
+            # If an entitlement correction makes the closing balance negative,
+            # retain that deficit rather than refunding already booked leave.
+            deficit = min(assignment.available_days, 0)
             _carryforward(assignment)
-            assignment.available_days = 0
+            assignment.available_days = deficit
             assignment.auto_entitlement_days = 0
             assignment.auto_service_year_start = year_end + date.resolution
             rolled_over = True
@@ -191,5 +180,35 @@ def sync_annual_leave(employee, leave_type, as_of=None):
     assignment.auto_entitlement_days = entitlement.earned_days
     assignment.auto_service_year_start = entitlement.service_year_start
     assignment.auto_period_basis = "calendar_year"
+    return assignment
+
+
+def calculate_annual_balance(assignment, as_of=None):
+    """Preview a copy, including save-time normalization, without saving."""
+    updated = _update_annual_balance(copy(assignment), as_of)
+    if updated is not None:
+        updated.pre_save_processing()
+    return updated
+
+
+@transaction.atomic
+def sync_annual_leave(employee, leave_type, as_of=None):
+    """Credit entitlement differences while keeping booked deductions."""
+    from leave.models import AvailableLeave
+
+    if leave_type.auto_leave_policy != "annual":
+        return None
+    # The company-aware manager adds DISTINCT, which PostgreSQL cannot combine
+    # with FOR UPDATE. Lock the unique assignment through the base manager.
+    assignment = (
+        AvailableLeave._base_manager.select_for_update()
+        .filter(employee_id=employee, leave_type_id=leave_type)
+        .first()
+    )
+    if assignment is None:
+        return None
+    updated = _update_annual_balance(assignment, as_of)
+    if updated is None:
+        return assignment
     assignment.save()
     return assignment
