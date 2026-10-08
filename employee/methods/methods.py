@@ -837,6 +837,7 @@ def bulk_create_work_info_import(success_lists):
         for comp in Company.objects.filter(company__in=companies).only("company")
     }
     reporting_manager_dict = optimize_reporting_manager_lookup()
+    leave_dates_changed = []
 
     for work_info in success_lists:
         badge_id = work_info["Badge ID"]
@@ -917,6 +918,10 @@ def bulk_create_work_info_import(success_lists):
             new_work_info_list.append(employee_work_info)
         else:
             # Update the existing instance
+            previous_leave_dates = (
+                employee_work_info.date_joining,
+                employee_work_info.contract_end_date,
+            )
             employee_work_info.email = email
             employee_work_info.department_id = department_obj
             employee_work_info.job_position_id = job_position_obj
@@ -936,6 +941,16 @@ def bulk_create_work_info_import(success_lists):
             employee_work_info.basic_salary = basic_salary
             employee_work_info.salary_hour = salary_hour
             update_work_info_list.append(employee_work_info)
+            # Imported values may be pandas Timestamps; compare calendar dates.
+            imported_leave_dates = tuple(
+                value.date() if isinstance(value, datetime) else value
+                for value in (
+                    employee_work_info.date_joining,
+                    employee_work_info.contract_end_date,
+                )
+            )
+            if imported_leave_dates != previous_leave_dates:
+                leave_dates_changed.append(employee_obj)
     if new_work_info_list:
         EmployeeWorkInformation.objects.bulk_create(
             new_work_info_list, batch_size=None if is_postgres else 999
@@ -961,6 +976,11 @@ def bulk_create_work_info_import(success_lists):
             ],
             batch_size=None if is_postgres else 999,
         )
+        # bulk_update() skips the signal that recalculates automatic leave.
+        if apps.is_installed("leave"):
+            from leave.services import schedule_auto_leave_sync
+
+            schedule_auto_leave_sync(leave_dates_changed)
     if apps.is_installed("payroll"):
 
         contract_creation_thread = threading.Thread(

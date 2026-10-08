@@ -162,11 +162,19 @@ def sync_annual_leave(employee, leave_type, as_of=None):
             assignment, entitlement.service_year_start, as_of
         )
     elif assignment.auto_service_year_start != entitlement.service_year_start:
-        if assignment.auto_service_year_start > entitlement.service_year_start:
-            # The joining date was corrected. Rebuild the current year from
-            # approved usage instead of treating the correction as a rollover.
+        if not (
+            entitlement.service_year_start.year
+            > assignment.auto_service_year_start.year
+            and entitlement.service_year_start <= as_of
+        ):
+            # Only a new calendar year is a rollover. Any other change means
+            # the joining date was corrected (earlier or later), so rebuild
+            # the year from approved usage since 1 January instead of
+            # carrying forward a projected, never-earned year.
             assignment.available_days = entitlement.earned_days - _approved_current_year_days(
-                assignment, entitlement.service_year_start, as_of
+                assignment,
+                date(entitlement.service_year_start.year, 1, 1),
+                as_of,
             )
         else:
             while assignment.auto_service_year_start < entitlement.service_year_start:

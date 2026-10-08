@@ -1604,6 +1604,14 @@ def save_employee_bulk_update(request):
                     employee_queryset = Employee.objects.filter(id__in=employee_list)
                     value = dict_value.get(field)
                     employee_queryset.update(**{field: value})
+        # queryset.update() skips the signal that recalculates automatic leave.
+        if apps.is_installed("leave") and any(
+            str(field).split("__")[-1] in ("date_joining", "contract_end_date")
+            for field in update_fields
+        ):
+            from leave.services import schedule_auto_leave_sync
+
+            schedule_auto_leave_sync(Employee.objects.filter(id__in=employee_list))
         if len(employee_list) > 0:
             messages.success(
                 request,

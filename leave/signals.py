@@ -7,8 +7,10 @@ from django.db.models.signals import post_migrate, post_save, pre_delete, pre_sa
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
+from employee.models import EmployeeWorkInformation
 from horilla.methods import get_horilla_model_class
 from leave.models import LeaveRequest, LeaveRequestConditionApproval
+from leave.services import schedule_auto_leave_sync
 
 if apps.is_installed("attendance"):
 
@@ -143,3 +145,32 @@ def auto_approve_self_approval_stage(sender, instance, created, **kwargs):
     """
     if created and instance.manager_id == instance.leave_request_id.employee_id:
         sender.objects.filter(pk=instance.pk).update(is_approved=True)
+
+
+# Automatic leave entitlement depends on these dates.
+AUTO_LEAVE_DATE_FIELDS = ("date_joining", "contract_end_date")
+
+
+@receiver(pre_save, sender=EmployeeWorkInformation)
+def remember_auto_leave_dates(sender, instance, raw=False, **kwargs):
+    if raw or not instance.pk:
+        return
+    instance._previous_auto_leave_dates = (
+        EmployeeWorkInformation._base_manager.filter(pk=instance.pk)
+        .values_list(*AUTO_LEAVE_DATE_FIELDS)
+        .first()
+    )
+
+
+@receiver(post_save, sender=EmployeeWorkInformation)
+def resync_auto_leave_on_date_change(sender, instance, created, raw=False, **kwargs):
+    """
+    Recalculate annual and sick leave when HR corrects the joining or
+    contract end date, instead of waiting for the periodic leave job.
+    """
+    if raw or created:
+        return
+    previous = getattr(instance, "_previous_auto_leave_dates", None)
+    current = tuple(getattr(instance, field) for field in AUTO_LEAVE_DATE_FIELDS)
+    if previous is not None and previous != current:
+        schedule_auto_leave_sync([instance.employee_id])

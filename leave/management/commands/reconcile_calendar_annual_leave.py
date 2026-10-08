@@ -28,10 +28,13 @@ class Command(BaseCommand):
             if not result:
                 self.stdout.write(json.dumps({"employee": assignment.employee_id.badge_id, "error": "Missing joining date"}))
                 continue
-            if assignment.auto_period_basis == "calendar_year" and assignment.auto_service_year_start == result.service_year_start:
+            calendar_basis = assignment.auto_period_basis == "calendar_year" and assignment.auto_service_year_start
+            if calendar_basis and assignment.auto_service_year_start == result.service_year_start:
                 new_available = assignment.available_days + result.earned_days - assignment.auto_entitlement_days
             else:
-                new_available = result.earned_days - _approved_current_year_days(assignment, result.service_year_start, as_of)
+                # Joining-date corrections are rebuilt from 1 January, as in sync_annual_leave.
+                usage_start = date(result.service_year_start.year, 1, 1) if calendar_basis else result.service_year_start
+                new_available = result.earned_days - _approved_current_year_days(assignment, usage_start, as_of)
             row = {"assignment": assignment.pk, "employee": assignment.employee_id.badge_id,
                    "leave_type": assignment.leave_type_id.name, "old_period": assignment.auto_service_year_start,
                    "new_period": result.service_year_start, "old_available": assignment.available_days,

@@ -5,7 +5,12 @@ Centralised business-logic helpers for the leave app.
 Condition evaluation follows the same pattern as payroll allowance eligibility checks.
 """
 
+import logging
+
+from django.db import transaction
 from django.utils.translation import gettext_lazy as _
+
+logger = logging.getLogger(__name__)
 
 
 def evaluate_leave_type_conditions(leave_type, employee):
@@ -133,3 +138,49 @@ def get_condition_display_choices():
         "grade": [],
         "service_duration": [],
     }
+
+
+def sync_auto_leave(employee, as_of=None):
+    """
+    Recalculate every automatic (annual and sick) leave balance of one employee.
+    """
+    from leave.annual_policy import sync_annual_leave
+    from leave.models import AvailableLeave
+    from leave.sick_policy import sync_sick_leave
+
+    assignments = (
+        AvailableLeave._base_manager.filter(employee_id=employee)
+        .exclude(leave_type_id__auto_leave_policy="none")
+        .select_related("leave_type_id")
+    )
+    for assignment in assignments:
+        leave_type = assignment.leave_type_id
+        if leave_type.auto_leave_policy == "annual":
+            sync_annual_leave(employee, leave_type, as_of)
+        else:
+            sync_sick_leave(employee, leave_type, as_of)
+
+
+def schedule_auto_leave_sync(employees):
+    """
+    Recalculate automatic leave after the current transaction commits.
+
+    Used when a joining or contract end date changes. Failures are logged
+    rather than raised so that saving employee details is never blocked; the
+    periodic leave job retries the calculation.
+    """
+    employees = list(employees)
+    if not employees:
+        return
+
+    def _sync():
+        for employee in employees:
+            try:
+                sync_auto_leave(employee)
+            except Exception:
+                logger.exception(
+                    "Automatic leave sync failed for employee %s",
+                    getattr(employee, "pk", employee),
+                )
+
+    transaction.on_commit(_sync)

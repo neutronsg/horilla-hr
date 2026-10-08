@@ -1600,6 +1600,22 @@ class LeaveRequest(HorillaModel):
                         manager_id=manager,
                     )
 
+    def can_override_service_gate(self, request):
+        """
+        HR may record paid leave inside the first three months of service,
+        for example back-dated leave. Employees applying for themselves, and
+        reporting managers without add or change permission, may not.
+        """
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_superuser:
+            return True
+        return getattr(user, "employee_get", None) != self.employee_id and (
+            user.has_perm("leave.add_leaverequest")
+            or user.has_perm("leave.change_leaverequest")
+        )
+
     def clean(self):
         cleaned_data = super().clean()
         leave_type = getattr(self, "leave_type_id", None)
@@ -1620,7 +1636,9 @@ class LeaveRequest(HorillaModel):
             if not joining_date:
                 raise ValidationError(_("Joining date is required for automatic leave."))
             eligible_date = add_months(joining_date, 3)
-            if timezone.localdate() < eligible_date or self.start_date < eligible_date:
+            if (
+                timezone.localdate() < eligible_date or self.start_date < eligible_date
+            ) and not self.can_override_service_gate(request):
                 raise ValidationError(
                     _("Paid leave is available after three months of service.")
                 )
