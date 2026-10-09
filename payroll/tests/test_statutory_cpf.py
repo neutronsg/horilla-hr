@@ -5,11 +5,12 @@ from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase, TestCase
+from django.test import RequestFactory
 
 from horilla.testkit import make_company, make_employee
-from employee.singapore_models import SingaporeEmployeeDetails
+from employee.singapore_models import SingaporeEmployeeDetails, SingaporeContributionProfile
 from payroll.cpf import contribution_amounts, contribution_rates, age_band
-from payroll.models.models import Contract, Allowance, Deduction, Payslip
+from payroll.models.models import Contract, Allowance, Deduction, Payslip, Reimbursement
 from payroll.views.component_views import payroll_calculation
 
 
@@ -64,6 +65,8 @@ class CpfPayrollIntegrationTests(TestCase):
             wage_type='monthly',payroll_workweek='five_day',deduct_leave_from_basic_pay=True,
             calculate_daily_leave_amount=True)
         self.details=SingaporeEmployeeDetails.objects.create(employee=self.employee,residency_status='citizen')
+        SingaporeContributionProfile.objects.create(employee=self.employee, effective_month=date(2025,1,1),
+            primary_race='other', muslim_status='no', residency_status='citizen', declaration_reference='QA verified declaration')
 
     def salary(self,start=date(2026,9,1),end=date(2026,9,30)):
         with patch('payroll.views.component_views.get_pending_attendance',return_value=[]):
@@ -81,6 +84,48 @@ class CpfPayrollIntegrationTests(TestCase):
         self.assertEqual(data['statutory_cpf']['employee_amount'],840)
         self.assertEqual(data['statutory_cpf']['employer_amount'],714)
         self.assertEqual(Payslip(gross_pay=data['gross_pay'],pay_head_data=data).sdl_display,10.5)
+
+    def test_approved_business_expense_does_not_become_statutory_wages(self):
+        from horilla import horilla_middlewares
+        request = RequestFactory().post('/payroll/reimbursement-approve/')
+        request.user = self.employee.employee_user_id
+        request.user.is_superuser = True
+        horilla_middlewares._thread_locals.request = request
+        try:
+            claim = Reimbursement(
+                title='Business Expenses', employee_id=self.employee,
+                type='reimbursement', amount=126.47, status='approved',
+                allowance_on=date(2026, 9, 30), attachment='qa/receipt.pdf')
+            claim.save()
+        finally:
+            horilla_middlewares._thread_locals.request = None
+        claim.refresh_from_db()
+        self.assertEqual(claim.allowance_id.cpf_wage_type, 'excluded')
+        self.assertFalse(claim.allowance_id.is_taxable)
+        data = self.salary()
+        self.assertEqual(data['gross_pay'], 4126.47)
+        self.assertAlmostEqual(data['taxable_gross_pay'], 4000)
+        self.assertEqual(data['statutory_cpf']['employee_amount'], 800)
+        self.assertEqual(data['statutory_cpf']['employer_amount'], 680)
+        self.assertEqual(data['sdl_wages'], 4000)
+        self.assertEqual(Payslip(gross_pay=data['gross_pay'], pay_head_data=data).sdl_display, 10)
+        self.assertAlmostEqual(data['net_pay'], 3326.47)
+
+    def test_component_title_does_not_override_its_explicit_wage_classification(self):
+        item = self.allowance(126.47)
+        item.title = 'Business Expenses'
+        item.save()
+        data = self.salary()
+        self.assertEqual(data['sdl_wages'], 4126.47)
+
+    def test_additional_wages_remain_in_sdl_base(self):
+        # SDL also covers foreign employees, independently of CPF eligibility.
+        self.details.residency_status = 'foreigner'
+        self.details.save()
+        self.allowance(200, cpf_wage_type='aw', one_time_date=date(2026, 9, 20))
+        data = self.salary()
+        self.assertEqual(data['sdl_wages'], 4200)
+        self.assertEqual(Payslip(gross_pay=data['gross_pay'], pay_head_data=data).sdl_display, 10.5)
 
     def test_legacy_static_cpf_is_replaced_once_and_custom_deduction_retained(self):
         for kind,amount in [('cpf',123),('none',10)]:

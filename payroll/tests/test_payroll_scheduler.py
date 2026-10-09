@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from django.test import SimpleTestCase, TestCase
 
-from employee.singapore_models import SingaporeEmployeeDetails
+from employee.singapore_models import SingaporeEmployeeDetails, SingaporeContributionProfile
 from horilla.testkit import make_company, make_employee
 from payroll.models.models import Contract, Payslip, PayslipAutoGenerate
 from payroll.scheduler import auto_payslip_generate, generate_payslip, previous_calendar_month
@@ -41,6 +41,8 @@ class AutomaticPayrollTests(TestCase):
                                 contract_status=status, wage=4000, wage_type="monthly",
                                 payroll_workweek="five_day")
         SingaporeEmployeeDetails.objects.create(employee=employee, residency_status="citizen")
+        SingaporeContributionProfile.objects.create(employee=employee, effective_month=date(2025,1,1),
+            primary_race="other", muslim_status="no", residency_status="citizen", declaration_reference="QA verified declaration")
         return employee
 
     def generate(self):

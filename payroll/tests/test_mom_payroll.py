@@ -31,6 +31,11 @@ class MomPayrollTests(TestCase):
     def calculate(self, summary=None):
         return compute_salary_on_period(self.employee, date(2026, 9, 1), date(2026, 9, 30), month_summary=summary)
 
+    def confirm_no_shg_fund(self):
+        from employee.singapore_models import SingaporeContributionProfile
+        SingaporeContributionProfile.objects.create(employee=self.employee, effective_month=date(2025,1,1),
+            primary_race="other", muslim_status="no", residency_status="citizen", declaration_reference="QA verified declaration")
+
     def test_carlos_working_day_proration_and_joining_date_clipping(self):
         data = self.calculate()
         self.assertAlmostEqual(data["basic_pay"], 8400 * 18 / 22)
@@ -119,6 +124,7 @@ class MomPayrollTests(TestCase):
         self.employee.dob = date(1990, 1, 1)
         self.employee.save()
         SingaporeEmployeeDetails.objects.create(employee=self.employee, residency_status="citizen")
+        self.confirm_no_shg_fund()
         component = Deduction.objects.create(title="CPF", statutory_type="cpf", is_fixed=True, amount=260)
         component.specific_employees.add(self.employee)
         with patch("payroll.views.component_views.get_pending_attendance", return_value=[]):
@@ -148,6 +154,7 @@ class MomPayrollTests(TestCase):
         self.employee.dob = date(1990, 1, 1)
         self.employee.save()
         SingaporeEmployeeDetails.objects.create(employee=self.employee, residency_status="citizen")
+        self.confirm_no_shg_fund()
         self.contract.salary_structure_id = SalaryStructure.objects.create(title="No deductions")
         self.contract.save()
         component = Deduction.objects.create(title="Old recurring CPF", statutory_type="cpf", is_fixed=True, amount=260)
@@ -165,6 +172,7 @@ class MomPayrollTests(TestCase):
         self.employee.dob = date(1990, 1, 1)
         self.employee.save()
         SingaporeEmployeeDetails.objects.create(employee=self.employee, residency_status="citizen")
+        self.confirm_no_shg_fund()
         structure = SalaryStructure.objects.create(title="CPF structure")
         self.contract.salary_structure_id = structure
         self.contract.save()

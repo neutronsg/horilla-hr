@@ -16,8 +16,9 @@
     <h2>{% trans "Singapore employment details" %}</h2>
     <p>{{ employee.get_full_name }} · {{ employee.badge_id }}</p>
     <p><a href="{% url 'employee-view-individual' employee.pk %}">{% trans "Back to employee" %}</a></p>
+    <p><a class="oh-btn oh-btn--secondary" href="{% url 'singapore-employee-contributions' employee.pk %}">{% trans "Self-help group contributions" %}</a></p>
     {% if edit %}
-      <p>{% trans "Leave unknown information blank. Pass type alone does not establish permission to work. These details do not change CPF calculations automatically." %}</p>
+      <p>{% trans "Leave unknown information blank. Pass type alone does not establish permission to work. Residency and PR effective date are used when calculating new CPF payslips. Existing payslips are unchanged." %}</p>
       <form method="post" autocomplete="off">
         {% csrf_token %}
         {{ form.non_field_errors }}{{ form.revision }}

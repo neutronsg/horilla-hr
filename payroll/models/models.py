@@ -967,6 +967,9 @@ class Allowance(HorillaModel):
                  ("excluded", _("Expense Reimbursement / Not CPF Wages"))],
         verbose_name=_("CPF Wage Classification"),
         help_text=_("Taxability is separate. Fixed transport / meal allowances are CPF wages; genuine expense reimbursements are excluded."))
+    shg_excluded_funds = models.JSONField(default=list, blank=True,
+        verbose_name=_("SHG wage exclusions"),
+        help_text=_("Exclude this allowance only where the fund's rules require it. Ordinary cash allowances remain wages; genuine expense reimbursements use the wage classification above."))
     is_taxable = models.BooleanField(
         default=True,
     )
@@ -1381,6 +1384,10 @@ class Allowance(HorillaModel):
     def clean(self):
         super().clean()
         self.clean_fixed_attributes()
+        from payroll.shg import FUNDS
+        if (not isinstance(self.shg_excluded_funds, list)
+                or any(fund not in FUNDS for fund in self.shg_excluded_funds)):
+            raise ValidationError({"shg_excluded_funds": "Select recognised self-help groups."})
         if not self.is_condition_based:
             self.field = None
             self.condition = None
@@ -2710,6 +2717,11 @@ class Reimbursement(HorillaModel):
                     reimbursement.only_show_under_employee = True
                     reimbursement.include_active_employees = False
                     reimbursement.amount = self.amount
+                    if self.type == "reimbursement":
+                        # Repaying evidenced business expenses is not earned pay.
+                        # Encashments remain wages for CPF, SDL and tax purposes.
+                        reimbursement.cpf_wage_type = "excluded"
+                        reimbursement.is_taxable = False
                     reimbursement.save()
                     reimbursement.include_active_employees = False
                     reimbursement.specific_employees.add(self.employee_id)

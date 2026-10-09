@@ -64,7 +64,7 @@
                 <div class="col-12" style="padding-right:0">{{ form.non_field_errors }}</div>
 
                 {% for field in form.visible_fields %}
-                    {% if field.name == "title" or field.name == "one_time_date" or field.name == "is_taxable" %}
+                    {% if field.name == "title" or field.name == "one_time_date" or field.name == "is_taxable" or field.name == "cpf_wage_type" or field.name == "prorate_fixed" or field.name == "shg_excluded_funds" %}
                         <div class="col-12 col-md-6" id="id_{{ field.name }}_parent_div" style="padding-right:0">
                             <div class="oh-label__info" for="id_{{ field.name }}">
                                 <label class="oh-label{% if field.field.required %} required-star{% endif %}"

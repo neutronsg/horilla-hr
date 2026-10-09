@@ -51,6 +51,10 @@ class AllowanceForm(ModelForm):
     """
 
     verbose_name = _("Allowance")
+    shg_excluded_funds = forms.MultipleChoiceField(required=False,
+        choices=[(fund, fund.upper()) for fund in ("cdac", "ecf", "sinda", "mbmf")],
+        label=_("SHG wage exclusions"),
+        help_text=_("Select only fund-specific exclusions supported by that fund's rules. Do not exclude ordinary cash allowances."))
 
     class Meta:
         """

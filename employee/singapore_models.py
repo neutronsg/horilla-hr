@@ -95,3 +95,79 @@ class SingaporeDetailsAudit(models.Model):
     class Meta:
         default_permissions = ()
         ordering = ["-occurred_at"]
+
+
+class SingaporeContributionProfile(models.Model):
+    """Append-only HR declarations, effective by salary month, with no public API relation."""
+
+    restricted_hr_model = True
+    employee = models.ForeignKey("employee.Employee", on_delete=models.PROTECT, related_name="+")
+    effective_month = models.DateField(verbose_name=_("Effective salary month"))
+    primary_race = models.CharField(max_length=12, choices=[
+        ("chinese", _("Chinese")), ("malay", _("Malay")), ("indian", _("Indian")),
+        ("eurasian", _("Eurasian")), ("other", _("Other")),
+    ], verbose_name=_("Primary race on NRIC / employee declaration"))
+    muslim_status = models.CharField(max_length=3, choices=[("yes", _("Yes")), ("no", _("No"))],
+                                     verbose_name=_("Muslim"))
+    residency_status = models.CharField(max_length=12, choices=SingaporeEmployeeDetails._meta.get_field("residency_status").choices,
+                                       verbose_name=_("Residency during this period"))
+    pr_effective_date = models.DateField(null=True, blank=True)
+    work_pass_type = models.CharField(max_length=30, blank=True,
+        choices=SingaporeEmployeeDetails._meta.get_field("work_pass_type").choices)
+    declaration_reference = models.CharField(max_length=255, verbose_name=_("HR verification / declaration reference"))
+    student_cpf_exempt = models.BooleanField(default=False,
+        verbose_name=_("Verified student exemption for CPF / CDAC / ECF / SINDA"))
+    student_mbmf_exempt = models.BooleanField(default=False,
+        verbose_name=_("Verified student exemption for MBMF"))
+    student_exempt_from = models.DateField(null=True, blank=True)
+    student_exempt_until = models.DateField(null=True, blank=True)
+    student_exemption_reference = models.CharField(max_length=255, blank=True)
+    fund_adjustments = models.JSONField(default=dict, blank=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+
+    class Meta:
+        default_permissions = ()
+        ordering = ["-effective_month", "-pk"]
+        indexes = [models.Index(fields=["employee", "effective_month"], name="sg_shg_employee_month")]
+
+    def clean(self):
+        super().clean()
+        errors = {}
+        if self.effective_month and self.effective_month.day != 1:
+            errors["effective_month"] = _("Use the first day of the effective salary month.")
+        if not self.declaration_reference.strip():
+            errors["declaration_reference"] = _("Record the NRIC / employee declaration verification reference.")
+        if self.residency_status == "pr" and not self.pr_effective_date:
+            errors["pr_effective_date"] = _("Record the PR effective date.")
+        if self.pr_effective_date and self.residency_status != "pr":
+            errors["pr_effective_date"] = _("PR effective date requires Permanent Resident status.")
+        if self.pr_effective_date and self.effective_month:
+            import calendar
+            last_day = self.effective_month.replace(day=calendar.monthrange(self.effective_month.year, self.effective_month.month)[1])
+            if self.pr_effective_date > last_day:
+                errors["pr_effective_date"] = _("PR effective date cannot be after the declaration's salary month.")
+        if self.residency_status in {"citizen", "pr"} and self.work_pass_type:
+            errors["work_pass_type"] = _("Work-pass type applies to foreign employees.")
+        if self.residency_status == "foreigner" and not self.work_pass_type:
+            errors["work_pass_type"] = _("Confirm the foreign employee's work-pass type.")
+        if self.student_cpf_exempt or self.student_mbmf_exempt:
+            if not self.student_exemption_reference.strip():
+                errors["student_exemption_reference"] = _("Record the qualifying institution / MUIS exemption evidence.")
+            if not self.student_exempt_from or not self.student_exempt_until:
+                errors["student_exempt_until"] = _("Record both exemption dates.")
+            elif self.student_exempt_until < self.student_exempt_from:
+                errors["student_exempt_until"] = _("Exemption end cannot precede its start.")
+        from payroll.shg import validate_adjustments
+        try:
+            validate_adjustments(self.fund_adjustments)
+        except ValidationError as exc:
+            errors["__all__"] = exc.messages
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise ValidationError("Contribution declarations are immutable. Save a new effective version.")
+        self.full_clean()
+        return super().save(*args, **kwargs)

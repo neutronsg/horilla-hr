@@ -1409,4 +1409,4 @@ ACCESSBILITY_FEATURE.append(("employees_chart", _("Can view Employees Chart")))
 ACCESSBILITY_FEATURE.append(("birthday_view", _("Can view Birthdays")))
 
 # Register private models without exposing a reverse relation on Employee.
-from employee.singapore_models import SingaporeDetailsAudit, SingaporeEmployeeDetails  # noqa: E402,F401
+from employee.singapore_models import SingaporeContributionProfile, SingaporeDetailsAudit, SingaporeEmployeeDetails  # noqa: E402,F401

@@ -6,6 +6,7 @@ This module is used to map url path with view methods.
 
 from django.urls import path
 from employee.singapore import singapore_details
+from employee.contributions import singapore_contributions
 
 from base.templatetags.horillafilters import app_installed
 from base.views import object_delete, object_duplicate
@@ -35,6 +36,7 @@ from horilla_documents.models import DocumentRequest
 
 urlpatterns = [
     path("singapore-details/<int:pk>/", singapore_details, name="singapore-employee-details"),
+    path("singapore-contributions/<int:pk>/", singapore_contributions, name="singapore-employee-contributions"),
     path(
         "allocation-view/<int:pk>/",
         allocations.AllocationView.as_view(),

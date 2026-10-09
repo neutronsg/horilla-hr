@@ -443,6 +443,7 @@ def calculate_allowance(**kwargs):
             "title": allowance.title,
             "is_taxable": allowance.is_taxable,
             "cpf_wage_type": allowance.cpf_wage_type,
+            "shg_excluded_funds": allowance.shg_excluded_funds,
             "one_time_date": str(allowance.one_time_date) if allowance.one_time_date else None,
             "amount": amount,
         }
@@ -455,6 +456,7 @@ def calculate_allowance(**kwargs):
             "title": allowance.title,
             "is_taxable": allowance.is_taxable,
             "cpf_wage_type": allowance.cpf_wage_type,
+            "shg_excluded_funds": allowance.shg_excluded_funds,
             "one_time_date": str(allowance.one_time_date) if allowance.one_time_date else None,
             "amount": amount,
         }

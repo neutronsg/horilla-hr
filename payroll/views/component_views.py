@@ -258,6 +258,16 @@ def payroll_calculation(employee, start_date, end_date, month_summary=None):
     cpf_salary = basic_pay_details["basic_pay"] - (loss_of_pay if not contract.deduct_leave_from_basic_pay else 0)
     cpf_allowances = allowances["allowances"]
     sdl_wages = max(0, cpf_salary + sum(item["amount"] for item in cpf_allowances if item["cpf_wage_type"] != "excluded"))
+    def wages_from(first_day):
+        earned = compute_salary_on_period(employee, first_day, end_date)
+        salary = earned["basic_pay"] - (earned["loss_of_pay"] if not contract.deduct_leave_from_basic_pay else 0)
+        components = calculate_allowance(employee=employee, start_date=first_day,
+            end_date=end_date, basic_pay=earned["basic_pay"], day_dict=earned["month_data"],
+            contract=contract, salary_details=earned)["allowances"]
+        return salary, components
+    from payroll.shg import calculate_shg
+    statutory_shg = calculate_shg(employee, contract, start_date, end_date,
+        cpf_salary, cpf_allowances, wages_from=wages_from)
     if (residency and residency.residency_status == "pr" and residency.pr_effective_date
             and start_date < residency.pr_effective_date <= end_date):
         # CPF starts on the day PR is granted. Recompute earned wages in that
@@ -279,6 +289,14 @@ def payroll_calculation(employee, start_date, end_date, month_summary=None):
             "employer_contribution_amount": statutory_cpf["employer_amount"],
             "employer_contribution_rate": statutory_cpf["employer_rate"] * 100,
         })
+    if statutory_shg:
+        for row in statutory_shg["funds"]:
+            if row["amount"]:
+                post_tax_deductions["post_tax_deductions"].append({
+                    "deduction_id": None, "title": row["fund"].upper(),
+                    "statutory_type": row["fund"], "amount": row["amount"],
+                    "employer_contribution_amount": 0, "employer_contribution_rate": 0,
+                })
 
 
     installments = (
@@ -344,6 +362,7 @@ def payroll_calculation(employee, start_date, end_date, month_summary=None):
         "sdl_exempt": contract.sdl_exempt,
         "sdl_wages": round(sdl_wages, 2),
         "statutory_cpf": statutory_cpf,
+        "statutory_shg": statutory_shg,
         "proration": working_days_details,
         "contract_wage": contract_wage,
         "basic_pay": basic_pay,

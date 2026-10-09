@@ -1,0 +1,71 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+<style>
+ .sg-shg {max-width:1100px;margin:2rem auto;} .sg-shg h2 {font-size:1.4rem;font-weight:600;}
+ .sg-shg h3 {font-size:1.05rem;font-weight:600;margin:1.6rem 0 .8rem;}
+ .sg-shg .intro,.sg-shg small {color:#64748b;} .sg-shg small {display:block;margin-top:.35rem;line-height:1.45;}
+ .sg-shg .fund-row {border:1px solid #e2e8f0;border-radius:8px;padding:1rem;margin-bottom:.8rem;}
+ .sg-shg .errorlist {color:#b91c1c;} .sg-shg dl {display:grid;grid-template-columns:180px 1fr;gap:.65rem;}
+ .sg-shg dd {margin:0;overflow-wrap:anywhere;} .sg-shg .table-wrap {overflow-x:auto;}
+ .sg-shg table {width:100%;font-size:.85rem;} .sg-shg th,.sg-shg td {padding:.65rem;text-align:left;border-bottom:1px solid #e2e8f0;}
+ @media(max-width:600px){.sg-shg{margin:1rem;} .sg-shg dl{grid-template-columns:1fr;}}
+</style>
+<div class="oh-wrapper sg-shg"><div class="oh-card">
+ <h2>{% trans "Self-help group contributions" %}</h2>
+ <p>{{ employee.get_full_name }} · {{ employee.badge_id }}</p>
+ <p><a href="{% url 'singapore-employee-details' employee.pk %}">{% trans "Back to Singapore employment details" %}</a></p>
+ <p class="intro">{% trans "CDAC, ECF, SINDA and MBMF are calculated automatically from verified declarations and earned wages. Probation, permanent and contract roles follow the same eligibility rules. No separate salary component assignment is needed." %}</p>
+ {% if edit %}
+ <form method="post" autocomplete="off">{% csrf_token %}{{ form.revision }}{{ form.non_field_errors }}
+  <h3>{% trans "Declaration for the salary period" %}</h3>
+  <div class="row">{% for field in form.declaration_fields %}<div class="col-md-6 mb-3"><label class="oh-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}<small>{{ field.help_text }}</small></div>{% endfor %}</div>
+  <h3>{% trans "Fund treatment" %}</h3>
+  <p class="intro">{% trans "Keep Automatic unless a documented application applies. Use its actual effective month. For a partial MBMF opt-out, enter the remaining monthly amount specified by the MUIS certificate as an Approved fixed contribution." %}</p>
+  {% for fund in form.fund_fields %}<div class="fund-row"><strong>{{ fund.name }}</strong><div class="row">
+   <div class="col-md-4"><label class="oh-label" for="{{ fund.mode.id_for_label }}">{{ fund.mode.label }}</label>{{ fund.mode }}{{ fund.mode.errors }}</div>
+   <div class="col-md-3" data-shg-amount><label class="oh-label" for="{{ fund.amount.id_for_label }}">{{ fund.amount.label }}</label>{{ fund.amount }}{{ fund.amount.errors }}</div>
+   <div class="col-md-5" data-shg-reference><label class="oh-label" for="{{ fund.reference.id_for_label }}">{{ fund.reference.label }}</label>{{ fund.reference }}{{ fund.reference.errors }}</div>
+  </div></div>{% endfor %}
+  <h3>{% trans "Verified student exemptions" %}</h3>
+  <div class="row">{% for field in form.student_fields %}<div class="col-md-6 mb-3"><label class="oh-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}<small>{{ field.help_text }}</small></div>{% endfor %}</div>
+  <button class="oh-btn oh-btn--secondary" type="submit">{% trans "Save new version" %}</button>
+  <a class="oh-btn" href="{% url 'singapore-employee-contributions' employee.pk %}">{% trans "Cancel" %}</a>
+ </form>
+ {% else %}
+  <h3>{% if selected_version %}{% trans "Selected declaration" %}{% else %}{% trans "Current salary month" %}{% endif %}</h3>
+  {% if selected_version %}<p><a href="{% url 'singapore-employee-contributions' employee.pk %}">{% trans "Return to current declaration" %}</a></p>{% endif %}
+  {% if current %}<dl>
+   <dt>{% trans "Effective from" %}</dt><dd>{{ current.effective_month|date:"M Y" }}</dd>
+   <dt>{% trans "Primary race" %}</dt><dd>{{ current.get_primary_race_display }}</dd>
+   <dt>{% trans "Muslim" %}</dt><dd>{{ current.get_muslim_status_display }}</dd>
+   <dt>{% trans "Residency" %}</dt><dd>{{ current.get_residency_status_display }}{% if current.work_pass_type %} · {{ current.get_work_pass_type_display }}{% endif %}</dd>
+   {% if current.pr_effective_date %}<dt>{% trans "PR effective date" %}</dt><dd>{{ current.pr_effective_date|date:"d M Y" }}</dd>{% endif %}
+   <dt>{% trans "Applicable funds" %}</dt><dd>{% for fund in funds %}{{ fund|upper }}{% if not forloop.last %}, {% endif %}{% empty %}{% trans "None under this declaration" %}{% endfor %}</dd>
+   <dt>{% trans "Verification reference" %}</dt><dd>{{ current.declaration_reference }}</dd>
+  </dl>
+  {% for item in adjustments %}<p><strong>{{ item.fund }}</strong> · {{ item.label }}{% if item.amount %} · S$ {{ item.amount }}{% endif %} · {{ item.reference }}</p>{% endfor %}
+  {% if current.student_cpf_exempt or current.student_mbmf_exempt %}<p>{% trans "Recorded student exemption" %}: {% if current.student_cpf_exempt %}CPF / CDAC / ECF / SINDA{% endif %}{% if current.student_mbmf_exempt %} · MBMF{% endif %}<br>{{ current.student_exempt_from|date:"d M Y" }} – {{ current.student_exempt_until|date:"d M Y" }} · {{ current.student_exemption_reference }}</p>{% endif %}
+  {% else %}<p>{% trans "Verification pending. Confirm the declaration before generating Singapore payroll." %}</p>{% endif %}
+  {% if can_edit %}<a class="oh-btn oh-btn--secondary" href="?edit=1">{% trans "Add / update declaration" %}</a>{% endif %}
+ {% endif %}
+ <h3>{% trans "Declaration history" %}</h3><p class="intro">{% trans "Each version is retained. The latest version for a salary month is used for new calculations. Paid payslips retain their saved calculation." %}</p>
+ <div class="table-wrap"><table><thead><tr><th>{% trans "Effective month" %}</th><th>{% trans "Saved" %}</th><th>{% trans "Saved by" %}</th><th>{% trans "Reference" %}</th></tr></thead><tbody>
+ {% for record in history %}<tr><td><a href="?version={{ record.pk }}">{{ record.effective_month|date:"M Y" }}</a></td><td>{{ record.created_at|date:"d M Y H:i" }}</td><td>{{ record.created_by|default:"System" }}</td><td>{{ record.declaration_reference }}</td></tr>{% empty %}<tr><td colspan="4">{% trans "No declarations yet." %}</td></tr>{% endfor %}
+ </tbody></table></div>
+ <p class="mt-3"><small>{% trans "Rules and rates" %}: <a href="https://www.cpf.gov.sg/employer/employer-obligations/contributions-to-self-help-groups" target="_blank" rel="noopener">CPF Board</a> · <a href="https://www.muis.gov.sg/give-back/mbmf/employer-information/" target="_blank" rel="noopener">MUIS</a></small></p>
+</div></div>
+{% if edit %}<script>
+ document.querySelectorAll('.sg-shg .fund-row').forEach(function(row) {
+   var mode = row.querySelector('select');
+   function update() {
+     [['[data-shg-amount]', mode.value === 'fixed' || mode.value === 'voluntary'],
+      ['[data-shg-reference]', mode.value !== 'auto']].forEach(function(setting) {
+       var wrapper = row.querySelector(setting[0]), input = wrapper.querySelector('input');
+       wrapper.hidden = !setting[1]; input.disabled = !setting[1];
+       if (!setting[1]) input.value = '';
+     });
+   }
+   mode.addEventListener('change', update); update();
+ });
+</script>{% endif %}
+{% endblock %}

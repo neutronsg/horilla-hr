@@ -19,4 +19,8 @@ def eligible_deductions(queryset, employee, contract=None):
         )
     if contract and contract.cpf_exempt:
         queryset = queryset.exclude(statutory_type__in=("cpf", "cdac", "ecf", "sinda"))
+    from payroll.shg import FUNDS, uses_singapore_payroll
+    if uses_singapore_payroll(employee):
+        # Dated declarations replace legacy manual SHG targeting in every channel.
+        queryset = queryset.exclude(statutory_type__in=FUNDS)
     return queryset.exclude(statutory_type="cpf")
