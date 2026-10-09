@@ -97,6 +97,9 @@ class CompanyLeaveCalendarTests(TestCase):
             data = json.loads(response.content)
             self.assertEqual(data["description"], "CONFIDENTIAL medical reason")
             self.assertEqual(data["available_days"], 10)
+            self.assertEqual(data["department"], str(self.department))
+            self.assertEqual((data["start"], data["end"]), ("2026-10-12", "2026-10-12"))
+            self.assertEqual((data["start_part"], data["end_part"]), ("full_day", "full_day"))
 
     def test_hr_without_view_permission_and_other_company_hr_cannot_fetch_details(self):
         self.role(permissions=("change_leaverequest",))

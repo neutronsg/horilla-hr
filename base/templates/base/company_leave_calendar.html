@@ -1,63 +1,170 @@
 {% load i18n %}
 <style>
-  .clc { margin-top:24px; border:1px solid rgba(128,128,128,.18); border-radius:16px; padding:20px; background:inherit; }
-  .clc h2 { font-size:19px; font-weight:700; margin:0 0 4px; }
-  .clc p { margin:0; font-size:13px; opacity:.7; }
-  .clc-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:16px 0; }
-  .clc-toolbar button,.clc-toolbar input,.clc-toolbar select,.clc-close { border:1px solid rgba(128,128,128,.3); border-radius:7px; padding:7px 11px; background:inherit; color:inherit; }
-  .clc-toolbar button[aria-pressed="true"] { background:#e54f38; color:white; border-color:#e54f38; }
-  .clc-period { font-weight:600; min-width:150px; text-align:center; }
-  .clc-summary { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
-  .clc-summary section { border-radius:10px; background:rgba(128,128,128,.06); padding:12px; }
-  .clc-summary h3 { font-size:14px; font-weight:600; margin:0 0 8px; }
-  .clc-summary ul { margin:0; padding-left:18px; font-size:13px; max-height:130px; overflow:auto; }
-  .clc-scroll { overflow-x:auto; }
-  .clc-grid { display:grid; grid-template-columns:repeat(7,minmax(95px,1fr)); min-width:665px; gap:1px; background:rgba(128,128,128,.18); border:1px solid rgba(128,128,128,.18); border-radius:8px; overflow:hidden; }
-  .clc-heading { padding:8px; text-align:center; font-size:12px; font-weight:600; background:#fafafa; }
-  .clc-day { min-height:110px; padding:7px; background:#fff; }
-  .clc-day.is-off { background:#f4f4f5; }
-  .clc-day.is-today { box-shadow:inset 0 0 0 2px #e54f38; }
+  .clc, .clc-detail { --clc-ink:#182230; --clc-muted:#667085; --clc-line:#e9ecf1; --clc-surface:#fff; --clc-soft:#f8f9fb; --clc-accent:#e54f38; color:var(--clc-ink); font-family:inherit; }
+  .clc { margin-top:24px; border:1px solid var(--clc-line); border-radius:16px; padding:24px; background:var(--clc-surface); box-shadow:0 2px 8px rgba(16,24,40,.025); }
+  .clc *, .clc-detail * { box-sizing:border-box; }
+  .clc-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+  .clc-icon { display:grid; place-items:center; width:42px; height:42px; flex-shrink:0; border-radius:12px; background:#fff0ec; color:#c54330; }
+  .clc-icon svg { width:22px; height:22px; }
+  .clc h2 { font-size:18px; line-height:1.4; font-weight:700; margin:0 0 3px; color:inherit; }
+  .clc p { margin:0; font-size:12px; line-height:1.6; color:var(--clc-muted); }
+  .clc-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+  .clc-nav, .clc-views, .clc-filters { display:flex; align-items:center; gap:6px; }
+  .clc-toolbar button, .clc-filters button, .clc-filters input, .clc-filters select, .clc-close { font:inherit; font-size:12px; line-height:20px; border:1px solid var(--clc-line); border-radius:8px; padding:7px 12px; background:var(--clc-surface); color:var(--clc-ink); }
+  .clc button, .clc-detail button { cursor:pointer; }
+  .clc button:hover, .clc-close:hover { background:var(--clc-soft); }
+  .clc button:focus-visible, .clc input:focus-visible, .clc select:focus-visible, .clc-scroll:focus-visible, .clc-detail button:focus-visible, .clc-detail summary:focus-visible, .clc-detail a:focus-visible { outline:2px solid var(--clc-accent); outline-offset:3px; }
+  .clc-nav button[data-action="previous"], .clc-nav button[data-action="next"] { padding:7px; width:34px; font-size:17px; }
+  .clc-period { font-size:14px; font-weight:650; min-width:170px; text-align:center; }
+  .clc-nav button[data-action="today"] { margin-left:4px; }
+  .clc-views { padding:3px; background:var(--clc-soft); border:1px solid var(--clc-line); border-radius:9px; gap:2px; }
+  .clc-views button { background:transparent; border-color:transparent; padding:4px 14px; color:var(--clc-muted); }
+  .clc-views button[aria-pressed="true"] { background:var(--clc-surface); color:var(--clc-ink); border-color:var(--clc-line); box-shadow:0 1px 3px rgba(16,24,40,.07); font-weight:600; }
+  .clc-filters { margin-bottom:20px; flex-wrap:wrap; gap:8px; }
+  .clc-search-wrap { position:relative; flex:1; min-width:150px; }
+  .clc-search-wrap svg { position:absolute; left:11px; top:10px; width:16px; height:16px; color:var(--clc-muted); pointer-events:none; }
+  .clc-filters input { width:100%; padding-left:34px; }
+  .clc-filters select { max-width:220px; }
+  .clc-filters input::placeholder { color:#98a2b3; }
+  .clc-filters button { display:flex; align-items:center; gap:6px; }
+  .clc-filters button svg { width:14px; height:14px; }
+  .clc-summary { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+  .clc-summary section { border:1px solid var(--clc-line); border-radius:12px; background:var(--clc-soft); padding:14px 16px; }
+  .clc-summary h3 { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:650; margin:0 0 10px; color:var(--clc-ink); }
+  .clc-count { border:1px solid var(--clc-line); border-radius:20px; padding:0 6px; font-size:10px; color:var(--clc-muted); background:var(--clc-surface); }
+  .clc-summary ul { list-style:none; margin:0; padding:0; max-height:150px; overflow:auto; }
+  .clc-empty { color:var(--clc-muted); font-size:12px; line-height:1.7; }
+  .clc-summary-row { display:flex; align-items:center; gap:9px; width:100%; border:0; background:transparent; text-align:left; padding:6px 0; color:var(--clc-ink); font:inherit; }
+  .clc-summary-row:hover { border-radius:6px; }
+  .clc-avatar { display:grid; place-items:center; flex-shrink:0; width:30px; height:30px; border-radius:9px; background:#edf0f8; color:#4a5d85; font-size:10px; font-weight:650; }
+  .clc-summary-name { display:block; font-size:12px; font-weight:600; }
+  .clc-summary-dates { display:block; font-size:11px; color:var(--clc-muted); line-height:1.5; }
+  .clc-scroll { overflow-x:auto; border:1px solid var(--clc-line); border-radius:12px; }
+  .clc-grid { display:grid; grid-template-columns:repeat(7,minmax(95px,1fr)); min-width:665px; gap:1px; background:var(--clc-line); }
+  .clc-heading { padding:10px 8px; text-align:center; font-size:11px; font-weight:600; color:var(--clc-muted); background:var(--clc-soft); }
+  .clc-day { min-height:116px; padding:8px; background:var(--clc-surface); }
+  .clc-day.is-off { background:var(--clc-soft); }
   .clc-day.is-outside .clc-date { opacity:.4; }
-  .clc-date { font-size:12px; font-weight:600; margin-bottom:5px; }
-  .clc-holiday { font-size:10px; color:#ae5b00; margin-bottom:4px; }
-  .clc-event { display:block; width:100%; text-align:left; border:0; border-radius:4px; margin-bottom:4px; padding:5px 6px; font-size:11px; line-height:1.4; background:#e9efff; color:#244681; overflow-wrap:anywhere; }
-  button.clc-event { cursor:pointer; }
-  .clc-status { font-size:13px; margin:8px 0; }
-  .clc-detail { width:min(580px,calc(100vw - 32px)); max-height:80vh; overflow:auto; border:1px solid #aaa; border-radius:12px; padding:20px; color:inherit; background:#fff; }
-  .clc-detail::backdrop { background:rgba(0,0,0,.35); }
-  .clc-detail h3 { font-size:18px; font-weight:600; margin:0 0 16px; }
-  .clc-detail dl { display:grid; grid-template-columns:140px 1fr; gap:8px; font-size:13px; }
-  .clc-detail dd { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
-  .clc-close { float:right; }
-  .dark .clc-day,.dark .clc-heading,.dark .clc-detail { background:#242424; }
-  .dark .clc-day.is-off { background:#303030; }
-  .dark .clc-event { background:#263653; color:#d4e0ff; }
-  @media(max-width:600px) { .clc { padding:12px; } .clc-summary { grid-template-columns:1fr; } .clc-toolbar input { width:100%; } }
+  .clc-day.is-today { background:#fffaf8; }
+  .clc-date { display:grid; place-items:center; width:24px; height:24px; font-size:11px; font-weight:600; margin-bottom:6px; }
+  .is-today .clc-date { background:var(--clc-accent); color:white; border-radius:50%; }
+  .clc-holiday { font-size:10px; color:#ad6b16; margin-bottom:5px; line-height:1.4; }
+  .clc-event { display:block; width:100%; text-align:left; border:1px solid #e1e7f4; border-left:3px solid #819bcc; border-radius:6px; margin-bottom:5px; padding:6px 7px; font:inherit; line-height:1.4; background:#f0f4fc; color:#35527c; overflow-wrap:anywhere; }
+  .clc .clc-event:hover { background:#e6edf9; }
+  .clc-event-name { display:block; font-size:11px; font-weight:600; }
+  .clc-event-part { display:block; font-size:10px; color:#657a9b; margin-top:2px; }
+  .clc-status { font-size:12px; color:var(--clc-muted); margin:8px 0; }
+  .clc-status:empty { display:none; }
+  .clc-detail { width:min(640px,calc(100vw - 32px)); max-height:88vh; max-height:88dvh; margin:auto; overflow:hidden; border:1px solid var(--clc-line); border-radius:18px; padding:0; background:var(--clc-surface); box-shadow:0 24px 80px rgba(16,24,40,.22); }
+  .clc-detail[open] { display:flex; flex-direction:column; }
+  .clc-detail::backdrop { background:rgba(16,24,40,.45); backdrop-filter:blur(3px); }
+  .clc-detail-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--clc-line); flex-shrink:0; }
+  .clc-detail-header h3 { margin:0; font-size:14px; font-weight:650; color:var(--clc-ink); }
+  .clc-detail-header .clc-close { display:grid; place-items:center; padding:6px; width:32px; height:32px; border:0; color:var(--clc-muted); }
+  .clc-close svg { width:18px; height:18px; }
+  .clc-detail-body { overflow-y:auto; overscroll-behavior:contain; padding:24px; min-height:0; }
+  .clc-detail-body p { font-size:13px; line-height:1.7; margin:0; }
+  .clc-detail-footer { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 24px; border-top:1px solid var(--clc-line); background:var(--clc-soft); flex-shrink:0; }
+  .clc-detail-footer p { font-size:11px; line-height:1.5; color:var(--clc-muted); margin:0; max-width:340px; }
+  .clc-detail-footer .clc-close { font-weight:600; padding:7px 18px; }
+  .clc-detail-hero { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+  .clc-detail-hero .clc-avatar { width:46px; height:46px; font-size:15px; border-radius:13px; }
+  .clc-detail-person { flex:1; min-width:0; }
+  .clc-detail-person h4 { font-size:19px; line-height:1.35; font-weight:700; margin:0 0 4px; overflow-wrap:anywhere; color:var(--clc-ink); }
+  .clc-detail-person p { font-size:12px; color:var(--clc-muted); }
+  .clc-badge { display:inline-flex; align-items:center; flex-shrink:0; gap:5px; padding:4px 9px; border-radius:20px; background:#edf9f1; color:#227346; font-size:11px; font-weight:600; }
+  .clc-badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
+  .clc-badge.is-pending { background:#fff4de; color:#94640d; }
+  .clc-badge.is-rejected { background:#fff0ed; color:#b94332; }
+  .clc-detail-dates { display:grid; grid-template-columns:1fr 1fr .85fr; gap:12px; margin:0 0 22px; padding:16px; border:1px solid var(--clc-line); border-radius:12px; background:var(--clc-soft); }
+  .clc-detail-dates dt, .clc-balance dt { font-size:11px; font-weight:500; color:var(--clc-muted); margin:0 0 5px; }
+  .clc-detail-dates dd { font-size:13px; font-weight:600; margin:0; }
+  .clc-detail-dates small { display:block; font-weight:400; font-size:11px; margin-top:3px; color:var(--clc-muted); }
+  .clc-detail-section { margin-top:20px; }
+  .clc-detail-section h4, .clc-detail-section h5 { font-size:12px; font-weight:650; margin:0 0 8px; color:var(--clc-ink); }
+  .clc-reason { white-space:pre-wrap; overflow-wrap:anywhere; color:var(--clc-muted); }
+  .clc-attachment { display:inline-flex; align-items:center; font-size:12px; color:#3d619c; margin-top:9px; text-decoration:underline; text-underline-offset:3px; }
+  .clc-balance { display:grid; grid-template-columns:1.2fr 1fr 1fr; gap:12px; padding:14px 16px; border:1px solid var(--clc-line); border-radius:12px; margin:0; }
+  .clc-balance dd { font-size:20px; font-weight:650; line-height:1.3; margin:0; }
+  .clc-balance small { margin-left:4px; font-size:11px; font-weight:400; color:var(--clc-muted); }
+  .clc-negative { color:#c14332; }
+  .clc-balance-note { margin-top:7px!important; font-size:11px!important; color:var(--clc-muted); }
+  .clc-approvals, .clc-timeline { list-style:none; padding:0; margin:0; }
+  .clc-approvals li { display:flex; align-items:center; gap:10px; padding:8px 0; }
+  .clc-step-number { display:grid; place-items:center; width:25px; height:25px; border:1px solid var(--clc-line); border-radius:50%; font-size:11px; color:var(--clc-muted); }
+  .clc-step-name { flex:1; font-size:12px; }
+  .clc-timeline li { position:relative; border-left:1px solid var(--clc-line); padding:0 0 16px 15px; margin-left:4px; }
+  .clc-timeline li::before { position:absolute; content:''; width:7px; height:7px; border-radius:50%; background:#b4bfce; left:-4px; top:5px; }
+  .clc-timeline li:last-child { padding-bottom:0; }
+  .clc-timeline-title { display:block; font-size:12px; font-weight:600; line-height:1.6; }
+  .clc-timeline-meta { display:block; font-size:11px; color:var(--clc-muted); line-height:1.6; margin-top:2px; overflow-wrap:anywhere; }
+  .clc-timeline p { font-size:12px; color:var(--clc-muted); margin-top:4px; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .clc-audit { margin-top:22px; border-top:1px solid var(--clc-line); padding-top:14px; }
+  .clc-audit > summary { cursor:pointer; display:list-item; list-style:disclosure-closed inside; font-size:12px; font-weight:600; color:var(--clc-muted); }
+  .clc-audit[open] > summary { list-style-type:disclosure-open; margin-bottom:16px; }
+  .clc-raw { margin-top:6px; font-size:11px; color:var(--clc-muted); }
+  .clc-raw summary { cursor:pointer; }
+  .clc-raw p { font-size:11px; padding:8px; margin-top:6px; border-radius:6px; background:var(--clc-soft); }
+  .clc-created { font-size:11px!important; color:var(--clc-muted); margin-top:18px!important; }
+  .dark .clc, .dark .clc-detail { --clc-ink:#e8ecf2; --clc-muted:#9ba5b4; --clc-line:#303641; --clc-surface:#171b22; --clc-soft:#20252e; }
+  .dark .clc-icon { background:#382621; color:#f59c89; }
+  .dark .clc-avatar { background:#293447; color:#b9cbea; }
+  .dark .clc-day.is-today { background:#30241f; }
+  .dark .clc-event { background:#243147; color:#d4e0ff; border-color:#334563; border-left-color:#7897c9; }
+  .dark .clc .clc-event:hover { background:#2d3c55; }
+  .dark .clc-event-part { color:#a8bad8; }
+  .dark .clc-badge { background:#203a2c; color:#8fdbaf; }
+  .dark .clc-badge.is-pending { background:#40321d; color:#ebc57d; }
+  .dark .clc-badge.is-rejected { background:#402821; color:#f7ad9a; }
+  .dark .clc-negative { color:#f7ad9a; }
+  .dark .clc-attachment { color:#a8c4f0; }
+  .dark .clc-filters select { color-scheme:dark; }
+  @media(max-width:600px) {
+    .clc { padding:16px; } .clc-header { align-items:flex-start; } .clc h2 { font-size:16px; }
+    .clc-summary { grid-template-columns:1fr; } .clc-toolbar { gap:10px; }
+    .clc-nav { width:100%; gap:4px; } .clc-period { min-width:0; flex:1; font-size:12px; }
+    .clc-filters { gap:8px; } .clc-filters select { flex:1; max-width:none; }
+    .clc-search-wrap { flex-basis:100%; order:-1; }
+    .clc-detail { width:calc(100vw - 20px); max-height:92vh; max-height:92dvh; border-radius:14px; }
+    .clc-detail-header, .clc-detail-footer { padding:14px 16px; } .clc-detail-body { padding:18px 16px; }
+    .clc-detail-hero { flex-wrap:wrap; } .clc-detail-person h4 { font-size:17px; }
+    .clc-detail-dates { grid-template-columns:1fr 1fr; } .clc-detail-dates > div:last-child { grid-column:1 / -1; border-top:1px solid var(--clc-line); padding-top:10px; }
+    .clc-balance { gap:8px; padding:12px; } .clc-balance dd { font-size:18px; }
+    .clc-detail-footer p { max-width:210px; }
+  }
 </style>
 <section class="clc" id="companyLeaveCalendar" data-today="{{ company_calendar_today }}" data-url="{% url 'ess-company-leave' %}">
-  <h2>{% trans "Company Leave Calendar" %}</h2>
-  <p>{% trans "Approved absences in your company. AM / PM indicate half-day leave." %}</p>
+  <div class="clc-header">
+    <span class="clc-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-13 4h2m4 0h2"/></svg></span>
+    <div><h2>{% trans "Company Leave Calendar" %}</h2><p>{% trans "Approved absences in your company. AM / PM indicate half-day leave." %}</p></div>
+  </div>
   <div class="clc-toolbar">
-    <button type="button" data-action="previous" aria-label="{% trans 'Previous period' %}">←</button>
-    <span class="clc-period" aria-live="polite"></span>
-    <button type="button" data-action="next" aria-label="{% trans 'Next period' %}">→</button>
-    <button type="button" data-action="today">{% trans "Today" %}</button>
-    <button type="button" data-view="month" aria-pressed="true">{% trans "Month" %}</button>
-    <button type="button" data-view="week" aria-pressed="false">{% trans "Week" %}</button>
+    <div class="clc-nav">
+      <button type="button" data-action="previous" aria-label="{% trans 'Previous period' %}">←</button>
+      <span class="clc-period" aria-live="polite"></span>
+      <button type="button" data-action="next" aria-label="{% trans 'Next period' %}">→</button>
+      <button type="button" data-action="today">{% trans "Today" %}</button>
+    </div>
+    <div class="clc-views" role="group" aria-label="{% trans 'Calendar view' %}">
+      <button type="button" data-view="month" aria-pressed="true">{% trans "Month" %}</button>
+      <button type="button" data-view="week" aria-pressed="false">{% trans "Week" %}</button>
+    </div>
+  </div>
+  <div class="clc-filters">
+    <div class="clc-search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input class="clc-search" type="search" maxlength="100" placeholder="{% trans 'Search employee' %}" aria-label="{% trans 'Search employee' %}"></div>
     <select class="clc-department" aria-label="{% trans 'Department' %}"><option value="">{% trans "All departments" %}</option></select>
-    <input class="clc-search" type="search" maxlength="100" placeholder="{% trans 'Search employee' %}" aria-label="{% trans 'Search employee' %}">
-    <button type="button" data-action="refresh">{% trans "Refresh" %}</button>
+    <button type="button" data-action="refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1"/></svg>{% trans "Refresh" %}</button>
   </div>
   <div class="clc-summary">
-    <section><h3>{% trans "Away today" %}</h3><ul class="clc-today-list"></ul></section>
-    <section><h3>{% trans "Next 7 days" %}</h3><ul class="clc-week-list"></ul></section>
+    <section><h3>{% trans "Away today" %} <span class="clc-count clc-today-count">0</span></h3><ul class="clc-today-list"></ul></section>
+    <section><h3>{% trans "Next 7 days" %} <span class="clc-count clc-week-count">0</span></h3><ul class="clc-week-list"></ul></section>
   </div>
   <div class="clc-status" role="status" aria-live="polite">{% trans "Loading..." %}</div>
-  <div class="clc-scroll"><div class="clc-grid"></div></div>
+  <div class="clc-scroll" tabindex="0" role="region" aria-label="{% trans 'Company leave dates' %}"><div class="clc-grid"></div></div>
   <dialog class="clc-detail" aria-labelledby="clcDetailTitle">
-    <button type="button" class="clc-close">{% trans "Close" %}</button>
-    <h3 id="clcDetailTitle">{% trans "Leave details" %}</h3>
-    <div class="clc-detail-body"></div>
+    <div class="clc-detail-header"><h3 id="clcDetailTitle">{% trans "Leave details" %}</h3><button type="button" class="clc-close" aria-label="{% trans 'Close leave details' %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div class="clc-detail-body" aria-live="polite"></div>
+    <div class="clc-detail-footer"><p>{% trans "Private details are visible only to company HR and admins." %}</p><button type="button" class="clc-close">{% trans "Close" %}</button></div>
   </dialog>
 </section>
 <script>
@@ -77,6 +184,14 @@
   function monday(value) { return add(value, -((value.getUTCDay()+6)%7)); }
   function node(tag, text, className) { const e = document.createElement(tag); if(text !== undefined) e.textContent=text; if(className) e.className=className; return e; }
   function part(value) { return value === 'first_half' ? 'AM' : value === 'second_half' ? 'PM' : '{% trans "Full day"|escapejs %}'; }
+  function initials(name) { return name.trim().split(/\s+/).filter(Boolean).slice(0,2).map(word=>Array.from(word)[0]).join('').toUpperCase(); }
+  function dateLabel(value, year=false) { const date=parse(value); if(Number.isNaN(date.getTime())) return '—'; return date.toLocaleDateString(undefined,{day:'numeric',month:'short',...(year?{year:'numeric'}:{}),timeZone:'UTC'}); }
+  function timeLabel(value) { if(!value) return ''; const date=new Date(value); return Number.isNaN(date.getTime())?'—':date.toLocaleString(undefined,{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Singapore'})+' SGT'; }
+  function number(value) { return value===null || value===undefined?'—':Number(value).toLocaleString(undefined,{maximumFractionDigits:2}); }
+  function daysLabel(value) { return number(value)+' '+(Math.abs(Number(value))===1?'{% trans "day"|escapejs %}':'{% trans "days"|escapejs %}'); }
+  function statusLabel(value) { return ({approved:'{% trans "Approved"|escapejs %}',requested:'{% trans "Pending approval"|escapejs %}',cancelled:'{% trans "Cancellation pending"|escapejs %}',rejected:'{% trans "Rejected"|escapejs %}'})[value] || value; }
+  function badge(value) { return node('span',statusLabel(value),'clc-badge'+(value==='requested'||value==='cancelled'?' is-pending':value==='rejected'?' is-rejected':'')); }
+  function section(title) { const element=node('section',undefined,'clc-detail-section'); element.append(node('h4',title)); return element; }
   function range() {
     if (view === 'week') { const start=monday(anchor); return [start,add(start,6)]; }
     const first=new Date(Date.UTC(anchor.getUTCFullYear(),anchor.getUTCMonth(),1));
@@ -97,7 +212,8 @@
       data.holidays.filter(h=>h.date===date).forEach(h=>{cell.classList.add('is-off');cell.append(node('div',h.name,'clc-holiday'));});
       data.events.forEach(event=>{
         const occurrence=event.days.find(day=>day.date===date); if(!occurrence) return;
-        const e=node(data.can_view_details?'button':'div',event.name+' · '+part(occurrence.part),'clc-event');
+        const e=node(data.can_view_details?'button':'div',undefined,'clc-event');
+        e.append(node('span',event.name,'clc-event-name'),node('span',part(occurrence.part),'clc-event-part'));
         e.title=event.name+(event.department?' · '+event.department:'')+' · {% trans "On leave"|escapejs %}';
         if(data.can_view_details) { e.type='button';e.addEventListener('click',()=>showDetail(event.id)); }
         cell.append(e);
@@ -110,18 +226,23 @@
       const list=root.querySelector(selector);list.replaceChildren();
       data.events.forEach(event=>{
         const days=event.days.filter(day=>!onlyToday || day.date===today); if(!days.length) return;
-        const label=event.name+(event.department?' · '+event.department:'')+' — '+(onlyToday?part(days[0].part):days.map(day=>day.date.slice(5)+' '+part(day.part)).join(', '));
+        const dates=onlyToday?part(days[0].part):days.map(day=>dateLabel(day.date)+(day.part==='full_day'?'':' · '+part(day.part))).join(', ');
         const li=node('li');
-        if(data.can_view_details) {const b=node('button',label,'clc-event');b.type='button';b.addEventListener('click',()=>showDetail(event.id));li.append(b);} else li.textContent=label;
+        const row=node(data.can_view_details?'button':'div',undefined,'clc-summary-row'), info=node('span');
+        info.append(node('span',event.name,'clc-summary-name'),node('span',dates,'clc-summary-dates'));
+        const avatar=node('span',initials(event.name),'clc-avatar');avatar.setAttribute('aria-hidden','true');row.append(avatar,info);
+        if(data.can_view_details) {row.type='button';row.addEventListener('click',()=>showDetail(event.id));}
+        li.append(row);
         list.append(li);
       });
-      if(!list.children.length) list.append(node('li','{% trans "No approved absences"|escapejs %}'));
+      root.querySelector(onlyToday?'.clc-today-count':'.clc-week-count').textContent=String(list.children.length);
+      if(!list.children.length) list.append(node('li','{% trans "No approved absences"|escapejs %}','clc-empty'));
     });
   }
   async function load() {
     if(controller) controller.abort(); controller=new AbortController();const signal=controller.signal;
     const [start,end]=range();
-    root.querySelector('.clc-period').textContent=view==='month'?anchor.toLocaleDateString(undefined,{month:'long',year:'numeric',timeZone:'UTC'}):iso(start)+' – '+iso(end);
+    root.querySelector('.clc-period').textContent=view==='month'?anchor.toLocaleDateString(undefined,{month:'long',year:'numeric',timeZone:'UTC'}):dateLabel(iso(start),start.getUTCFullYear()!==end.getUTCFullYear())+' – '+dateLabel(iso(end),true);
     status.textContent='{% trans "Loading..."|escapejs %}';
     try {
       const [data,upcoming]=await Promise.all([get(endpoint+'?'+params(start,end),signal),get(endpoint+'?'+params(parse(today),add(parse(today),6)),signal)]);
@@ -131,23 +252,72 @@
       options.forEach((name,id)=>{if(!Array.from(department.options).some(o=>o.value===id)){const option=node('option',name);option.value=id;department.append(option);}});
       draw(data,start,end);summaries(upcoming);
       status.textContent=data.events.length?'':'{% trans "No approved absences in this period"|escapejs %}';
-    } catch(error) { if(error.name!=='AbortError') {grid.replaceChildren();root.querySelector('.clc-today-list').replaceChildren();root.querySelector('.clc-week-list').replaceChildren();status.textContent='{% trans "Unable to load the company calendar. Please refresh."|escapejs %}';} }
+    } catch(error) { if(error.name!=='AbortError') {grid.replaceChildren();root.querySelector('.clc-today-list').replaceChildren();root.querySelector('.clc-week-list').replaceChildren();root.querySelectorAll('.clc-count').forEach(count=>count.textContent='—');status.textContent='{% trans "Unable to load the company calendar. Please refresh."|escapejs %}';} }
+  }
+  function renderDetail(data) {
+    const hero=node('div',undefined,'clc-detail-hero'), person=node('div',undefined,'clc-detail-person');
+    person.append(node('h4',data.name),node('p',data.leave_type+(data.department?' · '+data.department:'')));
+    const avatar=node('span',initials(data.name),'clc-avatar');avatar.setAttribute('aria-hidden','true');
+    hero.append(avatar,person,badge(data.status));
+    const dates=node('dl',undefined,'clc-detail-dates');
+    const sameDayPart=data.start===data.end?(data.start_part==='full_day'?data.end_part:data.start_part):null;
+    [['{% trans "From"|escapejs %}',dateLabel(data.start,true),part(sameDayPart || data.start_part)],['{% trans "To"|escapejs %}',dateLabel(data.end,true),part(sameDayPart || data.end_part)],['{% trans "Duration"|escapejs %}',daysLabel(data.requested_days),'']].forEach(([label,value,hint])=>{
+      const item=node('div'), dd=node('dd',value);if(hint) dd.append(node('small',hint));item.append(node('dt',label),dd);dates.append(item);
+    });
+    const reason=section('{% trans "Reason"|escapejs %}');
+    reason.append(node('p',data.description || '{% trans "No reason provided."|escapejs %}','clc-reason'));
+    if(data.attachment) {const a=node('a','{% trans "View attachment"|escapejs %}','clc-attachment');a.href=data.attachment;a.target='_blank';a.rel='noopener noreferrer';reason.append(a);}
+    const balances=section('{% trans "Current leave balance"|escapejs %}'), metrics=node('dl',undefined,'clc-balance');
+    const total=data.available_days===null || data.carryforward_days===null?null:Number(data.available_days)+Number(data.carryforward_days);
+    [['{% trans "Total remaining"|escapejs %}',total],['{% trans "Available"|escapejs %}',data.available_days],['{% trans "Carry forward"|escapejs %}',data.carryforward_days]].forEach(([label,value])=>{
+      const item=node('div'), dd=node('dd',number(value),value!==null && Number(value)<0?'clc-negative':'');dd.append(node('small',value!==null && Math.abs(Number(value))===1?'{% trans "day"|escapejs %}':'{% trans "days"|escapejs %}'));item.append(node('dt',label),dd);metrics.append(item);
+    });
+    balances.append(metrics,node('p','{% trans "Current balance includes other approved requests."|escapejs %}'+(total!==null && total<0?' {% trans "This balance is below zero."|escapejs %}':''),'clc-balance-note'));
+    const content=[hero,dates,reason,balances];
+    if(data.approvals.length) {
+      const approvals=section('{% trans "Approval steps"|escapejs %}'), list=node('ol',undefined,'clc-approvals');
+      data.approvals.forEach(step=>{const li=node('li');li.append(node('span',String(step.sequence),'clc-step-number'),node('span',step.name,'clc-step-name'),badge(step.approved?'approved':step.rejected?'rejected':'requested'));list.append(li);});
+      approvals.append(list);content.push(approvals);
+    }
+    if(data.comments.length) {
+      const activity=section('{% trans "Activity"|escapejs %}'), list=node('ul',undefined,'clc-timeline');
+      data.comments.forEach(entry=>{
+        const li=node('li');
+        // Present our exact audit format as a readable summary; retain the original record.
+        const audit=/^Self-approved; company=(\d+); role=(HR Manager|Admin); status=(approved|requested); deducted=(-?\d+(?:\.\d+)?); balance=(-?\d+(?:\.\d+)?)$/.exec(entry.text);
+        if(audit) {
+          li.append(node('span',entry.name+' · {% trans "Self-approved leave"|escapejs %}','clc-timeline-title'));
+          li.append(node('span',timeLabel(entry.at)+' · '+audit[2],'clc-timeline-meta'));
+          li.append(node('p',statusLabel(audit[3])+' · {% trans "Deducted"|escapejs %}: '+daysLabel(audit[4])+' · {% trans "Balance"|escapejs %}: '+daysLabel(audit[5])));
+          const raw=node('details',undefined,'clc-raw');raw.append(node('summary','{% trans "Original audit record"|escapejs %}'),node('p',entry.text));li.append(raw);
+        } else {
+          li.append(node('span',entry.name,'clc-timeline-title'),node('span',timeLabel(entry.at),'clc-timeline-meta'),node('p',entry.text));
+        }
+        list.append(li);
+      });
+      activity.append(list);content.push(activity);
+    }
+    if(data.history.length) {
+      const history=node('details',undefined,'clc-audit'), list=node('ul',undefined,'clc-timeline');
+      history.append(node('summary','{% trans "Request history"|escapejs %} · '+data.history.length));
+      data.history.forEach(entry=>{
+        const li=node('li');li.append(node('span',statusLabel(entry.status),'clc-timeline-title'),node('span',timeLabel(entry.at)+(entry.actor?' · '+entry.actor:''),'clc-timeline-meta'),node('p','{% trans "Recorded deduction"|escapejs %}: '+daysLabel(entry.deducted)));list.append(li);
+      });
+      history.append(list);content.push(history);
+    }
+    if(data.created_by) content.push(node('p','{% trans "Created by"|escapejs %} '+data.created_by,'clc-created'));
+    detailBody.replaceChildren(...content);detailBody.scrollTop=0;
   }
   async function showDetail(id) {
     if(detailController) detailController.abort();detailController=new AbortController();const signal=detailController.signal;
-    detailBody.replaceChildren(node('p','{% trans "Loading..."|escapejs %}'));if(!dialog.open) dialog.showModal();
+    detailBody.replaceChildren(node('p','{% trans "Loading leave details…"|escapejs %}','clc-empty'));detailBody.scrollTop=0;
+    if(!dialog.open) dialog.showModal();
     try {
       const data=await get(endpoint+id+'/',signal);if(signal.aborted || !dialog.open) return;
-      const dl=node('dl');
-      [['{% trans "Employee"|escapejs %}',data.name],['{% trans "Leave Type"|escapejs %}',data.leave_type],['{% trans "Status"|escapejs %}',data.status],['{% trans "Requested Days"|escapejs %}',data.requested_days],['{% trans "Description"|escapejs %}',data.description],['{% trans "Available Days"|escapejs %}',data.available_days],['{% trans "Carryforward Days"|escapejs %}',data.carryforward_days],['{% trans "Created By"|escapejs %}',data.created_by]].forEach(([label,value])=>{dl.append(node('dt',label),node('dd',value===null?'—':String(value)));});
-      if(data.attachment) {const dd=node('dd'), a=node('a','{% trans "View attachment"|escapejs %}');a.href=data.attachment;a.target='_blank';a.rel='noopener noreferrer';dd.append(a);dl.append(node('dt','{% trans "Attachment"|escapejs %}'),dd);}
-      const approvals=node('ul');data.approvals.forEach(step=>approvals.append(node('li',step.sequence+'. '+step.name+' — '+(step.approved?'Approved':step.rejected?'Rejected':'Pending'))));
-      const comments=node('ul');data.comments.forEach(entry=>comments.append(node('li',(entry.at?entry.at+' · ':'')+entry.name+': '+entry.text)));
-      const history=node('ul');data.history.forEach(entry=>history.append(node('li',entry.at+' · '+(entry.actor||'—')+' · '+entry.status+' · {% trans "Deducted"|escapejs %}: '+entry.deducted)));
-      detailBody.replaceChildren(dl,node('h4','{% trans "Approval steps"|escapejs %}'),approvals,node('h4','{% trans "Activity"|escapejs %}'),comments,node('h4','{% trans "History"|escapejs %}'),history);
-    } catch(error) { if(error.name!=='AbortError') detailBody.replaceChildren(node('p','{% trans "Unable to load leave details."|escapejs %}')); }
+      renderDetail(data);
+    } catch(error) { if(error.name!=='AbortError') detailBody.replaceChildren(node('p','{% trans "Unable to load leave details. Close this window and try again."|escapejs %}','clc-empty')); }
   }
-  root.querySelector('.clc-close').addEventListener('click',()=>dialog.close());
+  root.querySelectorAll('.clc-close').forEach(button=>button.addEventListener('click',()=>dialog.close()));
   dialog.addEventListener('close',()=>{if(detailController) detailController.abort();detailBody.replaceChildren();});
   root.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',()=>{
     const action=button.dataset.action;

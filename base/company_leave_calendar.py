@@ -165,7 +165,8 @@ def company_leave_detail(request, pk):
     ):
         return JsonResponse({"error": "HR/Admin leave-view access is required."}, status=403)
     item = get_object_or_404(_visible_requests(company_id).select_related(
-        "employee_id", "leave_type_id", "created_by"
+        "employee_id", "employee_id__employee_work_info__department_id",
+        "leave_type_id", "created_by"
     ), pk=pk)
     balance = AvailableLeave._base_manager.filter(
         employee_id=item.employee_id, leave_type_id=item.leave_type_id
@@ -175,6 +176,9 @@ def company_leave_detail(request, pk):
     history = item.history.select_related("history_user").order_by("history_date", "history_id")
     return JsonResponse({
         "name": item.employee_id.get_full_name(), "leave_type": item.leave_type_id.name,
+        "department": str(item.employee_id.employee_work_info.department_id or ""),
+        "start": item.start_date.isoformat(), "end": item.end_date.isoformat(),
+        "start_part": item.start_date_breakdown, "end_part": item.end_date_breakdown,
         "description": item.description, "status": item.status,
         "requested_days": item.requested_days,
         "attachment": item.attachment.url if item.attachment else None,
