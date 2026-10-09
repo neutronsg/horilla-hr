@@ -18,7 +18,7 @@ django-widget-tweaks
 
 # REST API
 djangorestframework==3.16.0
-djangorestframework-simplejwt==5.5.0
+djangorestframework-simplejwt==5.5.1
 PyJWT==2.14.0
 drf-yasg
 

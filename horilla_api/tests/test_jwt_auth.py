@@ -88,6 +88,15 @@ class JWTProtectedEndpointTests(TestCase):
         response = self.client.get("/api/employee/employee-type/")
         self.assertEqual(response.status_code, 401)
 
+    def test_existing_token_with_integer_user_id_still_authenticates(self):
+        from rest_framework_simplejwt.tokens import AccessToken
+
+        token = AccessToken.for_user(self.user)
+        token["user_id"] = self.user.pk
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+        response = self.client.get("/api/employee/employee-type/")
+        self.assertEqual(response.status_code, 200)
+
 
 class RejectBasicAuthTests(TestCase):
     def test_reject_basic_authentication_class(self):
