@@ -67,6 +67,27 @@ class JWTProtectedEndpointTests(TestCase):
         response = self.client.get("/api/employee/employee-type/")
         self.assertEqual(response.status_code, 200)
 
+    def test_refreshed_access_token_authenticates(self):
+        from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        refresh = RefreshToken.for_user(self.user)
+        serializer = TokenRefreshSerializer(data={"refresh": str(refresh)})
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {serializer.validated_data['access']}")
+        response = self.client.get("/api/employee/employee-type/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_wrong_signature_does_not_authenticate(self):
+        import jwt
+        from rest_framework_simplejwt.tokens import AccessToken
+
+        token = AccessToken.for_user(self.user)
+        forged = jwt.encode(token.payload, "a-different-secret-key-with-at-least-thirty-two-bytes", algorithm="HS256")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {forged}")
+        response = self.client.get("/api/employee/employee-type/")
+        self.assertEqual(response.status_code, 401)
+
 
 class RejectBasicAuthTests(TestCase):
     def test_reject_basic_authentication_class(self):
