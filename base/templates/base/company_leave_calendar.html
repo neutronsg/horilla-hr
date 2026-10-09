@@ -284,7 +284,7 @@
       data.comments.forEach(entry=>{
         const li=node('li');
         // Present our exact audit format as a readable summary; retain the original record.
-        const audit=/^Self-approved; company=(\d+); role=(HR Manager|Admin); status=(approved|requested); deducted=(-?\d+(?:\.\d+)?); balance=(-?\d+(?:\.\d+)?)$/.exec(entry.text);
+        const audit=/^Self-approved; company=(\d+); role=(HR Manager|Admin(?:/HR Manager)?|Superuser); status=(approved|requested); deducted=(-?\d+(?:\.\d+)?); balance=(-?\d+(?:\.\d+)?)$/.exec(entry.text);
         if(audit) {
           li.append(node('span',entry.name+' · {% trans "Self-approved leave"|escapejs %}','clc-timeline-title'));
           li.append(node('span',timeLabel(entry.at)+' · '+audit[2],'clc-timeline-meta'));
