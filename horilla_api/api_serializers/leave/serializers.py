@@ -1,3 +1,4 @@
+from leave.services import can_approve_leave_balance
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -71,7 +72,7 @@ def leave_Validations(self, data):
             _("There is a mismatch in the breakdown of the start date and end date.")
         )
 
-    if not effective_requested_days <= total_leave_days:
+    if not leave_type_id.allows_overdraft and effective_requested_days > total_leave_days:
         raise serializers.ValidationError(
             _("Employee doesn't have enough leave days..")
         )
@@ -498,10 +499,7 @@ class LeaveRequestApproveSerializer(serializers.ModelSerializer):
         available_leave = AvailableLeave.objects.get(
             leave_type_id=leave_type_id, employee_id=employee_id
         )
-        total_available_leave = (
-            available_leave.available_days + available_leave.carryforward_days
-        )
-        if not total_available_leave >= leave_request.requested_days:
+        if not can_approve_leave_balance(available_leave, leave_request.requested_days):
             raise serializers.ValidationError(
                 _("%(employee)s dont have enough leave days to approve the request..")
                 % {"employee": employee_id}

@@ -382,7 +382,7 @@ class MyLeaveRequestForm(HorillaFormView):
                             for requested_date in requested_dates
                         )
                         requested_days = requested_days - company_leave_count
-                if requested_days <= available_total_leave:
+                if leave_type.allows_overdraft or requested_days <= available_total_leave:
                     leave_request.save()
                     messages.success(
                         self.request, _("Leave request updated successfully")

@@ -1,8 +1,8 @@
 """
 Employee Self-Service (ESS) dashboard views.
 
-Accessible at /ess/ — shows personal data only for the logged-in employee.
-All data is scoped to request.user.employee_get; no cross-employee access.
+Accessible at /ess/ — personal data is scoped to the logged-in employee.
+The separate company calendar exposes a minimal approved-absence projection.
 """
 
 from datetime import date, timedelta
@@ -57,12 +57,15 @@ def ess_dashboard(request):
         messages.error(request, _("Your account is not linked to an employee record."))
         return HorillaRedirect(request)
 
+    from base.company_leave_calendar import _today
+
     return render(
         request,
         "base/ess_dashboard.html",
         {
             "employee": employee,
             "today": date.today(),
+            "company_calendar_today": _today().isoformat(),
         },
     )
 

@@ -1,0 +1,164 @@
+{% load i18n %}
+<style>
+  .clc { margin-top:24px; border:1px solid rgba(128,128,128,.18); border-radius:16px; padding:20px; background:inherit; }
+  .clc h2 { font-size:19px; font-weight:700; margin:0 0 4px; }
+  .clc p { margin:0; font-size:13px; opacity:.7; }
+  .clc-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:16px 0; }
+  .clc-toolbar button,.clc-toolbar input,.clc-toolbar select,.clc-close { border:1px solid rgba(128,128,128,.3); border-radius:7px; padding:7px 11px; background:inherit; color:inherit; }
+  .clc-toolbar button[aria-pressed="true"] { background:#e54f38; color:white; border-color:#e54f38; }
+  .clc-period { font-weight:600; min-width:150px; text-align:center; }
+  .clc-summary { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .clc-summary section { border-radius:10px; background:rgba(128,128,128,.06); padding:12px; }
+  .clc-summary h3 { font-size:14px; font-weight:600; margin:0 0 8px; }
+  .clc-summary ul { margin:0; padding-left:18px; font-size:13px; max-height:130px; overflow:auto; }
+  .clc-scroll { overflow-x:auto; }
+  .clc-grid { display:grid; grid-template-columns:repeat(7,minmax(95px,1fr)); min-width:665px; gap:1px; background:rgba(128,128,128,.18); border:1px solid rgba(128,128,128,.18); border-radius:8px; overflow:hidden; }
+  .clc-heading { padding:8px; text-align:center; font-size:12px; font-weight:600; background:#fafafa; }
+  .clc-day { min-height:110px; padding:7px; background:#fff; }
+  .clc-day.is-off { background:#f4f4f5; }
+  .clc-day.is-today { box-shadow:inset 0 0 0 2px #e54f38; }
+  .clc-day.is-outside .clc-date { opacity:.4; }
+  .clc-date { font-size:12px; font-weight:600; margin-bottom:5px; }
+  .clc-holiday { font-size:10px; color:#ae5b00; margin-bottom:4px; }
+  .clc-event { display:block; width:100%; text-align:left; border:0; border-radius:4px; margin-bottom:4px; padding:5px 6px; font-size:11px; line-height:1.4; background:#e9efff; color:#244681; overflow-wrap:anywhere; }
+  button.clc-event { cursor:pointer; }
+  .clc-status { font-size:13px; margin:8px 0; }
+  .clc-detail { width:min(580px,calc(100vw - 32px)); max-height:80vh; overflow:auto; border:1px solid #aaa; border-radius:12px; padding:20px; color:inherit; background:#fff; }
+  .clc-detail::backdrop { background:rgba(0,0,0,.35); }
+  .clc-detail h3 { font-size:18px; font-weight:600; margin:0 0 16px; }
+  .clc-detail dl { display:grid; grid-template-columns:140px 1fr; gap:8px; font-size:13px; }
+  .clc-detail dd { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .clc-close { float:right; }
+  .dark .clc-day,.dark .clc-heading,.dark .clc-detail { background:#242424; }
+  .dark .clc-day.is-off { background:#303030; }
+  .dark .clc-event { background:#263653; color:#d4e0ff; }
+  @media(max-width:600px) { .clc { padding:12px; } .clc-summary { grid-template-columns:1fr; } .clc-toolbar input { width:100%; } }
+</style>
+<section class="clc" id="companyLeaveCalendar" data-today="{{ company_calendar_today }}" data-url="{% url 'ess-company-leave' %}">
+  <h2>{% trans "Company Leave Calendar" %}</h2>
+  <p>{% trans "Approved absences in your company. AM / PM indicate half-day leave." %}</p>
+  <div class="clc-toolbar">
+    <button type="button" data-action="previous" aria-label="{% trans 'Previous period' %}">←</button>
+    <span class="clc-period" aria-live="polite"></span>
+    <button type="button" data-action="next" aria-label="{% trans 'Next period' %}">→</button>
+    <button type="button" data-action="today">{% trans "Today" %}</button>
+    <button type="button" data-view="month" aria-pressed="true">{% trans "Month" %}</button>
+    <button type="button" data-view="week" aria-pressed="false">{% trans "Week" %}</button>
+    <select class="clc-department" aria-label="{% trans 'Department' %}"><option value="">{% trans "All departments" %}</option></select>
+    <input class="clc-search" type="search" maxlength="100" placeholder="{% trans 'Search employee' %}" aria-label="{% trans 'Search employee' %}">
+    <button type="button" data-action="refresh">{% trans "Refresh" %}</button>
+  </div>
+  <div class="clc-summary">
+    <section><h3>{% trans "Away today" %}</h3><ul class="clc-today-list"></ul></section>
+    <section><h3>{% trans "Next 7 days" %}</h3><ul class="clc-week-list"></ul></section>
+  </div>
+  <div class="clc-status" role="status" aria-live="polite">{% trans "Loading..." %}</div>
+  <div class="clc-scroll"><div class="clc-grid"></div></div>
+  <dialog class="clc-detail" aria-labelledby="clcDetailTitle">
+    <button type="button" class="clc-close">{% trans "Close" %}</button>
+    <h3 id="clcDetailTitle">{% trans "Leave details" %}</h3>
+    <div class="clc-detail-body"></div>
+  </dialog>
+</section>
+<script>
+(function () {
+  'use strict';
+  const root = document.getElementById('companyLeaveCalendar');
+  if (!root) return;
+  let today = root.dataset.today;
+  const endpoint = root.dataset.url;
+  let anchor = parse(today), view = 'month', controller, detailController, timer;
+  const grid = root.querySelector('.clc-grid'), status = root.querySelector('.clc-status');
+  const department = root.querySelector('.clc-department'), search = root.querySelector('.clc-search');
+  const dialog = root.querySelector('dialog'), detailBody = root.querySelector('.clc-detail-body');
+  function parse(value) { return new Date(value + 'T00:00:00Z'); }
+  function iso(value) { return value.toISOString().slice(0,10); }
+  function add(value, days) { return new Date(value.getTime() + days * 86400000); }
+  function monday(value) { return add(value, -((value.getUTCDay()+6)%7)); }
+  function node(tag, text, className) { const e = document.createElement(tag); if(text !== undefined) e.textContent=text; if(className) e.className=className; return e; }
+  function part(value) { return value === 'first_half' ? 'AM' : value === 'second_half' ? 'PM' : '{% trans "Full day"|escapejs %}'; }
+  function range() {
+    if (view === 'week') { const start=monday(anchor); return [start,add(start,6)]; }
+    const first=new Date(Date.UTC(anchor.getUTCFullYear(),anchor.getUTCMonth(),1));
+    const last=new Date(Date.UTC(anchor.getUTCFullYear(),anchor.getUTCMonth()+1,0));
+    return [monday(first),add(monday(last),6)];
+  }
+  function params(start,end) { const p=new URLSearchParams({start:iso(start),end:iso(end)}); if(department.value) p.set('department',department.value); if(search.value.trim()) p.set('q',search.value.trim()); return p; }
+  async function get(url,signal) { const r=await fetch(url,{signal:signal,cache:'no-store',credentials:'same-origin'}); if(!r.ok) throw new Error('calendar'); return r.json(); }
+  function draw(data,start,end) {
+    grid.replaceChildren();
+    ['{% trans "Mon"|escapejs %}','{% trans "Tue"|escapejs %}','{% trans "Wed"|escapejs %}','{% trans "Thu"|escapejs %}','{% trans "Fri"|escapejs %}','{% trans "Sat"|escapejs %}','{% trans "Sun"|escapejs %}'].forEach(day=>grid.append(node('div',day,'clc-heading')));
+    for(let current=start; current<=end; current=add(current,1)) {
+      const date=iso(current), cell=node('div',undefined,'clc-day');
+      if(data.off_days.includes(date)) cell.classList.add('is-off');
+      if(date===today) cell.classList.add('is-today');
+      if(view==='month' && current.getUTCMonth()!==anchor.getUTCMonth()) cell.classList.add('is-outside');
+      cell.append(node('div',String(current.getUTCDate()),'clc-date'));
+      data.holidays.filter(h=>h.date===date).forEach(h=>{cell.classList.add('is-off');cell.append(node('div',h.name,'clc-holiday'));});
+      data.events.forEach(event=>{
+        const occurrence=event.days.find(day=>day.date===date); if(!occurrence) return;
+        const e=node(data.can_view_details?'button':'div',event.name+' · '+part(occurrence.part),'clc-event');
+        e.title=event.name+(event.department?' · '+event.department:'')+' · {% trans "On leave"|escapejs %}';
+        if(data.can_view_details) { e.type='button';e.addEventListener('click',()=>showDetail(event.id)); }
+        cell.append(e);
+      });
+      grid.append(cell);
+    }
+  }
+  function summaries(data) {
+    [['.clc-today-list',true],['.clc-week-list',false]].forEach(([selector,onlyToday])=>{
+      const list=root.querySelector(selector);list.replaceChildren();
+      data.events.forEach(event=>{
+        const days=event.days.filter(day=>!onlyToday || day.date===today); if(!days.length) return;
+        const label=event.name+(event.department?' · '+event.department:'')+' — '+(onlyToday?part(days[0].part):days.map(day=>day.date.slice(5)+' '+part(day.part)).join(', '));
+        const li=node('li');
+        if(data.can_view_details) {const b=node('button',label,'clc-event');b.type='button';b.addEventListener('click',()=>showDetail(event.id));li.append(b);} else li.textContent=label;
+        list.append(li);
+      });
+      if(!list.children.length) list.append(node('li','{% trans "No approved absences"|escapejs %}'));
+    });
+  }
+  async function load() {
+    if(controller) controller.abort(); controller=new AbortController();const signal=controller.signal;
+    const [start,end]=range();
+    root.querySelector('.clc-period').textContent=view==='month'?anchor.toLocaleDateString(undefined,{month:'long',year:'numeric',timeZone:'UTC'}):iso(start)+' – '+iso(end);
+    status.textContent='{% trans "Loading..."|escapejs %}';
+    try {
+      const [data,upcoming]=await Promise.all([get(endpoint+'?'+params(start,end),signal),get(endpoint+'?'+params(parse(today),add(parse(today),6)),signal)]);
+      if(signal.aborted) return;
+      if(data.today!==today) {today=data.today;root.dataset.today=today;load();return;}
+      const options=new Map([...data.departments,...upcoming.departments].map(d=>[d.id,d.name]));
+      options.forEach((name,id)=>{if(!Array.from(department.options).some(o=>o.value===id)){const option=node('option',name);option.value=id;department.append(option);}});
+      draw(data,start,end);summaries(upcoming);
+      status.textContent=data.events.length?'':'{% trans "No approved absences in this period"|escapejs %}';
+    } catch(error) { if(error.name!=='AbortError') {grid.replaceChildren();root.querySelector('.clc-today-list').replaceChildren();root.querySelector('.clc-week-list').replaceChildren();status.textContent='{% trans "Unable to load the company calendar. Please refresh."|escapejs %}';} }
+  }
+  async function showDetail(id) {
+    if(detailController) detailController.abort();detailController=new AbortController();const signal=detailController.signal;
+    detailBody.replaceChildren(node('p','{% trans "Loading..."|escapejs %}'));if(!dialog.open) dialog.showModal();
+    try {
+      const data=await get(endpoint+id+'/',signal);if(signal.aborted || !dialog.open) return;
+      const dl=node('dl');
+      [['{% trans "Employee"|escapejs %}',data.name],['{% trans "Leave Type"|escapejs %}',data.leave_type],['{% trans "Status"|escapejs %}',data.status],['{% trans "Requested Days"|escapejs %}',data.requested_days],['{% trans "Description"|escapejs %}',data.description],['{% trans "Available Days"|escapejs %}',data.available_days],['{% trans "Carryforward Days"|escapejs %}',data.carryforward_days],['{% trans "Created By"|escapejs %}',data.created_by]].forEach(([label,value])=>{dl.append(node('dt',label),node('dd',value===null?'—':String(value)));});
+      if(data.attachment) {const dd=node('dd'), a=node('a','{% trans "View attachment"|escapejs %}');a.href=data.attachment;a.target='_blank';a.rel='noopener noreferrer';dd.append(a);dl.append(node('dt','{% trans "Attachment"|escapejs %}'),dd);}
+      const approvals=node('ul');data.approvals.forEach(step=>approvals.append(node('li',step.sequence+'. '+step.name+' — '+(step.approved?'Approved':step.rejected?'Rejected':'Pending'))));
+      const comments=node('ul');data.comments.forEach(entry=>comments.append(node('li',(entry.at?entry.at+' · ':'')+entry.name+': '+entry.text)));
+      const history=node('ul');data.history.forEach(entry=>history.append(node('li',entry.at+' · '+(entry.actor||'—')+' · '+entry.status+' · {% trans "Deducted"|escapejs %}: '+entry.deducted)));
+      detailBody.replaceChildren(dl,node('h4','{% trans "Approval steps"|escapejs %}'),approvals,node('h4','{% trans "Activity"|escapejs %}'),comments,node('h4','{% trans "History"|escapejs %}'),history);
+    } catch(error) { if(error.name!=='AbortError') detailBody.replaceChildren(node('p','{% trans "Unable to load leave details."|escapejs %}')); }
+  }
+  root.querySelector('.clc-close').addEventListener('click',()=>dialog.close());
+  dialog.addEventListener('close',()=>{if(detailController) detailController.abort();detailBody.replaceChildren();});
+  root.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',()=>{
+    const action=button.dataset.action;
+    if(action==='today') anchor=parse(today);
+    else if(action==='next'||action==='previous') {const n=action==='next'?1:-1;anchor=view==='week'?add(anchor,7*n):new Date(Date.UTC(anchor.getUTCFullYear(),anchor.getUTCMonth()+n,1));}
+    load();
+  }));
+  root.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{view=button.dataset.view;root.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));load();}));
+  department.addEventListener('change',load);search.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(load,250);});
+  window.addEventListener('focus',()=>{if(!dialog.open) load();});
+  setInterval(()=>{if(!document.hidden && !dialog.open) load();},60000);
+  load();
+}());
+</script>

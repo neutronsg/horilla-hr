@@ -1,3 +1,7 @@
+from leave.services import (
+    can_approve_leave_balance, deduct_leave_balance, can_approve_own_leave,
+    next_leave_approval, record_self_approval,
+)
 from leave.locking import locked_leave_operation
 """
 views.py
@@ -1020,13 +1024,11 @@ def leave_request_approve(request, id, emp_id=None):
             request, message=_("No leave rquest found matching the query.")
         )
     employee_id = leave_request.employee_id
-    if not request.user.is_superuser:
-        if employee_id == request.user.employee_get:
-            messages.error(request, _("You cannot approve your own leave request."))
-            if emp_id is not None:
-                employee_id = emp_id
-                return redirect(f"/employee/employee-view/{employee_id}/")
-            return HorillaRedirect(request)
+    if not can_approve_own_leave(request.user, leave_request):
+        messages.error(request, _("You cannot approve your own leave request."))
+        if emp_id is not None:
+            return redirect(f"/employee/employee-view/{emp_id}/")
+        return HorillaRedirect(request)
     leave_type_id = leave_request.leave_type_id
     try:
         available_leave = AvailableLeave.objects.get(
@@ -1055,26 +1057,12 @@ def leave_request_approve(request, id, emp_id=None):
             return response
         return HorillaRedirect(request)
 
-    total_available_leave = (
-        available_leave.available_days + available_leave.carryforward_days
-    )
     send_notification = False
     approved = False
     error_message = ""
-    if leave_request.status != "approved":
-        if total_available_leave >= leave_request.requested_days:
-            if leave_request.requested_days > available_leave.carryforward_days:
-                leave = leave_request.requested_days - available_leave.carryforward_days
-                leave_request.approved_carryforward_days = (
-                    available_leave.carryforward_days
-                )
-                available_leave.carryforward_days = 0
-                available_leave.available_days = available_leave.available_days - leave
-                leave_request.approved_available_days = leave
-            else:
-                temp = available_leave.carryforward_days
-                available_leave.carryforward_days = temp - leave_request.requested_days
-                leave_request.approved_carryforward_days = leave_request.requested_days
+    if leave_request.status == "requested":
+        if can_approve_leave_balance(available_leave, leave_request.requested_days):
+            deduct_leave_balance(leave_request, available_leave, carryforward_first=True)
             leave_request.status = "approved"
             if not leave_request.multiple_approvals():
                 leave_request.save()
@@ -1100,24 +1088,25 @@ def leave_request_approve(request, id, emp_id=None):
                         ),
                         None,
                     )
-                    condition_approval = LeaveRequestConditionApproval.objects.filter(
-                        manager_id=approver, leave_request_id=leave_request
-                    ).first()
-                    if condition_approval is None:
+                    condition_approval = next_leave_approval(leave_request)
+                    if (
+                        condition_approval is None
+                        or condition_approval.manager_id != approver
+                        or condition_approval.is_rejected
+                    ):
                         error_message = str(
                             _("You are not an approver for this leave request.")
                         )
                         messages.error(request, error_message)
                     else:
                         condition_approval.is_approved = True
-                        managers = []
-                        for manager in conditional_requests["managers"]:
-                            managers.append(manager.employee_user_id)
-                        if len(managers) > condition_approval.sequence:
+                        condition_approval.save()
+                        next_step = next_leave_approval(leave_request)
+                        if next_step:
                             with contextlib.suppress(Exception):
                                 notify.send(
                                     request.user.employee_get,
-                                    recipient=managers[condition_approval.sequence],
+                                    recipient=next_step.manager_id.employee_user_id,
                                     verb="You have a new leave request to validate.",
                                     verb_ar="لديك طلب إجازة جديد يجب التحقق منه.",
                                     verb_de="Sie haben eine neue Urlaubsanfrage zur Validierung.",
@@ -1126,13 +1115,15 @@ def leave_request_approve(request, id, emp_id=None):
                                     icon="people-circle",
                                     redirect=f"/leave/request-view?id={leave_request.id}",
                                 )
-                        condition_approval.save()
                         approved = True
-                        if approver == conditional_requests["managers"][-1]:
+                        if next_step is None:
                             leave_request.save()
                             available_leave.save()
                             send_notification = True
             if approved:
+                # Intermediate steps are not persisted on the request itself.
+                leave_request.refresh_from_db()
+                record_self_approval(request.user, leave_request)
                 messages.success(request, _("Leave request approved successfully.."))
                 if send_notification:
                     with contextlib.suppress(Exception):
@@ -1189,8 +1180,7 @@ def leave_request_bulk_approve(request):
         filtered_ids = []
         for request_id in request_ids:
             leave_request = LeaveRequest.objects.get(id=int(request_id))
-            # Exclude requests where the employee is the current user
-            if leave_request.employee_id != request.user.employee_get:
+            if can_approve_own_leave(request.user, leave_request):
                 filtered_ids.append(request_id)
         if request.user.is_superuser:
             filtered_ids = request_ids
@@ -3825,8 +3815,9 @@ def leave_allocation_request_reject(request, req_id):
                         leave_type_id=leave_type,
                         employee_id=leave_allocation_request.employee_id,
                     ).first()
-                    available_leave.available_days = max(
-                        0, available_leave.available_days - requested_days
+                    remaining = available_leave.available_days - requested_days
+                    available_leave.available_days = (
+                        remaining if leave_type.allows_overdraft else max(0, remaining)
                     )
 
                     available_leave.save()

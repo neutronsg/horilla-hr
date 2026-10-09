@@ -123,7 +123,15 @@ def auto_approve_self_approval_stage(sender, instance, created, **kwargs):
     request is not stuck and can progress to the next approver.
     """
     if created and instance.manager_id == instance.leave_request_id.employee_id:
-        sender.objects.filter(pk=instance.pk).update(is_approved=True)
+        from leave.services import can_approve_own_leave
+
+        # HR/Admin now explicitly approves and audits their own step. Retain
+        # the existing automatic skip for other employees so their request
+        # can reach a different required approver.
+        if not can_approve_own_leave(
+            instance.manager_id.employee_user_id, instance.leave_request_id
+        ):
+            sender.objects.filter(pk=instance.pk).update(is_approved=True)
 
 
 # Automatic leave entitlement depends on these dates.

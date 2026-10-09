@@ -600,6 +600,11 @@ class LeaveType(HorillaModel):
             path="cbv/leave_types/detail_actions.html", context={"instance": self}
         )
 
+    @property
+    def allows_overdraft(self):
+        """Only annual leave with an approval step can borrow future days."""
+        return self.auto_leave_policy == "annual" and self.require_approval == "yes"
+
     def get_payment_percentage(self):
         """
         Returns the effective payment percentage (0–100) based on payment_type.
@@ -922,11 +927,15 @@ class AvailableLeave(HorillaModel):
                 expiry_date = self.leave_type_id.carryforward_expire_date
             self.expired_date = expiry_date
 
-        # Compute total_leave_days and ensure carryforward_days >= 0
+        # Preserve signed annual debt while keeping other leave totals unchanged.
+        total = self.available_days + self.carryforward_days
+        if self.leave_type_id.allows_overdraft:
+            total = self.available_days + max(self.carryforward_days, 0)
         self.total_leave_days = round(
-            max(self.available_days + self.carryforward_days, 0), 3
+            total if self.leave_type_id.allows_overdraft else max(total, 0), 3
         )
         self.carryforward_days = round(max(self.carryforward_days, 0), 3)
+
 
     def save(self, *args, **kwargs):
         self.pre_save_processing()
@@ -1787,7 +1796,7 @@ class LeaveRequest(HorillaModel):
 
         total_leave_days = available_days + carryforward_days + forcated_days
 
-        if not effective_requested_days <= total_leave_days:
+        if not leave_type.allows_overdraft and effective_requested_days > total_leave_days:
             raise ValidationError(
                 _("Does not have sufficient leave balance for the requested dates.")
             )
@@ -1930,6 +1939,11 @@ class LeaveRequest(HorillaModel):
         self._multiple_approvals_cache = result
         return result
 
+    def can_approve_self(self):
+        from leave.services import can_approve_own_leave
+        request = getattr(horilla_middlewares._thread_locals, "request", None)
+        return bool(request and can_approve_own_leave(request.user, self))
+
     def is_approved(self):
         request = getattr(horilla_middlewares._thread_locals, "request", None)
         if request:
@@ -1939,18 +1953,19 @@ class LeaveRequest(HorillaModel):
                 ).first()
             employee = request.user._horilla_employee_cache
 
+            if not self.can_approve_self():
+                return False
             multiple_approvals = self.multiple_approvals()
-            condition_approval = None
-            if multiple_approvals and employee:
-                for approval in multiple_approvals["approvals"]:
-                    if approval.manager_id_id == employee.id:
-                        condition_approval = approval
-                        break
-
-            if condition_approval:
-                return not condition_approval.is_approved
-            else:
-                return True
+            if multiple_approvals and not request.user.is_superuser:
+                from leave.services import next_leave_approval
+                next_step = next_leave_approval(self)
+                return bool(
+                    next_step
+                    and not next_step.is_rejected
+                    and employee
+                    and next_step.manager_id_id == employee.id
+                )
+            return True
 
     def delete(self, *args, **kwargs):
         if self.status == "requested":

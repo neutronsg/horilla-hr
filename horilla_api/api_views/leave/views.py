@@ -1,3 +1,7 @@
+from leave.services import (
+    can_approve_leave_balance, deduct_leave_balance, can_approve_own_leave,
+    next_leave_approval, record_self_approval,
+)
 from leave.locking import locked_leave_operation, employee_leave_lock
 import contextlib
 
@@ -719,19 +723,7 @@ class LeaveRequestApproveAPIView(APIView):
             raise serializers.ValidationError(e)
 
     def leave_approve_calculation(self, leave_request, available_leave):
-        if leave_request.requested_days > available_leave.available_days:
-            leave = leave_request.requested_days - available_leave.available_days
-            leave_request.approved_available_days = available_leave.available_days
-            available_leave.available_days = 0
-            available_leave.carryforward_days = (
-                available_leave.carryforward_days - leave
-            )
-
-            leave_request.approved_carryforward_days = leave
-        else:
-            temp = available_leave.available_days
-            available_leave.available_days = temp - leave_request.requested_days
-            leave_request.approved_available_days = leave_request.requested_days
+        deduct_leave_balance(leave_request, available_leave)
         available_leave.save()
 
     def leave_multiple_approve(self, request, leave_request, available_leave):
@@ -743,18 +735,12 @@ class LeaveRequestApproveAPIView(APIView):
             leave_request.status = "approved"
             leave_request.save()
         else:
-            conditional_requests = leave_request.multiple_approvals()
-            approver = [
-                manager
-                for manager in conditional_requests["managers"]
-                if manager.employee_user_id == request.user
-            ]
-            condition_approval = LeaveRequestConditionApproval.objects.filter(
-                manager_id=approver[0], leave_request_id=leave_request
-            ).first()
-            condition_approval.is_approved = True
-            condition_approval.save()
-            if approver[0] == conditional_requests["managers"][-1]:
+            step = next_leave_approval(leave_request)
+            if step is None or step.manager_id != request.user.employee_get or step.is_rejected:
+                raise serializers.ValidationError(_("You are not the next approver for this leave request."))
+            step.is_approved = True
+            step.save()
+            if next_leave_approval(leave_request) is None:
                 self.leave_approve_calculation(leave_request, available_leave)
                 leave_request.status = "approved"
                 leave_request.save()
@@ -763,7 +749,7 @@ class LeaveRequestApproveAPIView(APIView):
     @locked_leave_operation("LeaveRequest", "pk")
     def put(self, request, pk):
         leave_request = self.get_leave_request(pk)
-        if not request.user.is_superuser and leave_request.employee_id == request.user.employee_get:
+        if not can_approve_own_leave(request.user, leave_request):
             raise serializers.ValidationError(_("You cannot approve your own leave request."))
         serializer = LeaveRequestApproveSerializer(leave_request, data=request.data)
         if serializer.is_valid():
@@ -774,19 +760,21 @@ class LeaveRequestApproveAPIView(APIView):
                 leave_request.save()
             else:
                 self.leave_multiple_approve(request, leave_request, available_leave)
-            with contextlib.suppress(Exception):
-                notify.send(
-                    request.user.employee_get,
-                    recipient=leave_request.employee_id.employee_user_id,
-                    verb="Your Leave request has been approved",
-                    verb_ar="تمت الموافقة على طلب الإجازة الخاص بك",
-                    verb_de="Ihr Urlaubsantrag wurde genehmigt",
-                    verb_es="Se ha aprobado su solicitud de permiso",
-                    verb_fr="Votre demande de congé a été approuvée",
-                    icon="people-circle",
-                    redirect=f"/leave/user-request-view?id={leave_request.id}",
-                    api_redirect=f"/api/leave/user-request/{leave_request.id}",
-                )
+            record_self_approval(request.user, leave_request)
+            if leave_request.status == "approved":
+                with contextlib.suppress(Exception):
+                    notify.send(
+                        request.user.employee_get,
+                        recipient=leave_request.employee_id.employee_user_id,
+                        verb="Your Leave request has been approved",
+                        verb_ar="تمت الموافقة على طلب الإجازة الخاص بك",
+                        verb_de="Ihr Urlaubsantrag wurde genehmigt",
+                        verb_es="Se ha aprobado su solicitud de permiso",
+                        verb_fr="Votre demande de congé a été approuvée",
+                        icon="people-circle",
+                        redirect=f"/leave/user-request-view?id={leave_request.id}",
+                        api_redirect=f"/api/leave/user-request/{leave_request.id}",
+                    )
             return Response(status=200)
         return Response(serializer.errors, status=400)
 
@@ -909,8 +897,9 @@ class LeaveAllocationRequestRejectAPIView(APIView):
                 leave_type_id=leave_type,
                 employee_id=leave_allocation_request.employee_id,
             ).first()
-            available_leave.available_days = max(
-                0, available_leave.available_days - requested_days
+            remaining = available_leave.available_days - requested_days
+            available_leave.available_days = (
+                remaining if leave_type.allows_overdraft else max(0, remaining)
             )
             available_leave.save()
 
@@ -947,18 +936,7 @@ class LeaveRequestBulkApproveDeleteAPIview(APIView):
         raise serializers.ValidationError(_("Nothing to approve"))
 
     def leave_approve_calculation(self, leave_request, available_leave):
-        if leave_request.requested_days > available_leave.available_days:
-            leave = leave_request.requested_days - available_leave.available_days
-            leave_request.approved_available_days = available_leave.available_days
-            available_leave.available_days = 0
-            available_leave.carryforward_days = (
-                available_leave.carryforward_days - leave
-            )
-            leave_request.approved_carryforward_days = leave
-        else:
-            temp = available_leave.available_days
-            available_leave.available_days = temp - leave_request.requested_days
-            leave_request.approved_available_days = leave_request.requested_days
+        deduct_leave_balance(leave_request, available_leave)
         available_leave.save()
 
     @manager_permission_required("leave.change_leaverequest")
@@ -969,20 +947,27 @@ class LeaveRequestBulkApproveDeleteAPIview(APIView):
                 leave_request = self.get_locked_request(candidate.pk)
                 if leave_request.status != "requested":
                     continue
-                if not request.user.is_superuser and leave_request.employee_id == request.user.employee_get:
+                if not can_approve_own_leave(request.user, leave_request):
                     continue
                 employee_id = leave_request.employee_id
                 leave_type_id = leave_request.leave_type_id
                 available_leave = AvailableLeave.objects.get(
                     leave_type_id=leave_type_id, employee_id=employee_id
                 )
-                total_available_leave = (
-                    available_leave.available_days + available_leave.carryforward_days
-                )
-                if total_available_leave >= leave_request.requested_days:
-                    self.leave_approve_calculation(leave_request, available_leave)
-                    leave_request.status = "approved"
-                    leave_request.save()
+                if can_approve_leave_balance(available_leave, leave_request.requested_days):
+                    approver = LeaveRequestApproveAPIView()
+                    if leave_request.multiple_approvals():
+                        step = next_leave_approval(leave_request)
+                        if not request.user.is_superuser and (
+                            step is None or step.manager_id != request.user.employee_get or step.is_rejected
+                        ):
+                            continue
+                        approver.leave_multiple_approve(request, leave_request, available_leave)
+                    else:
+                        self.leave_approve_calculation(leave_request, available_leave)
+                        leave_request.status = "approved"
+                        leave_request.save()
+                    record_self_approval(request.user, leave_request)
         return Response(status=200)
 
     @manager_permission_required("leave.delete_leaverequest")

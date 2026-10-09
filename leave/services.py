@@ -6,11 +6,88 @@ Condition evaluation follows the same pattern as payroll allowance eligibility c
 """
 
 import logging
+import math
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger(__name__)
+
+
+def has_company_hr_permission(user, company_id, permission):
+    """Require an explicit company HR/Admin role and an existing permission."""
+    from base.auth_backends import (
+        get_effective_permission_codenames,
+        get_user_groups_for_company,
+    )
+
+    if not user or not user.is_authenticated or not user.is_active:
+        return False
+    if user.is_superuser:
+        return True
+    if company_id is None:
+        return False
+    return (
+        get_user_groups_for_company(user, company_id)
+        .filter(name__in=("HR Manager", "Admin"))
+        .exists()
+        and permission in get_effective_permission_codenames(user, company_id)
+    )
+
+
+def can_approve_own_leave(user, leave_request):
+    """Other requests keep their existing authorization; scope the self exception."""
+    employee = getattr(user, "employee_get", None)
+    if employee != leave_request.employee_id:
+        return True
+    work = getattr(employee, "employee_work_info", None)
+    return has_company_hr_permission(
+        user, getattr(work, "company_id_id", None), "change_leaverequest"
+    )
+
+
+def next_leave_approval(leave_request):
+    """Read the first unfinished step while the caller holds the employee lock."""
+    from leave.models import LeaveRequestConditionApproval
+
+    return (
+        LeaveRequestConditionApproval._base_manager.filter(
+            leave_request_id=leave_request, is_approved=False
+        )
+        .order_by("sequence", "pk")
+        .first()
+    )
+
+
+def record_self_approval(user, leave_request):
+    """Use the existing timestamped comments/audit trail; no new permission/schema."""
+    from leave.models import AvailableLeave, LeaverequestComment
+    from base.auth_backends import get_user_groups_for_company
+
+    if getattr(user, "employee_get", None) != leave_request.employee_id:
+        return
+    work = getattr(leave_request.employee_id, "employee_work_info", None)
+    company_id = getattr(work, "company_id_id", None)
+    roles = "Superuser" if user.is_superuser else "/".join(
+        get_user_groups_for_company(user, company_id)
+        .filter(name__in=("HR Manager", "Admin"))
+        .order_by("name").values_list("name", flat=True)
+    )
+    balance = AvailableLeave._base_manager.get(
+        employee_id=leave_request.employee_id, leave_type_id=leave_request.leave_type_id
+    )
+    LeaverequestComment.objects.create(
+        request_id=leave_request,
+        employee_id=leave_request.employee_id,
+        comment=(
+            f"Self-approved; company={company_id}; "
+            f"role={roles}; "
+            f"status={leave_request.status}; "
+            f"deducted={leave_request.approved_available_days + leave_request.approved_carryforward_days:g}; "
+            f"balance={balance.available_days + balance.carryforward_days:g}"
+        ),
+    )
 
 
 def evaluate_leave_type_conditions(leave_type, employee):
@@ -110,14 +187,51 @@ def evaluate_leave_type_conditions(leave_type, employee):
 
 def has_sufficient_leave_balance(available_leave, requested_days) -> bool:
     """
-    Gate used by leave_request_approve before deducting balance.
-
-    Returns True when available_days + carryforward_days covers requested_days.
+    Return raw sufficiency, before applying the annual advance-leave policy.
     """
     total = (available_leave.available_days or 0) + (
         available_leave.carryforward_days or 0
     )
     return total >= float(requested_days or 0)
+
+
+def can_approve_leave_balance(available_leave, requested_days) -> bool:
+    """Annual leave needing approval may borrow against future accruals."""
+    return (
+        available_leave.leave_type_id.allows_overdraft
+        or has_sufficient_leave_balance(available_leave, requested_days)
+    )
+
+
+def deduct_leave_balance(leave_request, available_leave, *, carryforward_first=False):
+    """Prepare a deduction inside the caller's employee lock and transaction.
+
+    Keep each request's refund amounts positive. Any approved annual overdraft
+    belongs to available_days, never to the expiring carryforward balance.
+    The caller saves both records only after the final approval.
+    """
+    days = float(leave_request.requested_days or 0)
+    if not math.isfinite(days) or days <= 0:
+        raise ValidationError(_("Requested leave days must be positive."))
+    if not can_approve_leave_balance(available_leave, days):
+        raise ValidationError(_("Insufficient leave balance."))
+
+    available = max(float(available_leave.available_days or 0), 0)
+    carryforward = max(float(available_leave.carryforward_days or 0), 0)
+    if carryforward_first:
+        used_carryforward = min(carryforward, days)
+        used_available = days - used_carryforward
+    else:
+        used_available = min(available, days)
+        used_carryforward = min(carryforward, days - used_available)
+        used_available = days - used_carryforward
+
+    leave_request.approved_available_days = used_available
+    leave_request.approved_carryforward_days = used_carryforward
+    available_leave.available_days = (
+        float(available_leave.available_days or 0) - used_available
+    )
+    available_leave.carryforward_days = carryforward - used_carryforward
 
 
 def get_condition_display_choices():

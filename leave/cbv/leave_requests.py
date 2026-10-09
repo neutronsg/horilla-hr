@@ -39,6 +39,7 @@ from leave.filters import LeaveRequestFilter
 from leave.forms import LeaveRequestCreationForm, LeaveRequestExportForm
 from leave.methods import filter_conditional_leave_request
 from leave.models import AvailableLeave, LeaveRequest, LeaveType
+from leave.services import can_approve_own_leave
 from leave.threading import LeaveMailSendThread
 from leave.views import multiple_approvals_check
 from notifications.signals import notify
@@ -82,7 +83,7 @@ class LeaveRequestsListView(HorillaListView):
         filtered_ids = []
         for request_id in instance_ids:
             leave_request = LeaveRequest.objects.get(id=request_id)
-            if leave_request.employee_id.id != request.user.employee_get.id:
+            if can_approve_own_leave(request.user, leave_request):
                 filtered_ids.append(request_id)
         if request.user.is_superuser:
             filtered_ids = instance_ids

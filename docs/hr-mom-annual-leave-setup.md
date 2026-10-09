@@ -37,13 +37,35 @@ The calculation uses **completed months ÷ 12 × the leave type's yearly days**,
 
 ## Manual HR entries and joining-date corrections
 
-HR can record paid leave inside the first three months for another employee when assigned the **HR Manager** or **Admin** role in that employee's company, with the existing **Add Leave Request** and **Change Employee Work Information** permissions. No additional permission is needed. Combining other roles, including Leave Manager with Payroll Manager or Recruiter, does not qualify. These role names are explicit; a renamed or custom role is not automatically treated as HR. Superusers can record leave for another employee. Self-service requests still follow the three-month rule, and HR entries still require sufficient leave balance and cannot start before joining. An employee without a company must have their company assigned before company HR/Admin can use this override.
+HR can record paid leave inside the first three months for another employee when assigned the **HR Manager** or **Admin** role in that employee's company, with the existing **Add Leave Request** and **Change Employee Work Information** permissions. No additional permission is needed. Combining other roles, including Leave Manager with Payroll Manager or Recruiter, does not qualify. These role names are explicit; a renamed or custom role is not automatically treated as HR. Superusers can record leave for another employee. Self-service requests still follow the three-month rule. HR entries cannot start before joining. Annual leave requiring approval may exceed the balance, as described below; other leave types still require sufficient balance. An employee without a company must have their company assigned before company HR/Admin can use this override.
 
 Saving a change to Joining Date or Contract End Date recalculates automatic leave, including changes made through bulk update or import. Annual leave recalculation preserves approved deductions and manual adjustments. January rollover applies the configured carryforward policy.
 
-This fix keeps existing approved leave charged to the balances used at approval. January rollover does not move those deductions to another year based on the leave dates. A correction that reduces credited entitlement can reduce the remaining balance below zero; this deficit is retained rather than refunding previously booked leave. Requests spanning New Year continue to use the existing accounting behavior; this change does not split them by year or introduce advance-leave rules.
+This fix keeps existing approved leave charged to the balances used at approval. January rollover does not move those deductions to another year based on the leave dates. A correction that reduces credited entitlement can reduce the remaining balance below zero; this deficit is retained rather than refunding previously booked leave. Requests spanning New Year continue to use the existing accounting behavior; requests are not split by year.
 
 To review annual balances, run `python manage.py reconcile_calendar_annual_leave --as-of YYYY-MM-DD`, optionally adding `--employee BADGE_ID`. The default preview does not save balances or trigger save automations. Add `--apply` to save the calculated balances.
+
+## Approved annual leave overdrafts
+
+Annual leave configured with **Automatic Leave Policy = Annual leave** and **Require Approval = Yes** may be requested even when the balance is insufficient. Existing approvers and company access checks still apply; no new permission is required. Pending applications do not change the balance. Only final approval deducts days, and insufficient annual days become a negative **Available Days** / **Total Leave Days** balance. The approval confirmation explains this behavior.
+
+For example, 2 available days minus 3 approved days leaves **-1 day**. The next 1-day entitlement increase makes the balance **0 days**. HR credits also repay the deficit. Repeated automatic sync does not credit days twice. A deficit remains across January rollover, including when unused days are not carried forward; carryforward caps apply to unused positive days, not the debt. Rejecting an already approved request returns the exact recorded deduction once.
+
+Sick leave, childcare leave, other manual leave types, and leave configured without approval retain their balance checks. The three-month service requirement, dates before joining, overlapping requests, and required attachments continue to be checked.
+
+## HR/Admin self approval
+
+A user assigned **HR Manager** or **Admin** in their own employee's company may approve their own leave using the existing **Change leave request** permission. The role alone is insufficient if that permission has been removed. Combining other roles does not qualify, and an HR/Admin role in a different company does not qualify. No new permission is required.
+
+Self approval follows the same balance, date and qualification checks as other approvals. An annual advance may create a negative balance as described above. In a multiple-approval chain, HR/Admin explicitly approves only their own next step; other required steps remain pending, and the balance is deducted only on final approval. Each explicit self approval adds a timestamped activity entry recording the actor, company role, deduction and resulting balance. Repeated approval does not charge again.
+
+## Company leave calendar
+
+The **Employee Dashboard** includes a company calendar with month/week views, **Away today**, **Next 7 days**, and department/name filters. It always uses the logged-in employee's company, including when the company selector says “all”. Its day labels use Singapore time. Company weekly off days and public holidays are marked; days excluded by the leave type are not shown as leave occurrences. AM/PM mark first/second half-day leave.
+
+Ordinary employees see approved absences with names, departments and dates only. The calendar does not expose leave types, descriptions, attachments, balances or audit details to them. Company **HR Manager** and **Admin** users with the existing **View leave request** permission can click an absence to see those details, approval steps and history. The separate detail endpoint enforces the same restriction.
+
+New pending/rejected requests are hidden. A previously approved request awaiting cancellation approval remains visible until the cancellation is finalized and its deduction is refunded. The calendar refreshes on load, when returning to the window, and every minute while visible; **Refresh** also updates it immediately. This feature does not create Teams meetings or send calendar invitations.
 
 ## Set up paid sick leave
 

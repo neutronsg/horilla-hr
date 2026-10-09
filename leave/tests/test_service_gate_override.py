@@ -201,7 +201,7 @@ class ServiceGateOverrideTests(TestCase):
             self.hr.employee_user_id.groups.add(group)
             self.clean_as(self.hr)
 
-    def test_override_still_requires_leave_balance(self):
+    def test_hr_can_submit_annual_advance_without_deducting_balance(self):
         from leave.models import AvailableLeave
 
         AvailableLeave._base_manager.filter(employee_id=self.employee).update(
@@ -209,8 +209,10 @@ class ServiceGateOverrideTests(TestCase):
             auto_service_year_start=date(2026, 5, 1),
         )
         self.assign_role(self.hr, self.company, self.hr_permissions(), "HR Manager")
-        with self.assertRaisesMessage(ValidationError, "sufficient leave balance"):
-            self.clean_as(self.hr)
+        self.clean_as(self.hr)
+        self.assertEqual(
+            AvailableLeave._base_manager.get(employee_id=self.employee).available_days, 0
+        )
 
     def test_override_cannot_record_leave_before_joining_date(self):
         from employee.models import EmployeeWorkInformation

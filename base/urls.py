@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from base import announcement
 from base import dashboard as dashboard_module
 from base import ess_dashboard, request_and_approve, views
+from base import company_leave_calendar
 from base.cbv import (
     announcement_cbv,
     company,
@@ -199,6 +200,8 @@ urlpatterns = [
     ),
     # ── ESS Dashboard ──────────────────────────────────────────────────────────
     path("ess/", ess_dashboard.ess_dashboard, name="ess-dashboard"),
+    path("ess/api/company-leave/", company_leave_calendar.company_leave_calendar, name="ess-company-leave"),
+    path("ess/api/company-leave/<int:pk>/", company_leave_calendar.company_leave_detail, name="ess-company-leave-detail"),
     path("ess/api/kpi/", ess_dashboard.ess_kpi_data, name="ess-kpi-data"),
     path(
         "ess/api/leave-balance/",
