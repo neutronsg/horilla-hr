@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import Client, RequestFactory, TestCase, override_settings
 
 from horilla import horilla_middlewares
 
@@ -174,12 +174,83 @@ class ServiceGateOverrideTests(TestCase):
         with self.assertRaisesMessage(ValidationError, "three months"):
             self.clean_as(self.employee)
 
-    def test_hr_permissions_do_not_cover_own_leave(self):
+    def test_company_hr_can_record_own_early_leave(self):
         self.assign_role(
             self.employee, self.company, self.hr_permissions(), "HR Manager"
         )
+        self.clean_as(self.employee)
+
+    def test_company_admin_can_record_own_early_leave(self):
+        self.assign_role(self.employee, self.company, self.hr_permissions(), "Admin")
+        self.clean_as(self.employee)
+
+    def test_self_override_still_requires_existing_operation_permissions(self):
+        self.assign_role(
+            self.employee, self.company,
+            self.hr_permissions().filter(codename="add_leaverequest"), "HR Manager",
+        )
         with self.assertRaisesMessage(ValidationError, "three months"):
             self.clean_as(self.employee)
+
+    def test_self_override_cannot_use_another_companys_hr_role(self):
+        self.assign_role(self.employee, self.other_company, self.hr_permissions(), "HR Manager")
+        with self.assertRaisesMessage(ValidationError, "three months"):
+            self.clean_as(self.employee)
+
+    def test_combined_non_hr_roles_cannot_bypass_own_service_gate(self):
+        self.assign_role(
+            self.employee, self.company,
+            self.hr_permissions().filter(codename="add_leaverequest"), "Leave Manager",
+        )
+        self.assign_role(
+            self.employee, self.company,
+            self.hr_permissions().filter(codename="change_employeeworkinformation"), "Payroll Manager",
+        )
+        with self.assertRaisesMessage(ValidationError, "three months"):
+            self.clean_as(self.employee)
+
+    def submit_own_leave(self, path, role):
+        from base.signals import _DEFAULT_HRMS_GROUPS, _resolve_group_permissions
+        from leave.models import AvailableLeave, LeaveRequest
+
+        self.assign_role(
+            self.employee, self.company,
+            _resolve_group_permissions(_DEFAULT_HRMS_GROUPS[role]), role,
+        )
+        user = self.employee.employee_user_id
+        user.is_new_employee = False
+        user.save()
+        self.assertFalse(user.is_superuser)
+        client = Client()
+        client.force_login(user, backend="base.auth_backends.CompanyScopedBackend")
+        session = client.session
+        session["selected_company"] = str(self.company.pk)
+        session.save()
+        balance = AvailableLeave._base_manager.get(
+            employee_id=self.employee, leave_type_id=self.leave_type,
+        )
+        before = balance.available_days + balance.carryforward_days
+        with patch("leave.models.timezone.localdate", return_value=TODAY), patch(
+            "leave.annual_policy.timezone.localdate", return_value=TODAY
+        ), patch("leave.views.LeaveMailSendThread.start"):
+            response = client.post(path, {
+                "employee_id": self.employee.pk,
+                "leave_type_id": self.leave_type.pk,
+                "start_date": "2026-07-17", "end_date": "2026-07-17",
+                "start_date_breakdown": "full_day", "end_date_breakdown": "full_day",
+                "description": "HR own early leave", "requested_days": "1",
+            }, HTTP_HX_REQUEST="true", HTTP_REFERER="http://testserver/leave/request-view/")
+        self.assertLess(response.status_code, 400)
+        item = LeaveRequest._base_manager.get(description="HR own early leave")
+        self.assertEqual((item.employee_id, item.status, item.requested_days), (self.employee, "requested", 1))
+        balance.refresh_from_db()
+        self.assertEqual(balance.available_days + balance.carryforward_days, before)
+
+    def test_hr_can_submit_own_early_leave_from_employee_self_service(self):
+        self.submit_own_leave("/leave/leave-request-create/", "HR Manager")
+
+    def test_admin_can_submit_own_early_leave_from_hr_creation_form(self):
+        self.submit_own_leave("/leave/request-creation/", "Admin")
 
     def test_superuser_can_record_another_employees_early_leave(self):
         user = self.hr.employee_user_id
@@ -187,12 +258,11 @@ class ServiceGateOverrideTests(TestCase):
         user.save()
         self.clean_as(self.hr)
 
-    def test_superuser_own_leave_is_still_blocked(self):
+    def test_superuser_can_record_own_early_leave(self):
         user = self.employee.employee_user_id
         user.is_superuser = True
         user.save()
-        with self.assertRaisesMessage(ValidationError, "three months"):
-            self.clean_as(self.employee)
+        self.clean_as(self.employee)
 
     def test_global_hr_group_works_when_company_scoping_is_disabled(self):
         with override_settings(COMPANY_SCOPED_PERMISSIONS=False):

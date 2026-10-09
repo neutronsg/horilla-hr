@@ -1612,7 +1612,7 @@ class LeaveRequest(HorillaModel):
                     )
 
     def can_override_service_gate(self, request):
-        """Allow company HR/Admin to record early leave for another employee.
+        """Allow company HR/Admin to record early leave, including their own.
 
         Require an explicit HR Manager or Admin role in the employee's company
         as well as the existing operation permissions. Combining non-HR roles
@@ -1625,8 +1625,6 @@ class LeaveRequest(HorillaModel):
 
         user = getattr(request, "user", None)
         if not user or not user.is_authenticated or not user.is_active:
-            return False
-        if getattr(user, "employee_get", None) == self.employee_id:
             return False
         if user.is_superuser:
             return True

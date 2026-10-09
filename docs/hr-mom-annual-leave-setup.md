@@ -29,7 +29,7 @@ For an employee who joins on **1 January 2025**:
 | 30 June 2025, after six completed months | 7 days |
 | 31 December 2025, after twelve completed months | 14 days |
 
-Employees can request paid annual leave from **1 April 2025**. HR can manually record early paid leave for another employee when authorized as described below. If the contract ends on **31 March 2025**, the employee has earned **4 days** even though paid annual leave could not be taken during probation. The system calculates the balance; HR must handle [payment for unused leave](https://www.mom.gov.sg/employment-practices/termination-of-employment/termination-with-notice) in the final settlement.
+Employees can request paid annual leave from **1 April 2025**. Company HR/Admin can manually record early paid leave, including their own, when authorized as described below. If the contract ends on **31 March 2025**, the employee has earned **4 days** even though paid annual leave could not be taken during probation. The system calculates the balance; HR must handle [payment for unused leave](https://www.mom.gov.sg/employment-practices/termination-of-employment/termination-with-notice) in the final settlement.
 
 The calculation uses **completed months ÷ 12 × the leave type's yearly days**, rounded to the nearest whole day with half a day rounded up. The joining year starts on the actual joining date; subsequent years start on **1 January**. January rollover carries eligible unused days according to the configured carryforward policy. A service-entitlement safeguard prevents split periods and rounding from reducing contractual/MOM entitlement, including probation spanning January. If the leave type's allowance is below MOM's statutory minimum for a service year, the statutory minimum applies.
 
@@ -37,7 +37,7 @@ The calculation uses **completed months ÷ 12 × the leave type's yearly days**,
 
 ## Manual HR entries and joining-date corrections
 
-HR can record paid leave inside the first three months for another employee when assigned the **HR Manager** or **Admin** role in that employee's company, with the existing **Add Leave Request** and **Change Employee Work Information** permissions. No additional permission is needed. Combining other roles, including Leave Manager with Payroll Manager or Recruiter, does not qualify. These role names are explicit; a renamed or custom role is not automatically treated as HR. Superusers can record leave for another employee. Self-service requests still follow the three-month rule. HR entries cannot start before joining. Annual leave requiring approval may exceed the balance, as described below; other leave types still require sufficient balance. An employee without a company must have their company assigned before company HR/Admin can use this override.
+HR can record paid leave inside the first three months, including their own requests, when assigned the **HR Manager** or **Admin** role in that employee's company, with the existing **Add Leave Request** and **Change Employee Work Information** permissions. No additional permission is needed. Combining other roles, including Leave Manager with Payroll Manager or Recruiter, does not qualify. These role names are explicit; a renamed or custom role is not automatically treated as HR. Superusers can record early leave, including their own. Ordinary employee self-service requests still follow the three-month rule; company HR/Admin can use the same service-gate exception in both self-service and HR creation forms. HR entries cannot start before joining. Annual leave requiring approval may exceed the balance, as described below; other leave types still require sufficient balance. An employee without a company must have their company assigned before company HR/Admin can use this override.
 
 Saving a change to Joining Date or Contract End Date recalculates automatic leave, including changes made through bulk update or import. Annual leave recalculation preserves approved deductions and manual adjustments. January rollover applies the configured carryforward policy.
 
@@ -51,7 +51,7 @@ Annual leave configured with **Automatic Leave Policy = Annual leave** and **Req
 
 For example, 2 available days minus 3 approved days leaves **-1 day**. The next 1-day entitlement increase makes the balance **0 days**. HR credits also repay the deficit. Repeated automatic sync does not credit days twice. A deficit remains across January rollover, including when unused days are not carried forward; carryforward caps apply to unused positive days, not the debt. Rejecting an already approved request returns the exact recorded deduction once.
 
-Sick leave, childcare leave, other manual leave types, and leave configured without approval retain their balance checks. The three-month service requirement, dates before joining, overlapping requests, and required attachments continue to be checked.
+Sick leave, childcare leave, other manual leave types, and leave configured without approval retain their balance checks. The three-month service requirement retains the company HR/Admin exception described above. Dates before joining, overlapping requests, and required attachments continue to be checked.
 
 ## HR/Admin self approval
 
