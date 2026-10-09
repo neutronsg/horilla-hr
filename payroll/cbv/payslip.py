@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -393,12 +394,14 @@ class PayrollCreateFormView(HorillaFormView):
             payslip = Payslip.objects.filter(
                 employee_id=employee, start_date=start_date, end_date=end_date
             ).first()
-            contract = Contract.objects.filter(
-                employee_id=employee, contract_status="active"
-            ).first()
-            if start_date < contract.contract_start_date:
-                start_date = contract.contract_start_date
-            payslip_data = payroll_calculation(employee, start_date, end_date)
+            try:
+                payslip_data = payroll_calculation(employee, start_date, end_date)
+                if payslip_data is None:
+                    raise ValidationError(_("No contract covers this payroll period."))
+            except ValidationError as error:
+                form.add_error(None, error)
+                self.form = form
+                return self.form_invalid(form)
             payslip_data["payslip"] = payslip
             data = {}
             data["employee"] = employee
@@ -418,7 +421,12 @@ class PayrollCreateFormView(HorillaFormView):
             data["pay_data"] = json.loads(payslip_data["json_data"])
             calculate_employer_contribution(data)
             data["installments"] = payslip_data["installments"]
-            payslip_data["instance"] = save_payslip(**data)
+            try:
+                payslip_data["instance"] = save_payslip(**data)
+            except ValidationError as error:
+                form.add_error(None, error)
+                self.form = form
+                return self.form_invalid(form)
             form = forms.PayslipForm()
             messages.success(self.request, _("Payslip Saved"))
             payslip = payslip_data["instance"]

@@ -1,3 +1,4 @@
+from leave.locking import locked_employee_sync
 """Synchronise paid sick leave balances with MOM's linked annual limits."""
 
 from datetime import date, timedelta
@@ -80,6 +81,7 @@ def approved_sick_days(assignment, entitlement, as_of=None):
     return days
 
 
+@locked_employee_sync
 @transaction.atomic
 def sync_sick_leave(employee, leave_type, as_of=None):
     if leave_type.auto_leave_policy not in {"outpatient_sick", "hospitalisation"}:

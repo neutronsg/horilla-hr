@@ -1,3 +1,4 @@
+from leave.locking import locked_leave_operation
 """
 views.py
 """
@@ -400,6 +401,7 @@ def multiple_approvals_check(id):
 @login_required
 @hx_request_required
 @manager_can_enter("leave.add_leaverequest")
+@locked_leave_operation()
 def leave_request_creation(request, type_id=None, emp_id=None):
     """
     function used to create leave request.
@@ -917,6 +919,7 @@ def leave_request_filter(request):
 @login_required
 @hx_request_required
 @manager_can_enter("leave.change_leaverequest")
+@locked_leave_operation("LeaveRequest")
 def leave_request_update(request, id):
     """
     function used to update leave request.
@@ -996,6 +999,7 @@ def leave_request_delete(request, id):
 
 @login_required
 @manager_can_enter("leave.change_leaverequest")
+@locked_leave_operation("LeaveRequest")
 def leave_request_approve(request, id, emp_id=None):
     """
     function used to approve a leave request.
@@ -1245,6 +1249,7 @@ def leave_bulk_reject(request):
 @login_required
 @hx_request_required
 @manager_can_enter("leave.change_leaverequest")
+@locked_leave_operation("LeaveRequest")
 def leave_request_cancel(request, id, emp_id=None):
     """
     function used to Reject leave request.
@@ -1345,6 +1350,7 @@ def leave_request_cancel(request, id, emp_id=None):
 
 @login_required
 @hx_request_required
+@locked_leave_operation("LeaveRequest")
 def user_leave_cancel(request, id):
     """
     function used to cancel approved leave request by employee.
@@ -2326,6 +2332,7 @@ def restrict_day_select_filter(request):
 
 @login_required
 @hx_request_required
+@locked_leave_operation()
 def user_leave_request(request, id):
     """
     function used to create user leave request.
@@ -2489,6 +2496,7 @@ def user_leave_request(request, id):
 
 @login_required
 @hx_request_required
+@locked_leave_operation("LeaveRequest")
 def user_request_update(request, id):
     """
     function used to update user leave request.
@@ -3304,6 +3312,7 @@ def leave_over_period(request):
 
 @login_required
 @hx_request_required
+@locked_leave_operation()
 def leave_request_create(request):
     """
     function used to create leave request from calendar.
@@ -3730,6 +3739,7 @@ def leave_allocation_request_update(request, req_id):
 
 @login_required
 @leave_allocation_reject_permission()
+@locked_leave_operation("LeaveAllocationRequest", "req_id")
 def leave_allocation_request_approve(request, req_id):
     """
     function used to approve a leave allocation request.
@@ -3785,6 +3795,7 @@ def leave_allocation_request_approve(request, req_id):
 @login_required
 @hx_request_required
 @leave_allocation_reject_permission()
+@locked_leave_operation("LeaveAllocationRequest", "req_id")
 def leave_allocation_request_reject(request, req_id):
     """
     function used to Reject leave allocation request.
@@ -4266,6 +4277,7 @@ def employee_available_leave_count(request):
 @login_required
 @hx_request_required
 @manager_can_enter("base.add_penaltyaccounts")
+@locked_leave_operation("AvailableLeave", "instance_id")
 def cut_available_leave(request, instance_id):
     """
     This method is used to create the penalties
@@ -5233,6 +5245,7 @@ if apps.is_installed("attendance"):
     @is_compensatory_leave_enabled()
     @hx_request_required
     @manager_can_enter(perm="leave.change_compensatoryleaverequest")
+    @locked_leave_operation("CompensatoryLeaveRequest", "comp_id")
     def approve_compensatory_leave(request, comp_id):
         """
         function used to approve compensatory leave request,
@@ -5274,6 +5287,7 @@ if apps.is_installed("attendance"):
     @is_compensatory_leave_enabled()
     @hx_request_required
     @manager_can_enter(perm="leave.delete_compensatoryleaverequest")
+    @locked_leave_operation("CompensatoryLeaveRequest", "comp_id")
     def reject_compensatory_leave(request, comp_id):
         """
         function used to Reject compensatoey leave request.

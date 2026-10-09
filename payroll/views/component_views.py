@@ -1,3 +1,5 @@
+from payroll.cpf import cpf_details, calculate_cpf
+from payroll.contracts import select_payroll_contract
 """
 component_views.py
 
@@ -232,6 +234,8 @@ def payroll_calculation(employee, start_date, end_date, month_summary=None):
         "end_date": end_date,
         "basic_pay": basic_pay,
         "day_dict": working_days_details,
+        "contract": contract,
+        "salary_details": basic_pay_details,
     }
     # basic pay will be basic_pay = basic_pay - update_compensation_amount
     # Overtime pay (regular/week-off/holiday) comes from the configurable
@@ -250,8 +254,32 @@ def payroll_calculation(employee, start_date, end_date, month_summary=None):
     gross_pay = updated_gross_pay_data["gross_pay"]
     gross_pay_deductions = updated_gross_pay_data["deductions"]
     kwargs["gross_pay"] = gross_pay
+    residency = cpf_details(employee, contract)
+    cpf_salary = basic_pay_details["basic_pay"] - (loss_of_pay if not contract.deduct_leave_from_basic_pay else 0)
+    cpf_allowances = allowances["allowances"]
+    sdl_wages = max(0, cpf_salary + sum(item["amount"] for item in cpf_allowances if item["cpf_wage_type"] != "excluded"))
+    if (residency and residency.residency_status == "pr" and residency.pr_effective_date
+            and start_date < residency.pr_effective_date <= end_date):
+        # CPF starts on the day PR is granted. Recompute earned wages in that
+        # part of the month; don't prorate attendance/overtime by calendar days.
+        post_pr = compute_salary_on_period(employee, residency.pr_effective_date, end_date)
+        cpf_salary = post_pr["basic_pay"] - (post_pr["loss_of_pay"] if not contract.deduct_leave_from_basic_pay else 0)
+        cpf_allowances = calculate_allowance(employee=employee,
+            start_date=residency.pr_effective_date, end_date=end_date,
+            basic_pay=post_pr["basic_pay"], day_dict=post_pr["month_data"],
+            contract=contract, salary_details=post_pr)["allowances"]
+    statutory_cpf = calculate_cpf(employee, contract, start_date, end_date,
+        cpf_salary, cpf_allowances, residency)
     pretax_deductions = calculate_pre_tax_deduction(**kwargs)
     post_tax_deductions = calculate_post_tax_deduction(**kwargs)
+    if statutory_cpf:
+        post_tax_deductions["post_tax_deductions"].append({
+            "deduction_id": None, "title": "Statutory CPF", "statutory_type": "cpf",
+            "amount": statutory_cpf["employee_amount"],
+            "employer_contribution_amount": statutory_cpf["employer_amount"],
+            "employer_contribution_rate": statutory_cpf["employer_rate"] * 100,
+        })
+
 
     installments = (
         pretax_deductions["installments"] | post_tax_deductions["installments"]
@@ -314,6 +342,8 @@ def payroll_calculation(employee, start_date, end_date, month_summary=None):
         "employee": employee,
         "wage_type": contract.wage_type,
         "sdl_exempt": contract.sdl_exempt,
+        "sdl_wages": round(sdl_wages, 2),
+        "statutory_cpf": statutory_cpf,
         "proration": working_days_details,
         "contract_wage": contract_wage,
         "basic_pay": basic_pay,
@@ -1043,9 +1073,16 @@ def generate_payslip(request):
                 from attendance.views.summary import build_monthly_summary
 
             for employee in employees:
-                contract = Contract.objects.filter(
-                    employee_id=employee, contract_status="active"
-                ).first()
+                try:
+                    contract = select_payroll_contract(employee, start_date, end_date)
+                except ValidationError as error:
+                    messages.error(request, "; ".join(error.messages))
+                    emp_count -= 1
+                    continue
+                if contract is None:
+                    messages.error(request, _("No contract covers this payroll period."))
+                    emp_count -= 1
+                    continue
                 from payroll.calendar import employment_period
                 employee_start, employee_end = employment_period(employee, contract, start_date, end_date)
 
@@ -1088,7 +1125,12 @@ def generate_payslip(request):
                 data["pay_data"] = json.loads(payslip["json_data"])
                 calculate_employer_contribution(data)
                 data["installments"] = payslip["installments"]
-                instance = save_payslip(**data)
+                try:
+                    instance = save_payslip(**data)
+                except ValidationError as error:
+                    messages.error(request, "; ".join(error.messages))
+                    emp_count -= 1
+                    continue
                 instances.append(instance)
                 if end_date <= date.today():
                     notify.send(
@@ -1125,11 +1167,14 @@ def check_contract_start_date(request):
     employee_id = request.GET.get("employee_id")
     start_date = request.GET.get("start_date")
 
-    contract = Contract.objects.filter(
-        employee_id=employee_id, contract_status="active"
-    ).first()
-
-    if not contract or start_date >= str(contract.contract_start_date):
+    end_date = request.GET.get("end_date") or start_date
+    try:
+        start = date.fromisoformat(start_date)
+        end = date.fromisoformat(end_date)
+        contract = select_payroll_contract(employee_id, start, end)
+    except (TypeError, ValueError, ValidationError):
+        return HttpResponse("")
+    if not contract or start >= contract.contract_start_date:
         return HttpResponse("")
 
     title_message = _(
@@ -1176,22 +1221,6 @@ def create_payslip(request, new_post_data=None):
     form = forms.PayslipForm()
 
     if request.method == "POST":
-        employee_id = request.POST.get("employee_id")
-        start_date = (
-            datetime.strptime(request.POST.get("start_date"), "%Y-%m-%d").date()
-            if isinstance(request.POST.get("start_date"), str)
-            else request.POST.get("start_date")
-        )
-
-        if employee_id and start_date:
-            contract = Contract.objects.filter(
-                employee_id=employee_id, contract_status="active"
-            ).first()
-
-            if contract and start_date < contract.contract_start_date:
-                new_post_data = request.POST.copy()
-                new_post_data["start_date"] = contract.contract_start_date
-                request.POST = new_post_data
         form = forms.PayslipForm(request.POST)
         if form.is_valid():
             employee = form.cleaned_data["employee_id"]
@@ -1207,6 +1236,8 @@ def create_payslip(request, new_post_data=None):
                 end_date = form.cleaned_data["end_date"]
                 try:
                     payslip_data = payroll_calculation(employee, start_date, end_date)
+                    if payslip_data is None:
+                        raise ValidationError(_("No contract covers this payroll period."))
                 except ValidationError as error:
                     form.add_error(None, error)
                     return render(request, "payroll/payslip/create_payslip.html", {"individual_form": form})
@@ -1230,7 +1261,11 @@ def create_payslip(request, new_post_data=None):
                 data["pay_data"] = json.loads(payslip_data["json_data"])
                 calculate_employer_contribution(data)
                 data["installments"] = payslip_data["installments"]
-                payslip_data["instance"] = save_payslip(**data)
+                try:
+                    payslip_data["instance"] = save_payslip(**data)
+                except ValidationError as error:
+                    form.add_error(None, error)
+                    return render(request, "payroll/payslip/create_payslip.html", {"individual_form": form})
                 form = forms.PayslipForm()
                 messages.success(request, _("Payslip Saved"))
                 payslip = payslip_data["instance"]
@@ -1286,9 +1321,14 @@ def validate_start_date(request):
     if end_date:
         end_datetime = datetime.strptime(end_date, "%Y-%m-%d").date()
     for emp_id in employee_id:
-        contract = Contract.objects.filter(
-            employee_id__id=emp_id, contract_status="active"
-        ).first()
+        if not start_datetime or not end_datetime:
+            continue
+        try:
+            contract = select_payroll_contract(emp_id, start_datetime, end_datetime)
+        except ValidationError as error:
+            errors.extend(error.messages)
+            valid = False
+            continue
 
         if not contract:
             continue

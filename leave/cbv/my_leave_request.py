@@ -1,3 +1,4 @@
+from leave.locking import locked_leave_operation
 """
 This page is handled the cbv of my leave request page
 """
@@ -315,6 +316,7 @@ class MyLeaveRequestForm(HorillaFormView):
     #         )
     #     return super().form_invalid(form)
 
+    @locked_leave_operation()
     def form_valid(self, form: UserLeaveRequestCreationForm) -> HttpResponse:
         def _done():
             if self.request.META.get("HTTP_HX_REQUEST"):
@@ -504,6 +506,7 @@ class MyLeaveRequestSingleForm(HorillaFormView):
             self.request, self.template_name, {"form": form, "errors": errors}
         )
 
+    @locked_leave_operation()
     def form_valid(self, form: UserLeaveRequestCreationForm) -> HttpResponse:
         employee = self.request.user.employee_get
         resolved = resolve(self.request.path_info)

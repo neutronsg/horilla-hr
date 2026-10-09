@@ -1,3 +1,8 @@
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+from leave.locking import employee_leave_lock
+from payroll.contracts import select_payroll_contract
+
 """
 methods.py
 
@@ -310,7 +315,7 @@ def daily_computation(employee, wage, start_date, end_date):
 
     leave_data = get_leaves(employee, start_date, end_date)
 
-    contract = employee.contract_set.filter(contract_status="active").first()
+    contract = select_payroll_contract(employee, start_date, end_date)
     basic_pay = wage * total_working_days
     loss_of_pay = 0
 
@@ -344,9 +349,7 @@ def daily_computation(employee, wage, start_date, end_date):
         + half_day_leaves_between_period_on_end_date
     ) * 0.5
 
-    contract = employee.contract_set.filter(
-        is_active=True, contract_status="active"
-    ).first()
+    contract = select_payroll_contract(employee, start_date, end_date)
 
     unpaid_leaves = leave_data["unpaid_leaves"] - unpaid_half_leaves
     if contract.calculate_daily_leave_amount:
@@ -453,7 +456,7 @@ def months_between_range(wage, start_date, end_date, employee=None, require_sche
     """Split a period into months, retaining each full month's denominator."""
     from payroll.calendar import month_bounds, working_day_weights
 
-    contract = (Contract.objects.filter(employee_id=employee, contract_status="active").first()
+    contract = (select_payroll_contract(employee, start_date, end_date)
                 if employee else None)
     months_data = []
     current = start_date.replace(day=1)
@@ -538,7 +541,7 @@ def monthly_computation(employee, wage, start_date, end_date, *args, month_summa
             data["working_days_on_period"] * data["per_day_amount"]
         )
 
-    contract = employee.contract_set.filter(contract_status="active").first()
+    contract = select_payroll_contract(employee, start_date, end_date)
     loss_of_pay = 0
     date_range = get_date_range(start_date, end_date)
     # Half-day filter: only truly unpaid leaves (exclude custom payment_type)
@@ -580,9 +583,7 @@ def monthly_computation(employee, wage, start_date, end_date, *args, month_summa
         + half_day_leaves_between_period_on_end_date
     ) * 0.5
 
-    contract = employee.contract_set.filter(
-        is_active=True, contract_status="active"
-    ).first()
+    contract = select_payroll_contract(employee, start_date, end_date)
     unpaid_leaves = abs(leave_data["unpaid_leaves"] - unpaid_half_leaves)
     total_working_days = sum(d["working_days_on_period"] for d in month_data)
     paid_days = total_working_days - unpaid_leaves
@@ -656,9 +657,7 @@ def compute_salary_on_period(
             back to the classic months_between_range/get_working_days/
             get_leaves-based computation.
     """
-    contract = Contract.objects.filter(
-        employee_id=employee, contract_status="active"
-    ).first()
+    contract = select_payroll_contract(employee, start_date, end_date)
     if contract is None:
         return contract
 
@@ -832,28 +831,30 @@ def save_payslip(**kwargs):
     """
     This method is used to save the generated payslip
     """
-    filtered_instance = Payslip.objects.filter(
-        employee_id=kwargs["employee"],
-        start_date=kwargs["start_date"],
-        end_date=kwargs["end_date"],
-    ).first()
-    instance = filtered_instance if filtered_instance is not None else Payslip()
-    instance.employee_id = kwargs["employee"]
-    instance.group_name = kwargs.get("group_name")
-    instance.start_date = kwargs["start_date"]
-    instance.end_date = kwargs["end_date"]
-    # Preserve the user-selected payment date; model.save supplies the
-    # Singapore default (6th of following month, rolled forward from weekends)
-    # when omitted.
-    if kwargs.get("payment_date") is not None:
-        instance.payment_date = kwargs["payment_date"]
-    instance.status = kwargs["status"]
-    instance.basic_pay = round(kwargs["basic_pay"], 2)
-    instance.contract_wage = round(kwargs["contract_wage"], 2)
-    instance.gross_pay = round(kwargs["gross_pay"], 2)
-    instance.deduction = round(kwargs["deduction"], 2)
-    instance.net_pay = round(kwargs["net_pay"], 2)
-    instance.pay_head_data = kwargs["pay_data"]
-    instance.save()
-    instance.installment_ids.set(kwargs["installments"])
-    return instance
+    with employee_leave_lock(kwargs["employee"]):
+        filtered_instance = Payslip.objects.filter(
+            employee_id=kwargs["employee"],
+            start_date=kwargs["start_date"],
+            end_date=kwargs["end_date"],
+        ).first()
+        if filtered_instance is not None and filtered_instance.status == "paid":
+            raise ValidationError(_("A paid payslip cannot be regenerated."))
+        instance = filtered_instance if filtered_instance is not None else Payslip()
+        instance.employee_id = kwargs["employee"]
+        instance.group_name = kwargs.get("group_name")
+        instance.start_date = kwargs["start_date"]
+        instance.end_date = kwargs["end_date"]
+        # Preserve the HR-selected date. The default is the scheduled 6th;
+        # HR records the actual date when salary is transferred.
+        if kwargs.get("payment_date") is not None:
+            instance.payment_date = kwargs["payment_date"]
+        instance.status = kwargs["status"]
+        instance.basic_pay = round(kwargs["basic_pay"], 2)
+        instance.contract_wage = round(kwargs["contract_wage"], 2)
+        instance.gross_pay = round(kwargs["gross_pay"], 2)
+        instance.deduction = round(kwargs["deduction"], 2)
+        instance.net_pay = round(kwargs["net_pay"], 2)
+        instance.pay_head_data = kwargs["pay_data"]
+        instance.save()
+        instance.installment_ids.set(kwargs["installments"])
+        return instance

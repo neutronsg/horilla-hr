@@ -1,3 +1,4 @@
+from leave.locking import employee_leave_lock
 import calendar
 import logging
 import math
@@ -11,7 +12,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q, Sum
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -1534,6 +1535,7 @@ class LeaveRequest(HorillaModel):
 
         return overlapping_requests
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
         self.requested_days = calculate_requested_days(
             self.start_date,
@@ -1873,26 +1875,32 @@ class LeaveRequest(HorillaModel):
             self.requested_days = self.requested_days - company_leave_count
 
     def no_approval(self):
-        employee_id = self.employee_id
-        leave_type_id = self.leave_type_id
-        available_leave = AvailableLeave.objects.get(
-            leave_type_id=leave_type_id, employee_id=employee_id
-        )
-        if self.requested_days > available_leave.available_days:
-            leave = self.requested_days - available_leave.available_days
-            self.approved_available_days = available_leave.available_days
-            available_leave.available_days = 0
-            available_leave.carryforward_days = (
-                available_leave.carryforward_days - leave
+        with employee_leave_lock(self.employee_id_id):
+            if self.pk and type(self).objects.filter(pk=self.pk, status="approved").exists():
+                self.refresh_from_db()
+                return
+            employee_id = self.employee_id
+            leave_type_id = self.leave_type_id
+            available_leave = AvailableLeave.objects.get(
+                leave_type_id=leave_type_id, employee_id=employee_id
             )
-            self.approved_carryforward_days = leave
-        else:
-            available_leave.available_days = (
-                available_leave.available_days - self.requested_days
-            )
-            self.approved_available_days = self.requested_days
-        self.status = "approved"
-        available_leave.save()
+            if self.requested_days > available_leave.available_days + available_leave.carryforward_days:
+                raise ValidationError(_("Insufficient leave balance."))
+            if self.requested_days > available_leave.available_days:
+                leave = self.requested_days - available_leave.available_days
+                self.approved_available_days = available_leave.available_days
+                available_leave.available_days = 0
+                available_leave.carryforward_days = (
+                    available_leave.carryforward_days - leave
+                )
+                self.approved_carryforward_days = leave
+            else:
+                available_leave.available_days = (
+                    available_leave.available_days - self.requested_days
+                )
+                self.approved_available_days = self.requested_days
+            self.status = "approved"
+            available_leave.save()
 
     def multiple_approvals(self, *args, **kwargs):
         if hasattr(self, "_multiple_approvals_cache"):

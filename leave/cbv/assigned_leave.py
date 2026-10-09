@@ -1,3 +1,4 @@
+from leave.locking import locked_leave_operation, locked_bulk_balances
 """
 this page handles cbv of assigned leave page
 """
@@ -125,6 +126,7 @@ class AssignedleaveList(HorillaListView):
         )
         return form
 
+    @locked_bulk_balances
     def handle_bulk_submission(self, request):
         """
         This method to handle bulk update form submission, including the
@@ -354,6 +356,7 @@ class AssignedLeaveFormView(HorillaFormView):
 
         return context
 
+    @locked_leave_operation()
     def form_valid(self, form: AssignLeaveForm) -> HttpResponse:
         if form.is_valid():
             if form.instance.pk:

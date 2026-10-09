@@ -16,6 +16,7 @@
         id="payslipCreateForm"
     >
         {% csrf_token %}
+        {{ individual_form.non_field_errors }}
         <div class="row">
             <div class="col-12">
                 <div class="oh-input__group">
@@ -49,6 +50,15 @@
                         for="{{individual_form.end_date.id_for_label}}"
                     >{% trans "End Date" %}</label>
                     {{ individual_form.end_date }} {{ individual_form.end_date.errors }}
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="oh-input__group">
+                    <label class="oh-input__label" for="{{ individual_form.payment_date.id_for_label }}">{% trans "Payment Date" %}</label>
+                    {{ individual_form.payment_date }} {{ individual_form.payment_date.errors }}
+                    <small>{{ individual_form.payment_date.help_text }}</small>
                 </div>
             </div>
         </div>

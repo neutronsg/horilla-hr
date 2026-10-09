@@ -42,9 +42,8 @@ def calculate_taxable_amount(**kwargs):
     start_date = kwargs["start_date"]
     end_date = kwargs["end_date"]
     basic_pay = kwargs["basic_pay"]
-    contract = Contract.objects.filter(
-        employee_id=employee, contract_status="active"
-    ).first()
+    from payroll.contracts import select_payroll_contract
+    contract = kwargs.get("contract") or select_payroll_contract(employee, start_date, end_date)
     filing = contract.filing_status
     if not filing:
         return 0

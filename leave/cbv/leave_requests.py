@@ -1,3 +1,5 @@
+from leave.locking import locked_leave_operation
+from horilla.http.response import HorillaRedirect
 """
 This page handles the cbv of leave requests page
 """
@@ -84,6 +86,18 @@ class LeaveRequestsListView(HorillaListView):
                 filtered_ids.append(request_id)
         if request.user.is_superuser:
             filtered_ids = instance_ids
+        status = request.POST.get("status")
+        if status == "approved":
+            from leave.views import leave_request_approve
+            for request_id in filtered_ids:
+                leave_request_approve(request, request_id)
+            return HorillaRedirect(request)
+        if status in {"rejected", "cancelled"} or LeaveRequest.objects.filter(
+                pk__in=filtered_ids, status__in=("approved", "cancelled")).exists():
+            # Status-only bulk updates must not bypass balance refunds, work
+            # records or the rejection reason. Use the existing dedicated action.
+            messages.error(request, _("Use the Approve or Reject action to change these requests."))
+            return HorillaRedirect(request)
         formatted_ids = [str(filtered_ids)]
         request.POST = request.POST.copy()
         request.POST.setlist("instance_ids", formatted_ids)
@@ -510,6 +524,7 @@ class LeaveRequestFormView(HorillaFormView):
         self.form = form
         return self.render_to_response(self.get_context_data())
 
+    @locked_leave_operation()
     def form_valid(self, form: LeaveRequestCreationForm) -> HttpResponse:
         form = self.form_class(
             self.request.POST, self.request.FILES, instance=self.form.instance

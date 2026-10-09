@@ -115,11 +115,15 @@ class MomPayrollTests(TestCase):
         self.assertAlmostEqual(data["total_deductions"], 10)
 
     def test_nonexempt_employee_retains_cpf(self):
+        from employee.singapore_models import SingaporeEmployeeDetails
+        self.employee.dob = date(1990, 1, 1)
+        self.employee.save()
+        SingaporeEmployeeDetails.objects.create(employee=self.employee, residency_status="citizen")
         component = Deduction.objects.create(title="CPF", statutory_type="cpf", is_fixed=True, amount=260)
         component.specific_employees.add(self.employee)
         with patch("payroll.views.component_views.get_pending_attendance", return_value=[]):
             data = payroll_calculation(self.employee, date(2026, 9, 7), date(2026, 9, 30))
-        self.assertAlmostEqual(data["total_deductions"], 260)
+        self.assertAlmostEqual(data["total_deductions"], 1374)
 
     def test_exemption_needs_reason_and_sdl_is_snapshot_based(self):
         self.contract.cpf_exempt = True
@@ -139,7 +143,11 @@ class MomPayrollTests(TestCase):
         self.assertIn("CPF", html)
         self.assertIn("assigned directly to employee", html)
 
-    def test_empty_structure_is_authoritative_without_inferred_exemption(self):
+    def test_empty_structure_retains_custom_policy_but_cannot_exempt_statutory_cpf(self):
+        from employee.singapore_models import SingaporeEmployeeDetails
+        self.employee.dob = date(1990, 1, 1)
+        self.employee.save()
+        SingaporeEmployeeDetails.objects.create(employee=self.employee, residency_status="citizen")
         self.contract.salary_structure_id = SalaryStructure.objects.create(title="No deductions")
         self.contract.save()
         component = Deduction.objects.create(title="Old recurring CPF", statutory_type="cpf", is_fixed=True, amount=260)
@@ -149,10 +157,14 @@ class MomPayrollTests(TestCase):
         with patch("payroll.views.component_views.get_pending_attendance", return_value=[]):
             data = payroll_calculation(self.employee, date(2026, 9, 7), date(2026, 9, 30))
         self.assertFalse(self.contract.cpf_exempt)
-        self.assertAlmostEqual(data["total_deductions"], 100)
+        self.assertAlmostEqual(data["total_deductions"], 1474)
         self.assertEqual(data["pretax_deductions"], [])
 
-    def test_selected_structure_keeps_its_configured_cpf(self):
+    def test_selected_structure_cpf_is_replaced_by_statutory_calculation(self):
+        from employee.singapore_models import SingaporeEmployeeDetails
+        self.employee.dob = date(1990, 1, 1)
+        self.employee.save()
+        SingaporeEmployeeDetails.objects.create(employee=self.employee, residency_status="citizen")
         structure = SalaryStructure.objects.create(title="CPF structure")
         self.contract.salary_structure_id = structure
         self.contract.save()
@@ -160,7 +172,7 @@ class MomPayrollTests(TestCase):
         structure.add_deduction(component)
         with patch("payroll.views.component_views.get_pending_attendance", return_value=[]):
             data = payroll_calculation(self.employee, date(2026, 9, 7), date(2026, 9, 30))
-        self.assertAlmostEqual(data["total_deductions"], 260)
+        self.assertAlmostEqual(data["total_deductions"], 1374)
 
     def test_recalculation_refuses_paid_payslip(self):
         from django.core.management import call_command

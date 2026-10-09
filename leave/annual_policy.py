@@ -1,3 +1,4 @@
+from leave.locking import locked_employee_sync
 """Keep auto-calculated annual leave balances in step with service time."""
 
 import math
@@ -191,6 +192,7 @@ def calculate_annual_balance(assignment, as_of=None):
     return updated
 
 
+@locked_employee_sync
 @transaction.atomic
 def sync_annual_leave(employee, leave_type, as_of=None):
     """Credit entitlement differences while keeping booked deductions."""

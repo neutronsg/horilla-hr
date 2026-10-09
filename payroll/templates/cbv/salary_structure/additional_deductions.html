@@ -2,7 +2,7 @@
 {% for row in rows %}
 <div class="mb-2">
   <strong>{{ row.employee }}</strong>
-  {% for deduction in row.deductions %}<div>{{ deduction.title }} — {% trans "assigned directly to employee" %}{% if deduction.only_show_under_employee or deduction.is_installment or deduction.one_time_date or deduction.update_compensation %} ({% trans "separate employee deduction" %}){% else %} ({% trans "excluded: not in this salary structure" %}){% endif %}{% if row.contract.cpf_exempt and deduction.statutory_type != 'none' and deduction.statutory_type != 'mbmf' %} ({% trans "CPF exempt" %}){% endif %}</div>{% endfor %}
+  {% for deduction in row.deductions %}<div>{{ deduction.title }} — {% trans "assigned directly to employee" %}{% if deduction.statutory_type == "cpf" %} ({% trans "statutory CPF is calculated automatically; this configured amount is not used" %}){% elif deduction.only_show_under_employee or deduction.is_installment or deduction.one_time_date or deduction.update_compensation %} ({% trans "separate employee deduction" %}){% else %} ({% trans "excluded: not in this salary structure" %}){% endif %}{% if row.contract.cpf_exempt and deduction.statutory_type != 'none' and deduction.statutory_type != 'mbmf' %} ({% trans "CPF exempt" %}){% endif %}</div>{% endfor %}
   {% if row.contract.cpf_exempt %}<div>{% trans "CPF exempt" %}: {{ row.contract.cpf_exemption_reason }}</div>{% endif %}
   {% if row.contract.sdl_exempt %}<div>{% trans "SDL exempt" %}: {{ row.contract.sdl_exemption_reason }}</div>{% endif %}
 </div>

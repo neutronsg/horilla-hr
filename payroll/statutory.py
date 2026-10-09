@@ -1,11 +1,12 @@
 """Apply recorded statutory exemptions regardless of component targeting."""
 
 
-def eligible_deductions(queryset, employee):
+def eligible_deductions(queryset, employee, contract=None):
     from django.db.models import Q
     from payroll.models.models import Contract
 
-    contract = Contract.objects.filter(employee_id=employee, contract_status="active").first()
+    if contract is None:
+        contract = Contract.objects.filter(employee_id=employee, contract_status="active").first()
     if contract and contract.salary_structure_id:
         # An explicitly selected structure is HR's recurring deduction policy.
         # Keep separately recorded advances, installments and one-off items.
@@ -18,4 +19,4 @@ def eligible_deductions(queryset, employee):
         )
     if contract and contract.cpf_exempt:
         queryset = queryset.exclude(statutory_type__in=("cpf", "cdac", "ecf", "sinda"))
-    return queryset
+    return queryset.exclude(statutory_type="cpf")

@@ -25,7 +25,9 @@ def update_compensation_deduction(
         # .exclude(exclude_employees=employee)
     )
     from payroll.statutory import eligible_deductions
-    deduction_heads = eligible_deductions(deduction_heads, employee)
+    from payroll.contracts import select_payroll_contract
+    contract = select_payroll_contract(employee, start_date, end_date)
+    deduction_heads = eligible_deductions(deduction_heads, employee, contract)
     deductions = []
     temp = compensation_amount
     for deduction in deduction_heads:

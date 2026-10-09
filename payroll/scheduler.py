@@ -5,16 +5,26 @@ This module is used to register scheduled tasks
 """
 
 import json
+import calendar
+import logging
 import sys
 from datetime import date, timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from dateutil.relativedelta import relativedelta
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from payroll.methods.methods import calculate_employer_contribution, save_payslip
 from payroll.views.component_views import payroll_calculation
 
 from .models.models import Contract, Payslip
+
+logger = logging.getLogger(__name__)
+
+
+def previous_calendar_month(run_date):
+    period_end = run_date.replace(day=1) - timedelta(days=1)
+    return period_end.replace(day=1), period_end
 
 
 def expire_contract():
@@ -33,7 +43,6 @@ def generate_payslip(date, companies, all):
 
     from employee.models import Employee
 
-    date = date
     employees = Employee.objects.none()
     # Get all employees with in the companies
     if all == True:
@@ -46,32 +55,32 @@ def generate_payslip(date, companies, all):
                 employee_work_info__company_id=company
             )
 
-    # Filter out employees who don't have a contract_set or whose contract status is not active
-    active_employees = employees.filter(
-        contract_set__isnull=False, contract_set__contract_status="active"
-    )
-
-    # Remove duplicates if an employee has multiple active contracts
-    active_employees = active_employees.distinct()
-    # find the date range
-    period_start = date - relativedelta(months=1)
-    period_end = date - timedelta(days=1)
+    # Historical payroll includes staff who left during the previous month.
+    period_start, period_end = previous_calendar_month(date)
+    from payroll.contracts import select_payroll_contract
+    from payroll.calendar import employment_period
     # Payslip creation
-    for employee in active_employees:
+    for employee in employees.distinct():
+        try:
+            contract = select_payroll_contract(employee, period_start, period_end)
+        except ValidationError:
+            logger.exception("Automatic payroll contract validation failed for employee %s", employee.pk)
+            continue
+        if contract is None:
+            continue
+        start_date, end_date = employment_period(employee, contract, period_start, period_end)
         payslip = Payslip.objects.filter(
-            employee_id=employee, start_date=period_start, end_date=period_end
+            employee_id=employee, start_date=start_date, end_date=end_date
         ).first()
         if payslip:
             continue
-        contract = Contract.objects.filter(
-            employee_id=employee, contract_status="active"
-        ).first()
-        if period_end < contract.contract_start_date:
+        try:
+            payslip_data = payroll_calculation(employee, period_start, period_end)
+        except ValidationError:
+            logger.exception("Automatic payroll calculation failed for employee %s", employee.pk)
             continue
-        # A contract starting mid-period shortens only that employee's payslip,
-        # so the adjusted start must stay local to this iteration.
-        start_date = max(period_start, contract.contract_start_date)
-        payslip_data = payroll_calculation(employee, start_date, period_end)
+        if not payslip_data:
+            continue
         payslip_data["payslip"] = payslip
         data = {}
         data["employee"] = employee
@@ -86,7 +95,10 @@ def generate_payslip(date, companies, all):
         data["pay_data"] = json.loads(payslip_data["json_data"])
         calculate_employer_contribution(data)
         data["installments"] = payslip_data["installments"]
-        payslip_data["instance"] = save_payslip(**data)
+        try:
+            payslip_data["instance"] = save_payslip(**data)
+        except ValidationError:
+            logger.exception("Automatic payroll save validation failed for employee %s", employee.pk)
 
 
 def is_last_day_of_month(date):
@@ -104,9 +116,9 @@ def auto_payslip_generate():
 
     # from payroll.models import PayslipAutoGenerate
     if PayslipAutoGenerate.objects.filter(auto_generate=True).exists():
-        today = date.today()
+        today = timezone.localdate()
         day_today = today.day
-        last_day = (today + timedelta(days=1)).replace(day=1) - timedelta(days=1)
+        last_day_number = calendar.monthrange(today.year, today.month)[1]
         auto_payslips = PayslipAutoGenerate.objects.filter(auto_generate=True)
         companies = []
         auto_companies = [auto.company_id for auto in auto_payslips]
@@ -117,7 +129,7 @@ def auto_payslip_generate():
                     companies.append(auto.company_id)
             else:
                 generate_day = int(generate_day)
-                if generate_day >= last_day.day and day_today == last_day.day:
+                if generate_day >= last_day_number and day_today == last_day_number:
                     companies.append(auto.company_id)
                 elif generate_day == day_today:
                     companies.append(auto.company_id)
@@ -126,17 +138,13 @@ def auto_payslip_generate():
         # Check if 'All company' case exists, i.e., None is in companies
         if companies:
             if None in companies:
-                company_all = Company.objects.all()
-                generate_companies = []
-                # Append the companies that are not in PayslipAutoGenerate
-                for company in company_all:
-                    if company not in auto_companies:
-                        generate_companies.append(company)
-                generate_payslip(
-                    date=date.today(), companies=generate_companies, all=True
-                )
+                # A company with its own schedule is excluded from the default,
+                # but must still run when its own schedule is due today.
+                explicit_companies = [company for company in companies if company is not None]
+                default_companies = [company for company in Company.objects.all() if company not in auto_companies]
+                generate_payslip(date=today, companies=explicit_companies + default_companies, all=True)
             else:
-                generate_payslip(date=date.today(), companies=companies, all=False)
+                generate_payslip(date=today, companies=companies, all=False)
 
 
 if not any(

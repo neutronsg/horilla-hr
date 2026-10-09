@@ -364,10 +364,28 @@ def calculate_allowance(**kwargs):
             tax_allowances.append(allowance)
         else:
             no_tax_allowances.append(allowance)
+    def fixed_amount(allowance):
+        amount = allowance.amount
+        contract = kwargs.get("contract")
+        details = kwargs.get("salary_details")
+        if (contract and details and contract.wage_type == "monthly"
+                and allowance.prorate_fixed and not allowance.one_time_date
+                and allowance.cpf_wage_type != "excluded"):
+            payable = details["basic_pay"]
+            if not contract.deduct_leave_from_basic_pay:
+                payable -= details["loss_of_pay"]
+            if contract.wage:
+                amount *= max(0, payable) / contract.wage
+            else:
+                # Zero basic wages still have a working-day allowance proportion.
+                amount *= sum(m["working_days_on_period"] / m["working_days_on_month"]
+                              for m in details["month_data"] if m["working_days_on_month"])
+        return round(amount, 2)
+
     # Find and append the amount of tax_allowances
     for allowance in tax_allowances:
         if allowance.is_fixed:
-            amount = allowance.amount
+            amount = fixed_amount(allowance)
             kwargs["amount"] = amount
             kwargs["component"] = allowance
 
@@ -394,7 +412,7 @@ def calculate_allowance(**kwargs):
     # Find and append the amount of not tax_allowances
     for allowance in no_tax_allowances:
         if allowance.is_fixed:
-            amount = allowance.amount
+            amount = fixed_amount(allowance)
             kwargs["amount"] = amount
             kwargs["component"] = allowance
             amount = if_condition_on(**kwargs)
@@ -424,6 +442,8 @@ def calculate_allowance(**kwargs):
             "allowance_id": allowance.id,
             "title": allowance.title,
             "is_taxable": allowance.is_taxable,
+            "cpf_wage_type": allowance.cpf_wage_type,
+            "one_time_date": str(allowance.one_time_date) if allowance.one_time_date else None,
             "amount": amount,
         }
         serialized_allowances.append(serialized_allowance)
@@ -434,6 +454,8 @@ def calculate_allowance(**kwargs):
             "allowance_id": allowance.id,
             "title": allowance.title,
             "is_taxable": allowance.is_taxable,
+            "cpf_wage_type": allowance.cpf_wage_type,
+            "one_time_date": str(allowance.one_time_date) if allowance.one_time_date else None,
             "amount": amount,
         }
         serialized_allowances.append(serialized_allowance)
@@ -475,7 +497,7 @@ def calculate_tax_deduction(*_args, **kwargs):
     deductions_amt = []
     serialized_deductions = []
     from payroll.statutory import eligible_deductions
-    deductions = eligible_deductions(deductions, employee)
+    deductions = eligible_deductions(deductions, employee, kwargs.get("contract"))
     for deduction in deductions:
         calculation_function = calculation_mapping.get(deduction.based_on)
         amount = calculation_function(
@@ -549,7 +571,7 @@ def calculate_pre_tax_deduction(*_args, **kwargs):
     serialized_deductions = []
 
     from payroll.statutory import eligible_deductions
-    deductions = eligible_deductions(deductions, employee)
+    deductions = eligible_deductions(deductions, employee, kwargs.get("contract"))
     for deduction in deductions:
         if deduction.is_condition_based:
             conditions = list(
@@ -660,7 +682,7 @@ def calculate_post_tax_deduction(*_args, **kwargs):
     serialized_net_pay_deductions = []
 
     from payroll.statutory import eligible_deductions
-    deductions = eligible_deductions(deductions, employee)
+    deductions = eligible_deductions(deductions, employee, kwargs.get("contract"))
     for deduction in deductions:
         if deduction.is_condition_based:
             condition_field = deduction.field

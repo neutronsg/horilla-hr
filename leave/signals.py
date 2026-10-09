@@ -1,3 +1,5 @@
+from django.db import router
+from django.db.models import QuerySet
 # leave/signals.py
 
 import threading
@@ -11,6 +13,17 @@ from employee.models import EmployeeWorkInformation
 from horilla.methods import get_horilla_model_class
 from leave.models import LeaveRequest, LeaveRequestConditionApproval
 from leave.services import schedule_auto_leave_sync
+
+def leave_work_record_defaults(instance, day):
+    half_day = (day == instance.start_date and instance.start_date_breakdown != "full_day") or (
+        day == instance.end_date and instance.end_date_breakdown != "full_day")
+    return {
+        "is_leave_record": True, "leave_request_id": instance,
+        "day_percentage": 0.5 if half_day else 0.0,
+        "work_record_type": "CONF" if half_day else "ABS",
+        "message": _("Half day Attendance need to validate") if half_day else "Leave",
+    }
+
 
 if apps.is_installed("attendance"):
 
@@ -31,57 +44,23 @@ if apps.is_installed("attendance"):
 
         period_dates = instance.requested_dates()
         if instance.status == "approved":
-            for date in period_dates:
-                try:
-                    work_entry = (
-                        WorkRecords.objects.filter(
-                            date=date,
-                            employee_id=instance.employee_id,
-                        ).first()
-                        if WorkRecords.objects.filter(
-                            date=date,
-                            employee_id=instance.employee_id,
-                        ).exists()
-                        else WorkRecords()
-                    )
-                    work_entry.employee_id = instance.employee_id
-                    work_entry.is_leave_record = True
-                    work_entry.leave_request_id = instance
-                    work_entry.day_percentage = (
-                        0.50
-                        if instance.start_date == date
-                        and instance.start_date_breakdown == "first_half"
-                        or instance.end_date == date
-                        and instance.end_date_breakdown == "second_half"
-                        else 0.00
-                    )
-                    status = (
-                        "CONF"
-                        if instance.start_date == date
-                        and instance.start_date_breakdown == "first_half"
-                        or instance.end_date == date
-                        and instance.end_date_breakdown == "second_half"
-                        else "ABS"
-                    )
-                    work_entry.work_record_type = status
-                    work_entry.date = date
-                    work_entry.message = (
-                        "Leave"
-                        if status == "ABS"
-                        else _("Half day Attendance need to validate")
-                    )
-                    work_entry.save()
-
-                except Exception as e:
-                    print(e)
-
-        else:
-            for date in period_dates:
-                WorkRecords._base_manager.filter(
-                    is_leave_record=True,
-                    date=date,
+            for day in period_dates:
+                # A failure must propagate to the approval transaction. Silently
+                # swallowing a DB error leaves an approved request without its
+                # attendance record (and breaks PostgreSQL's transaction).
+                # The company manager adds DISTINCT, which is incompatible with
+                # update_or_create's PostgreSQL row lock. The request already scopes the employee.
+                QuerySet(model=WorkRecords, using=router.db_for_write(WorkRecords)).update_or_create(
+                    date=day,
                     employee_id=instance.employee_id,
-                ).delete()
+                    defaults=leave_work_record_defaults(instance, day),
+                )
+        else:
+            WorkRecords._base_manager.filter(
+                is_leave_record=True,
+                leave_request_id=instance,
+            ).delete()
+
 
     @receiver(pre_delete, sender=LeaveRequest)
     def leaverequest_pre_delete(sender, instance, **kwargs):

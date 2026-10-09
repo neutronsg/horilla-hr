@@ -430,12 +430,9 @@ class PayslipForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        active_contracts = Contract.objects.filter(contract_status="active")
-        self.fields["employee_id"].choices = [
-            (contract.employee_id.id, contract.employee_id)
-            for contract in active_contracts
-            if contract.employee_id.is_active
-        ]
+        self.fields["employee_id"].queryset = Employee.objects.filter(
+            contract_set__contract_status__in=("active", "expired", "terminated")
+        ).distinct()
         self.fields["employee_id"].widget.attrs.update(
             {
                 "hx-get": "/payroll/check-contract-start-date",
@@ -534,10 +531,9 @@ class GeneratePayslipForm(HorillaForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["employee_id"].queryset = Employee.objects.filter(
-            is_active=True,
             contract_set__isnull=False,
-            contract_set__contract_status="active",
-        )
+            contract_set__contract_status__in=("active", "expired", "terminated"),
+        ).distinct()
         self.fields["employee_id"].widget.attrs.update(
             {"class": "oh-select oh-select-2", "id": uuid.uuid4()}
         )
@@ -685,7 +681,7 @@ class BonusForm(Form):
         is_fixed = self.cleaned_data["is_fixed"]
         rate = self.cleaned_data["rate"]
 
-        bonus = Allowance()
+        bonus = Allowance(cpf_wage_type="aw")
         bonus.title = title
         bonus.one_time_date = date
         bonus.only_show_under_employee = True

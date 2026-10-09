@@ -1,3 +1,4 @@
+from leave.locking import locked_leave_operation, employee_leave_lock
 import contextlib
 
 from django.contrib.auth.decorators import permission_required
@@ -424,6 +425,7 @@ class AssignLeaveGetUpdateDeleteAPIView(APIView):
         permission_required("leave.change_availableleave", raise_exception=True),
         name="dispatch",
     )
+    @locked_leave_operation("AvailableLeave", "pk")
     def put(self, request, pk):
         available_leave = self.get_available_leave(pk)
         serializer = AvailableLeaveUpdateSerializer(available_leave, data=request.data)
@@ -482,6 +484,7 @@ class LeaveRequestGetCreateAPIView(APIView):
         return paginator.get_paginated_response(serializer.data)
 
     @manager_permission_required("leave.add_leaverequest")
+    @locked_leave_operation()
     def post(self, request):
         data = request.data
         if isinstance(data, QueryDict):
@@ -532,6 +535,7 @@ class LeaveRequestGetUpdateDeleteAPIView(APIView):
         return Response(serializer.data, status=200)
 
     @manager_permission_required("leave.change_leaverequest")
+    @locked_leave_operation("LeaveRequest", "pk")
     def put(self, request, pk):
         leave_request = self.get_leave_request(pk)
         if leave_request.status == "requested":
@@ -756,8 +760,11 @@ class LeaveRequestApproveAPIView(APIView):
                 leave_request.save()
 
     @manager_permission_required("leave.change_leaverequest")
+    @locked_leave_operation("LeaveRequest", "pk")
     def put(self, request, pk):
         leave_request = self.get_leave_request(pk)
+        if not request.user.is_superuser and leave_request.employee_id == request.user.employee_get:
+            raise serializers.ValidationError(_("You cannot approve your own leave request."))
         serializer = LeaveRequestApproveSerializer(leave_request, data=request.data)
         if serializer.is_valid():
             available_leave = serializer.validated_data.get("available_leave")
@@ -807,9 +814,10 @@ class LeaveRequestRejectAPIView(APIView):
         leave_request.save()
 
     @manager_permission_required("leave.change_leaverequest")
+    @locked_leave_operation("LeaveRequest", "pk")
     def put(self, request, pk):
         leave_request = self.get_leave_request(pk)
-        employee_id = request.user.employee_get
+        employee_id = leave_request.employee_id
         if leave_request.status != "rejected":
             self.leave_calculation(leave_request, employee_id)
             with contextlib.suppress(Exception):
@@ -838,6 +846,7 @@ class LeaveRequestCancelAPIView(APIView):
         except LeaveRequest.DoesNotExist as e:
             raise serializers.ValidationError(e)
 
+    @locked_leave_operation("LeaveRequest", "pk")
     def put(self, request, pk):
         leave_request = self.get_leave_request(pk)
         if (
@@ -872,6 +881,7 @@ class LeaveAllocationApproveAPIView(APIView):
         available_leave.save()
 
     @manager_permission_required("leave.change_leaveallocationrequest")
+    @locked_leave_operation("LeaveAllocationRequest", "pk")
     def put(self, request, pk):
         leave_allocation_request = self.get_leave_allocation_request(pk)
         if leave_allocation_request.status == "requested":
@@ -905,6 +915,7 @@ class LeaveAllocationRequestRejectAPIView(APIView):
             available_leave.save()
 
     @manager_permission_required("leave.change_leaveallocationrequest")
+    @locked_leave_operation("LeaveAllocationRequest", "pk")
     def put(self, request, pk):
         leave_allocation_request = self.get_leave_allocation_request(pk)
         if leave_allocation_request.status != "rejected":
@@ -917,6 +928,9 @@ class LeaveAllocationRequestRejectAPIView(APIView):
 
 class LeaveRequestBulkApproveDeleteAPIview(APIView):
     permission_classes = [IsAuthenticated]
+
+    def get_locked_request(self, pk):
+        return LeaveRequest.objects.get(pk=pk)
 
     def get_leave_requests(self, request):
         try:
@@ -950,19 +964,25 @@ class LeaveRequestBulkApproveDeleteAPIview(APIView):
     @manager_permission_required("leave.change_leaverequest")
     def put(self, request):
         leave_requests = self.get_leave_requests(request)
-        for leave_request in leave_requests:
-            employee_id = leave_request.employee_id
-            leave_type_id = leave_request.leave_type_id
-            available_leave = AvailableLeave.objects.get(
-                leave_type_id=leave_type_id, employee_id=employee_id
-            )
-            total_available_leave = (
-                available_leave.available_days + available_leave.carryforward_days
-            )
-            if total_available_leave >= leave_request.requested_days:
-                self.leave_approve_calculation(leave_request, available_leave)
-                leave_request.status = "approved"
-                leave_request.save()
+        for candidate in list(leave_requests):
+            with employee_leave_lock(candidate.employee_id_id):
+                leave_request = self.get_locked_request(candidate.pk)
+                if leave_request.status != "requested":
+                    continue
+                if not request.user.is_superuser and leave_request.employee_id == request.user.employee_get:
+                    continue
+                employee_id = leave_request.employee_id
+                leave_type_id = leave_request.leave_type_id
+                available_leave = AvailableLeave.objects.get(
+                    leave_type_id=leave_type_id, employee_id=employee_id
+                )
+                total_available_leave = (
+                    available_leave.available_days + available_leave.carryforward_days
+                )
+                if total_available_leave >= leave_request.requested_days:
+                    self.leave_approve_calculation(leave_request, available_leave)
+                    leave_request.status = "approved"
+                    leave_request.save()
         return Response(status=200)
 
     @manager_permission_required("leave.delete_leaverequest")

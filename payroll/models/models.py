@@ -1,3 +1,4 @@
+from leave.locking import employee_leave_lock
 """
 models.py
 Used to register models
@@ -218,6 +219,24 @@ class Contract(HorillaModel):
         verbose_name=_("Payroll Workweek"),
         help_text=_("Used for incomplete-month salary. For half-day schedules, select a shift instead."),
     )
+    cpf_pr_scheme = models.CharField(
+        max_length=20, default="graduated",
+        choices=[("graduated", _("Graduated employer / employee")),
+                 ("full_employer", _("Full employer / graduated employee")),
+                 ("full_both", _("Full employer / employee"))],
+        verbose_name=_("PR CPF Scheme"),
+    )
+    cpf_pr_scheme_start = models.DateField(null=True, blank=True,
+        verbose_name=_("Higher PR CPF Rates Effective Month"),
+        help_text=_("Enter the first day of the effective month stated in CPF Board approval."))
+    cpf_pr_approval = models.CharField(max_length=255, blank=True, default="",
+        verbose_name=_("CPF Board Approval Reference"))
+    cpf_annual_ow_estimate = models.DecimalField(max_digits=12, decimal_places=2,
+        null=True, blank=True, validators=[min_zero],
+        verbose_name=_("Estimated Annual OW Subject to CPF"),
+        help_text=_("Required for Additional Wages before year end. Include OW from all contracts with this employer; review whenever wages change."))
+    cpf_estimate_year = models.PositiveSmallIntegerField(null=True, blank=True,
+        verbose_name=_("CPF Estimate Year"))
     cpf_exempt = models.BooleanField(default=False, verbose_name=_("CPF Exempt"))
     cpf_exemption_reason = models.CharField(max_length=255, blank=True, default="", verbose_name=_("CPF Exemption Basis"))
     sdl_exempt = models.BooleanField(default=False, verbose_name=_("SDL Exempt"))
@@ -458,6 +477,10 @@ class Contract(HorillaModel):
         return f"{self.contract_name} -{self.contract_start_date} - {self.contract_end_date}"
 
     def clean(self):
+        if self.cpf_pr_scheme != "graduated" and not self.cpf_pr_approval.strip():
+            raise ValidationError({"cpf_pr_approval": _("Record CPF Board approval before using higher PR rates.")})
+        if self.cpf_pr_scheme != "graduated" and (not self.cpf_pr_scheme_start or self.cpf_pr_scheme_start.day != 1):
+            raise ValidationError({"cpf_pr_scheme_start": _("Record the approved effective month using its first day.")})
         for flag, reason in (("cpf_exempt", "cpf_exemption_reason"), ("sdl_exempt", "sdl_exemption_reason")):
             if getattr(self, flag) and not getattr(self, reason).strip():
                 raise ValidationError({reason: _("Record the exemption basis and supporting document reference.")})
@@ -936,6 +959,14 @@ class Allowance(HorillaModel):
         related_name="allowance_excluded",
         blank=True,
     )
+    prorate_fixed = models.BooleanField(default=True,
+        verbose_name=_("Prorate Fixed Monthly Allowance"),
+        help_text=_("Use payable salary proportion for joining, leaving and unpaid time. One-off items and reimbursements are excluded."))
+    cpf_wage_type = models.CharField(max_length=10, default="ow",
+        choices=[("ow", _("CPF Ordinary Wages")), ("aw", _("CPF Additional Wages")),
+                 ("excluded", _("Expense Reimbursement / Not CPF Wages"))],
+        verbose_name=_("CPF Wage Classification"),
+        help_text=_("Taxability is separate. Fixed transport / meal allowances are CPF wages; genuine expense reimbursements are excluded."))
     is_taxable = models.BooleanField(
         default=True,
     )
@@ -2113,7 +2144,7 @@ class Payslip(HorillaModel):
         null=True,
         blank=True,
         verbose_name=_("Payment Date"),
-        help_text=_("Actual salary payment date; defaults to the 6th of the following month, moved to Monday when it falls on a weekend."),
+        help_text=_("Defaults to the scheduled 6th of the following month. Confirm the actual payment date after transferring salary."),
     )
     pay_head_data = models.JSONField()
     contract_wage = models.FloatField(null=True, default=0)
@@ -2142,22 +2173,14 @@ class Payslip(HorillaModel):
         if month == 13:
             month = 1
             year += 1
-        payment_date = date(year, month, 6)
-        while payment_date.weekday() >= 5:
-            payment_date += timedelta(days=1)
-        return payment_date
-
-    def save(self, *args, **kwargs):
-        if self.payment_date is None and self.end_date:
-            self.payment_date = self.default_payment_date(self.end_date)
-        return super().save(*args, **kwargs)
+        return date(year, month, 6)
 
     @property
     def sdl_display(self):
         """Indicative employer SDL; never included in employee deductions."""
         if self.pay_head_data.get("sdl_exempt", False):
             return 0
-        remuneration = float(self.gross_pay or 0)
+        remuneration = float(self.pay_head_data.get("sdl_wages", self.gross_pay) or 0)
         if remuneration <= 0:
             return 0
         return min(11.25, max(2.0, remuneration * 0.0025))
@@ -2253,21 +2276,29 @@ class Payslip(HorillaModel):
             )
 
     def save(self, *args, **kwargs):
-        if (
-            Payslip.objects.filter(
-                employee_id=self.employee_id,
-                start_date=self.start_date,
-                end_date=self.end_date,
-            )
-            .exclude(pk=self.pk)
-            .exists()
-        ):
-            raise ValidationError(_("Employee ,start and end date must be unique"))
+        with employee_leave_lock(self.employee_id_id):
+            if isinstance(self.pay_head_data, dict) and self.pay_head_data.get("statutory_cpf"):
+                from payroll.cpf import assert_single_cpf_month
+                assert_single_cpf_month(self.employee_id, self.start_date, self.end_date, exclude_pk=self.pk)
+            if (
+                Payslip.objects.filter(
+                    employee_id=self.employee_id,
+                    start_date=self.start_date,
+                    end_date=self.end_date,
+                )
+                .exclude(pk=self.pk)
+                .exists()
+            ):
+                raise ValidationError(_("Employee ,start and end date must be unique"))
 
-        if not isinstance(self.pay_head_data, (QueryDict, dict)):
-            raise ValidationError(_("The data must be in dictionary or querydict type"))
+            if not isinstance(self.pay_head_data, (QueryDict, dict)):
+                raise ValidationError(_("The data must be in dictionary or querydict type"))
 
-        super().save(*args, **kwargs)
+            if self.payment_date is None and self.end_date:
+                self.payment_date = self.default_payment_date(self.end_date)
+                if kwargs.get("update_fields") is not None:
+                    kwargs["update_fields"] = set(kwargs["update_fields"]) | {"payment_date"}
+            super().save(*args, **kwargs)
 
     def get_name(self):
         """
