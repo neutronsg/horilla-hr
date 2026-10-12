@@ -1,0 +1,42 @@
+{% load i18n %}
+<form class="sg-config" method="post" autocomplete="off" {% if embedded %}action="{% url 'employee-view-update' obj_id %}?tab=singapore" hx-post="{% url 'employee-view-update' obj_id %}?tab=singapore" hx-target="#employee-update-form-root" hx-swap="outerHTML"{% endif %}>
+ {% csrf_token %}{{ form.revision }}{{ form.configuration_version }}{{ form.configuration_version.errors }}
+ {% if embedded %}<input type="hidden" name="form" value="singapore_contributions"><input type="hidden" name="salary_month" value="{{ salary_month|date:'Y-m-d' }}">{% if container_mode %}<input type="hidden" name="container" value="true">{% endif %}{% endif %}
+ {% if not embedded %}<div class="sg-section-heading"><div><h3>{% trans "Contributions" %}</h3><p>{% trans "Choose the funds this employee contributes to. Standard amounts are calculated from salary." %}</p></div></div>{% endif %}
+ {{ form.non_field_errors }}
+ <div class="sg-config-meta">{% for field in form.declaration_fields %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}</div>
+ <div class="sg-fund-heading"><span>{% trans "Fund" %}</span><span>{% trans "Contribution setting" %}</span></div>
+ {% for fund in form.fund_fields %}<div class="sg-fund-row">
+  <div class="sg-fund-label"><strong>{{ fund.name }}</strong><small>{{ fund.description }}</small></div>
+  <div class="sg-fund-setting"><label class="sg-sr-only" for="{{ fund.mode.id_for_label }}">{{ fund.mode.label }}</label>{{ fund.mode }}{{ fund.mode.errors }}
+   <div class="sg-fund-extra"><div data-shg-amount hidden><label for="{{ fund.amount.id_for_label }}">{{ fund.amount.label }}</label>{{ fund.amount }}{{ fund.amount.errors }}</div><div data-shg-reference hidden><label for="{{ fund.reference.id_for_label }}">{{ fund.reference.label }}</label>{{ fund.reference }}{{ fund.reference.errors }}</div></div>
+  </div>
+ </div>{% endfor %}
+ <div class="sg-exemption-fields" hidden><h4>{% trans "Student exemption period" %}</h4><p>{% trans "Retain the qualifying evidence. Standard contributions resume outside these dates." %}</p><div class="sg-config-meta">{% for field in form.student_fields %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}</div></div>
+ <div class="sg-config-footer"><button type="button" class="sg-text-button" data-no-funds>{% trans "No funds apply" %}</button><button type="submit" class="oh-btn oh-btn--secondary">{% trans "Save contributions" %}</button></div>
+ <p class="sg-save-note">{% trans "Applies from the selected month. Existing payslips stay unchanged." %}</p>
+</form>
+<script>
+(function () {
+ function initFundForms() {
+  document.querySelectorAll('.sg-config').forEach(function(form){
+   function update(){
+    var student=false;
+    form.querySelectorAll('.sg-fund-row').forEach(function(row){
+     var mode=row.querySelector('select');student=student||mode.value==='student_exempt';
+     [['[data-shg-amount]',mode.value==='fixed'||mode.value==='voluntary'],['[data-shg-reference]',['fixed','voluntary','opt_out'].includes(mode.value)]].forEach(function(setting){var box=row.querySelector(setting[0]);box.hidden=!setting[1];box.querySelector('input').disabled=!setting[1];});
+    });
+    var exemption=form.querySelector('.sg-exemption-fields');exemption.hidden=!student;exemption.querySelectorAll('input').forEach(function(input){input.disabled=!student;});
+   }
+   if(!form.dataset.bound){
+    form.querySelectorAll('.sg-fund-row select').forEach(function(select){select.addEventListener('change',function(){var row=select.closest('.sg-fund-row');row.querySelectorAll('.sg-fund-extra input').forEach(function(input){input.value='';});update();});});
+    form.querySelector('[data-no-funds]').addEventListener('click',function(){form.querySelectorAll('.sg-fund-row select').forEach(function(select){select.value='not_applicable';select.closest('.sg-fund-row').querySelectorAll('.sg-fund-extra input').forEach(function(input){input.value='';});});update();});
+    form.dataset.bound='true';
+   }
+   update();
+  });
+ }
+ $(document).off('htmx:afterSwap.sgFundForms').on('htmx:afterSwap.sgFundForms',initFundForms);
+ $(initFundForms);
+})();
+</script>

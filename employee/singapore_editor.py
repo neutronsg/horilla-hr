@@ -37,6 +37,7 @@ def editor_context(request, employee):
     except (ValueError, TypeError):
         month = timezone.localdate().replace(day=1)
     context["salary_month"] = month
+    edit_details = can_edit and (request.GET.get("sg_edit") == "1" or submitted == "singapore_details")
     with transaction.atomic():
         if restricted_post:
             Employee.objects.entire().select_for_update().get(pk=employee.pk)
@@ -58,36 +59,37 @@ def editor_context(request, employee):
                         action="update", fields=fields)
                     messages.success(request, "Singapore employment details saved.")
                     details_form = None
+                    edit_details = False
         if submitted == "singapore_contributions":
             contribution_form = ContributionProfileForm(request.POST, prefix="shg", previous=latest,
-                instance=SingaporeContributionProfile(employee=employee, created_by=request.user))
+                instance=SingaporeContributionProfile(employee=employee, created_by=request.user), details=details)
             if contribution_form.is_valid():
                 if contribution_form.cleaned_data["revision"] != (str(latest.pk) if latest else ""):
                     contribution_form.add_error(None, "This declaration changed while you were editing. Reload before saving.")
                 else:
                     latest = contribution_form.save()
                     SingaporeDetailsAudit.objects.create(employee=employee, actor=request.user,
-                        action="update_contribution", fields=list(ContributionProfileForm.Meta.fields) + ["fund_adjustments"])
+                        action="update_contribution", fields=list(ContributionProfileForm.Meta.fields) + ["fund_selection", "fund_adjustments"])
                     messages.success(request, "Contribution declaration saved. Existing payslips are unchanged.")
                     contribution_form = None
         if can_edit:
-            if details_form is None:
+            if details_form is None and edit_details:
                 details_form = SingaporeDetailsForm(instance=details, prefix="sg")
             if contribution_form is None:
                 initial = model_to_dict(latest, fields=ContributionProfileForm.Meta.fields) if latest else {
                     name: getattr(details, name) for name in ("residency_status", "pr_effective_date", "work_pass_type")}
                 initial.update(effective_month=month, revision=str(latest.pk) if latest else "")
                 contribution_form = ContributionProfileForm(prefix="shg", previous=latest, initial=initial,
-                    instance=SingaporeContributionProfile(employee=employee, created_by=request.user))
+                    instance=SingaporeContributionProfile(employee=employee, created_by=request.user), details=details)
         current = profile_for(employee, month)
         month_end = month.replace(day=calendar.monthrange(month.year, month.month)[1])
         context.update(singapore_details=details, singapore_details_form=details_form,
             contribution_form=contribution_form, contribution_profile=current,
             contribution_funds=applicable_funds(current, month_end) if current else [],
-            contribution_latest=latest)
+            contribution_latest=latest, edit_singapore_details=edit_details)
         if request.method == "GET":
             SingaporeDetailsAudit.objects.create(employee=employee, actor=request.user,
-                action="view_full" if can_edit else "view_masked", fields=[])
+                action="view_full" if edit_details else "view_masked", fields=[])
             SingaporeDetailsAudit.objects.create(employee=employee, actor=request.user,
                 action="view_contribution", fields=[])
     return context

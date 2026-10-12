@@ -22,6 +22,7 @@ class SingaporeEditorTests(TestCase):
         self.hr = make_employee(company=self.company, email="sg-editor-hr@test.example")
         self.employee = make_employee(company=self.company, email="sg-editor@test.example")
         self.grant("change_employee")
+        SingaporeEmployeeDetails.objects.create(employee=self.employee, residency_status="foreigner", work_pass_type="S_PASS")
 
     def grant(self, *codenames):
         user = self.hr.employee_user_id
@@ -42,16 +43,14 @@ class SingaporeEditorTests(TestCase):
 
     def declaration(self, **changes):
         data = {"form": "singapore_contributions", "salary_month": "2026-09-01",
-            "shg-effective_month": "2026-09-01", "shg-primary_race": "other",
-            "shg-muslim_status": "no", "shg-residency_status": "foreigner",
-            "shg-work_pass_type": "S_PASS", "shg-declaration_reference": "Verified employee declaration",
+            "shg-effective_month": "2026-09", "shg-configuration_version": "funds-v2", "shg-declaration_reference": "Verified employee declaration",
             "shg-revision": ""}
-        data.update({f"shg-{fund}_mode": "auto" for fund in ("cdac", "ecf", "sinda", "mbmf")})
+        data.update({f"shg-{fund}_mode": "not_applicable" for fund in ("cdac", "ecf", "sinda", "mbmf")})
         data.update(changes)
         return data
 
     def test_general_employee_edit_cannot_leak_restricted_data_or_save_it(self):
-        SingaporeEmployeeDetails.objects.create(employee=self.employee, identity_type="FIN", identity_number="F1234567D", residency_status="foreigner")
+        SingaporeEmployeeDetails.objects.filter(employee=self.employee).update(identity_type="FIN", identity_number="F1234567D")
         context = editor_context(self.request(), self.employee)
         self.assertTrue(context["show_singapore_tab"])
         self.assertFalse(context["can_view_singapore_details"])
@@ -63,7 +62,7 @@ class SingaporeEditorTests(TestCase):
 
     def test_view_only_has_masked_details_and_no_edit_forms(self):
         self.grant("view_singaporeemployeedetails")
-        SingaporeEmployeeDetails.objects.create(employee=self.employee, identity_type="FIN", identity_number="F1234567D", residency_status="foreigner")
+        SingaporeEmployeeDetails.objects.filter(employee=self.employee).update(identity_type="FIN", identity_number="F1234567D")
         response = employee_view_update(self.request(), self.employee.pk)
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
@@ -81,8 +80,11 @@ class SingaporeEditorTests(TestCase):
             self.assertEqual(response.status_code, 200)
             html = response.content.decode()
             self.assertIn('id="step-singapore"', html)
-            self.assertIn('name="sg-identity_number"', html)
-            self.assertIn('name="shg-primary_race"', html)
+            self.assertNotIn('name="sg-identity_number"', html)
+            self.assertNotIn('name="shg-primary_race"', html)
+            self.assertNotIn('name="shg-muslim_status"', html)
+            self.assertIn('name="shg-mbmf_mode"', html)
+            self.assertNotIn("<details", html)
             self.assertIn('name="shg-effective_month"', html)
             self.assertIn('"singapore"', html)
             self.assertIn("no-store", response["Cache-Control"])
@@ -99,11 +101,18 @@ class SingaporeEditorTests(TestCase):
         response = employee_view_update(self.request(), self.employee.pk)
         self.assertIn("No mandatory self-help group contribution applies", response.content.decode())
 
-    def test_unknown_muslim_status_blocks_save_even_for_foreign_employee(self):
+    def test_each_fund_needs_an_explicit_setting(self):
         self.grant("view_singaporeemployeedetails", "change_singaporeemployeedetails")
-        context = editor_context(self.request("post", self.declaration(**{"shg-muslim_status": ""})), self.employee)
-        self.assertIn("muslim_status", context["contribution_form"].errors)
+        context = editor_context(self.request("post", self.declaration(**{"shg-mbmf_mode": ""})), self.employee)
+        self.assertIn("mbmf_mode", context["contribution_form"].errors)
         self.assertFalse(SingaporeContributionProfile.objects.exists())
+
+    def test_edit_employment_is_a_separate_explicit_action(self):
+        self.grant("view_singaporeemployeedetails", "change_singaporeemployeedetails")
+        response = employee_view_update(self.request(query="?tab=singapore&sg_edit=1"), self.employee.pk)
+        self.assertIn('name="sg-identity_number"', response.content.decode())
+        self.assertIn('name="shg-mbmf_mode"', response.content.decode())
+        self.assertEqual(SingaporeDetailsAudit.objects.filter(action="view_full").count(), 1)
 
     def test_stale_declaration_rejected_and_future_version_does_not_cover_past(self):
         self.grant("view_singaporeemployeedetails", "change_singaporeemployeedetails")
@@ -117,7 +126,7 @@ class SingaporeEditorTests(TestCase):
 
     def test_employment_save_is_separate_and_stale_revision_does_not_overwrite(self):
         self.grant("view_singaporeemployeedetails", "change_singaporeemployeedetails")
-        data = {"form": "singapore_details", "sg-revision": "", "sg-residency_status": "foreigner", "sg-work_pass_type": "S_PASS"}
+        data = {"form": "singapore_details", "sg-revision": SingaporeEmployeeDetails.objects.get(employee=self.employee).updated_at.isoformat(), "sg-residency_status": "foreigner", "sg-work_pass_type": "S_PASS"}
         editor_context(self.request("post", data), self.employee)
         record = SingaporeEmployeeDetails.objects.get(employee=self.employee)
         self.assertEqual(record.residency_status, "foreigner")
@@ -141,8 +150,8 @@ class SingaporeEditorTests(TestCase):
         self.grant("view_singaporeemployeedetails", "change_singaporeemployeedetails")
         editor_context(self.request("post", self.declaration()), self.employee)
         original = SingaporeContributionProfile.objects.get()
-        editor_context(self.request("post", self.declaration(**{"shg-revision": str(original.pk), "shg-effective_month": "2026-10-01", "shg-muslim_status": "yes"})), self.employee)
+        editor_context(self.request("post", self.declaration(**{"shg-revision": str(original.pk), "shg-effective_month": "2026-10-01", "shg-mbmf_mode": "auto"})), self.employee)
         original.refresh_from_db()
-        self.assertEqual(original.muslim_status, "no")
+        self.assertFalse(original.fund_selection["mbmf"])
         self.assertEqual(SingaporeContributionProfile.objects.count(), 2)
         self.assertEqual(editor_context(self.request(), self.employee)["contribution_funds"], [])

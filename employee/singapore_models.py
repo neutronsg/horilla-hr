@@ -103,11 +103,11 @@ class SingaporeContributionProfile(models.Model):
     restricted_hr_model = True
     employee = models.ForeignKey("employee.Employee", on_delete=models.PROTECT, related_name="+")
     effective_month = models.DateField(verbose_name=_("Effective salary month"))
-    primary_race = models.CharField(max_length=12, choices=[
+    primary_race = models.CharField(max_length=12, blank=True, choices=[
         ("chinese", _("Chinese")), ("malay", _("Malay")), ("indian", _("Indian")),
         ("eurasian", _("Eurasian")), ("other", _("Other")),
     ], verbose_name=_("Primary race on NRIC / employee declaration"))
-    muslim_status = models.CharField(max_length=3, choices=[("yes", _("Yes")), ("no", _("No"))],
+    muslim_status = models.CharField(max_length=3, blank=True, choices=[("yes", _("Yes")), ("no", _("No"))],
                                      verbose_name=_("Muslim"))
     residency_status = models.CharField(max_length=12, choices=SingaporeEmployeeDetails._meta.get_field("residency_status").choices,
                                        verbose_name=_("Residency during this period"))
@@ -122,6 +122,8 @@ class SingaporeContributionProfile(models.Model):
     student_exempt_from = models.DateField(null=True, blank=True)
     student_exempt_until = models.DateField(null=True, blank=True)
     student_exemption_reference = models.CharField(max_length=255, blank=True)
+    # Null preserves the interpretation of historical demographic declarations.
+    fund_selection = models.JSONField(null=True, blank=True, default=None, editable=False)
     fund_adjustments = models.JSONField(default=dict, blank=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
@@ -158,7 +160,20 @@ class SingaporeContributionProfile(models.Model):
                 errors["student_exempt_until"] = _("Record both exemption dates.")
             elif self.student_exempt_until < self.student_exempt_from:
                 errors["student_exempt_until"] = _("Exemption end cannot precede its start.")
-        from payroll.shg import validate_adjustments
+        from payroll.shg import FUNDS, validate_adjustments
+        if self.fund_selection is None:
+            if not self.primary_race:
+                errors["primary_race"] = _("Confirm the primary race for this legacy declaration.")
+            if not self.muslim_status:
+                errors["muslim_status"] = _("Confirm Muslim status for this legacy declaration.")
+        elif (not isinstance(self.fund_selection, dict) or set(self.fund_selection) != set(FUNDS)
+              or any(type(value) is not bool for value in self.fund_selection.values())):
+            errors["__all__"] = _("Confirm whether each of CDAC, ECF, SINDA and MBMF applies.")
+        elif self.residency_status == "foreigner":
+            if self.fund_selection["cdac"] or self.fund_selection["ecf"]:
+                errors["__all__"] = _("CDAC and ECF statutory contributions require citizen or PR residency. Use voluntary contribution for an authorised request.")
+            if self.fund_selection["sinda"] and self.work_pass_type != "EP":
+                errors["__all__"] = _("SINDA statutory contributions for foreign employees require an Employment Pass. Use voluntary contribution for an authorised request.")
         try:
             validate_adjustments(self.fund_adjustments)
         except ValidationError as exc:
