@@ -23,7 +23,7 @@ from payroll.shg import FUNDS, applicable_funds, profile_for, validate_adjustmen
 TREATMENTS = [("auto", "Automatic statutory calculation"), ("opt_out", "Documented opt-out"),
               ("fixed", "Approved fixed contribution"), ("voluntary", "Requested voluntary contribution")]
 
-class ContributionProfileForm(forms.ModelForm):
+class LegacyContributionProfileForm(forms.ModelForm):
     revision = forms.CharField(required=False, widget=forms.HiddenInput)
 
     class Meta:
@@ -45,6 +45,8 @@ class ContributionProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         previous = kwargs.pop("previous", None)
         super().__init__(*args, **kwargs)
+        self.fields["primary_race"].required = True
+        self.fields["muslim_status"].required = True
         for fund in FUNDS:
             adjustment = previous.fund_adjustments.get(fund, {}) if previous else {}
             self.fields[f"{fund}_mode"] = forms.ChoiceField(label=f"{fund.upper()} treatment",
@@ -112,6 +114,133 @@ class ContributionProfileForm(forms.ModelForm):
                  "amount": self[f"{fund}_amount"], "reference": self[f"{fund}_reference"]} for fund in FUNDS]
 
 
+FUND_SETTINGS = [("", "Choose a setting"), ("auto", "Contribute · standard rate"),
+                 ("not_applicable", "Not applicable"), ("opt_out", "Documented opt-out"),
+                 ("fixed", "Approved monthly amount"), ("voluntary", "Voluntary contribution"),
+                 ("student_exempt", "Student exemption · dated")]
+FUND_NAMES = {"cdac": "Chinese Development Assistance Council", "ecf": "Eurasian Community Fund",
+              "sinda": "Singapore Indian Development Association", "mbmf": "Mosque Building and Mendaki Fund"}
+
+
+class ContributionProfileForm(forms.ModelForm):
+    """Configure verified fund eligibility directly, without demographic questions."""
+    revision = forms.CharField(required=False, widget=forms.HiddenInput)
+    configuration_version = forms.ChoiceField(choices=[("funds-v2", "funds-v2")], initial="funds-v2", widget=forms.HiddenInput)
+    effective_month = forms.DateField(label="Effective salary month", input_formats=["%Y-%m", "%Y-%m-%d"],
+        widget=forms.DateInput(attrs={"type": "month"}, format="%Y-%m"))
+
+    class Meta:
+        model = SingaporeContributionProfile
+        fields = ("effective_month", "declaration_reference", "student_exempt_from",
+                  "student_exempt_until", "student_exemption_reference")
+        labels = {"declaration_reference": "Verification reference", "student_exempt_from": "Exemption starts",
+                  "student_exempt_until": "Exemption ends", "student_exemption_reference": "Exemption evidence"}
+        widgets = {name: forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d")
+                   for name in ("student_exempt_from", "student_exempt_until")}
+
+    def __init__(self, *args, **kwargs):
+        previous = kwargs.pop("previous", None)
+        details = kwargs.pop("details", None)
+        super().__init__(*args, **kwargs)
+        if self.is_bound and self.data.get(self.add_prefix("configuration_version")) != "funds-v2":
+            # A pre-upgrade demographic form used Auto on every fund. Never
+            # reinterpret that old payload as four explicit fund selections.
+            data = self.data.copy()
+            for fund in FUNDS:
+                data[self.add_prefix(f"{fund}_mode")] = ""
+            self.data = data
+        # Residency remains the source for CPF and PR transition wage calculations.
+        source = details if details and details.residency_status else previous
+        for name in ("residency_status", "pr_effective_date", "work_pass_type"):
+            setattr(self.instance, name, getattr(source, name, "" if name != "pr_effective_date" else None))
+        eligible = applicable_funds(previous, previous.effective_month.replace(
+            day=calendar.monthrange(previous.effective_month.year, previous.effective_month.month)[1])) if previous else []
+        for fund in FUNDS:
+            adjustment = previous.fund_adjustments.get(fund, {}) if previous else {}
+            mode = adjustment.get("mode", "auto" if fund in eligible else "not_applicable") if previous else ""
+            if previous and mode == "auto" and ((fund == "mbmf" and previous.student_mbmf_exempt)
+                    or (fund != "mbmf" and previous.student_cpf_exempt)):
+                mode = "student_exempt"
+            self.fields[f"{fund}_mode"] = forms.ChoiceField(label=f"{fund.upper()} contribution",
+                choices=FUND_SETTINGS, initial=mode)
+            self.fields[f"{fund}_amount"] = forms.DecimalField(required=False, min_value=Decimal(".01"),
+                max_value=Decimal("99999.99"), decimal_places=2, max_digits=7, label="Monthly amount (S$)",
+                initial=adjustment.get("amount"))
+            self.fields[f"{fund}_reference"] = forms.CharField(required=False, max_length=255,
+                label="Approval reference", initial=adjustment.get("reference", ""))
+        for field in self.fields.values():
+            if not isinstance(field.widget, forms.HiddenInput):
+                field.widget.attrs["class"] = "sg-input"
+        self.fields["declaration_reference"].widget.attrs["placeholder"] = "HR review / employee declaration"
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get("configuration_version"):
+            self.add_error(None, "The contribution form has changed. Reload the page before saving.")
+        selection, adjustments = {}, {}
+        exempt = set()
+        for fund in FUNDS:
+            mode = cleaned.get(f"{fund}_mode")
+            selection[fund] = mode in {"auto", "fixed", "opt_out", "student_exempt"}
+            amount, reference = cleaned.get(f"{fund}_amount"), cleaned.get(f"{fund}_reference", "")
+            if mode in {"auto", "not_applicable", "student_exempt"}:
+                if amount is not None or reference:
+                    self.add_error(f"{fund}_mode", "Clear the amount and approval reference for this setting.")
+            elif mode in {"fixed", "voluntary", "opt_out"}:
+                if not reference:
+                    self.add_error(f"{fund}_reference", "Record the approval or employee request reference.")
+                if mode == "opt_out" and amount is not None:
+                    self.add_error(f"{fund}_amount", "An opt-out cannot have a contribution amount.")
+                elif mode != "opt_out" and amount is None:
+                    self.add_error(f"{fund}_amount", "Enter the approved monthly amount.")
+                adjustments[fund] = {"mode": mode, "reference": reference}
+                if amount is not None:
+                    adjustments[fund]["amount"] = str(amount)
+            if mode == "student_exempt":
+                exempt.add(fund)
+        self.instance.fund_selection = selection
+        self.instance.fund_adjustments = adjustments if not self.errors else {}
+        self.instance.student_cpf_exempt = bool(exempt - {"mbmf"})
+        self.instance.student_mbmf_exempt = "mbmf" in exempt
+        if self.instance.student_cpf_exempt:
+            for fund in ("cdac", "ecf", "sinda"):
+                if cleaned.get(f"{fund}_mode") in {"auto", "fixed"}:
+                    self.add_error(f"{fund}_mode", "Use the student exemption for each applicable CDAC / ECF / SINDA fund.")
+        if not exempt:
+            for name in ("student_exempt_from", "student_exempt_until", "student_exemption_reference"):
+                if cleaned.get(name):
+                    self.add_error(name, "Clear exemption details when no student exemption is selected.")
+        if not self.instance.residency_status:
+            self.add_error(None, "Save the employee's residency in employment details before configuring contributions.")
+        if self.instance.residency_status == "foreigner" and not self.instance.work_pass_type:
+            self.add_error(None, "Save the employee's work-pass type in employment details first.")
+        return cleaned
+
+    def _update_errors(self, errors):
+        # Residency is read from employment details, so its validation belongs in
+        # the form summary rather than a field that is not part of this editor.
+        if hasattr(errors, "error_dict"):
+            mapped = {}
+            for name, items in errors.error_dict.items():
+                target = name if name in self.fields else "__all__"
+                mapped.setdefault(target, []).extend(items)
+            errors = ValidationError(mapped)
+        super()._update_errors(errors)
+
+    @property
+    def fund_fields(self):
+        return [{"name": fund.upper(), "description": FUND_NAMES[fund], "mode": self[f"{fund}_mode"],
+                 "amount": self[f"{fund}_amount"], "reference": self[f"{fund}_reference"]} for fund in FUNDS]
+
+    @property
+    def declaration_fields(self):
+        return [self[name] for name in ("effective_month", "declaration_reference")]
+
+    @property
+    def student_fields(self):
+        return [self[name] for name in self.Meta.fields[2:]]
+
+
 @login_required
 @never_cache
 @require_http_methods(["GET", "POST"])
@@ -143,14 +272,14 @@ def singapore_contributions(request, pk):
         initial.update(effective_month=today.replace(day=1), revision=str(latest.pk) if latest else "")
         form = ContributionProfileForm(request.POST if request.method == "POST" else None,
             instance=SingaporeContributionProfile(employee=employee, created_by=request.user),
-            initial=initial, previous=latest)
+            initial=initial, previous=latest, details=SingaporeEmployeeDetails.objects.filter(employee=employee).first())
         if request.method == "POST" and form.is_valid():
             if form.cleaned_data["revision"] != initial["revision"]:
                 form.add_error(None, "This declaration changed while you were editing. Reload before saving.")
             else:
                 form.save()
                 SingaporeDetailsAudit.objects.create(employee=employee, actor=request.user,
-                    action="update_contribution", fields=list(ContributionProfileForm.Meta.fields) + ["fund_adjustments"])
+                    action="update_contribution", fields=list(ContributionProfileForm.Meta.fields) + ["fund_selection", "fund_adjustments"])
                 messages.success(request, "Contribution declaration saved. Existing payslips are unchanged.")
                 return redirect("singapore-employee-contributions", pk=pk)
         if request.method == "GET":

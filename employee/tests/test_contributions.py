@@ -8,9 +8,9 @@ from django.test import RequestFactory, TestCase, override_settings
 
 from base.methods import has_export_access
 from base.models import CompanyGroupAssignment
-from employee.contributions import ContributionProfileForm, singapore_contributions
+from employee.contributions import LegacyContributionProfileForm as ContributionProfileForm, singapore_contributions
 from employee.models import Employee
-from employee.singapore_models import SingaporeContributionProfile, SingaporeDetailsAudit
+from employee.singapore_models import SingaporeContributionProfile, SingaporeDetailsAudit, SingaporeEmployeeDetails
 from horilla.testkit import make_company, make_employee
 from payroll.shg import profile_for
 
@@ -20,6 +20,7 @@ class ContributionPrivacyTests(TestCase):
         self.company=make_company("SHG HR QA")
         self.hr=make_employee(company=self.company,email="shg-hr@test.example")
         self.employee=make_employee(company=self.company,email="shg-staff@test.example")
+        SingaporeEmployeeDetails.objects.create(employee=self.employee, residency_status="citizen")
         self.other=make_employee(company=make_company("Other SHG QA"),email="shg-other@test.example")
 
     def grant(self,*codenames):
@@ -33,7 +34,7 @@ class ContributionPrivacyTests(TestCase):
         return req
 
     def data(self,**kwargs):
-        data={"effective_month":"2026-09-01","primary_race":"chinese","muslim_status":"no",
+        data={"configuration_version":"funds-v2", "effective_month":"2026-09-01","primary_race":"chinese","muslim_status":"no",
               "residency_status":"citizen","declaration_reference":"HR verified declaration", "revision":""}
         data.update({f"{fund}_mode":"auto" for fund in ("cdac","ecf","sinda","mbmf")})
         data.update(kwargs)

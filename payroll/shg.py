@@ -69,6 +69,8 @@ def profile_for(employee, month):
 
 
 def applicable_funds(profile, end):
+    if getattr(profile, "fund_selection", None) is not None:
+        return [fund for fund in FUNDS if profile.fund_selection.get(fund) is True]
     local = profile.residency_status == "citizen" or (
         profile.residency_status == "pr" and profile.pr_effective_date <= end)
     funds = []
@@ -143,14 +145,14 @@ def calculate_shg(employee, contract, start, end, basic_wages, allowances, *, wa
         salary, components = basic_wages, allowances
         if (fund != "mbmf" and mode != "voluntary" and profile.residency_status == "pr"
                 and start < profile.pr_effective_date <= end):
-            if profile.primary_race == "indian":
+            if fund == "sinda":
                 # An EP holder may already owe SINDA before becoming PR. Do not guess the pass.
                 from employee.singapore_models import SingaporeContributionProfile
                 prior = SingaporeContributionProfile.objects.filter(employee=employee,
                     effective_month__lt=month).order_by("-effective_month", "-pk").first()
                 if prior is None:
                     raise ValidationError("Confirm the Indian employee's pre-PR work-pass history for this transition month.")
-                if prior.residency_status != "foreigner" or prior.primary_race != "indian":
+                if prior.residency_status != "foreigner" or (prior.fund_selection is None and prior.primary_race != "indian"):
                     raise ValidationError("Review the Indian employee's pre-PR declaration: residency and race history are inconsistent.")
                 already_sinda = "sinda" in applicable_funds(prior, start)
             else:

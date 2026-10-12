@@ -168,7 +168,8 @@ class ShgPayrollTests(TestCase):
         from django.urls import reverse
         self.details.residency_status = "foreigner"
         self.details.save()
-        self.profile(primary_race="other", muslim_status="no", residency_status="foreigner", work_pass_type="S_PASS")
+        self.profile(primary_race="", muslim_status="", residency_status="foreigner", work_pass_type="S_PASS",
+            fund_selection={"cdac":False,"ecf":False,"sinda":False,"mbmf":False})
         unconfirmed = make_employee(company=self.company, email="shg-unconfirmed@test.example", first_name="Unconfirmed")
         unconfirmed.dob = date(1990, 1, 1)
         unconfirmed.save()
