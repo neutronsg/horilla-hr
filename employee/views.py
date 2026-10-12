@@ -40,6 +40,8 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext as __
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.cache import never_cache
+from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
 from django.views.decorators.http import require_http_methods
 
 from accessibility.decorators import enter_if_accessible
@@ -1674,6 +1676,9 @@ def employee_view_new(request):
 
 @login_required
 @manager_can_enter("employee.change_employee")
+@never_cache
+@sensitive_post_parameters()
+@sensitive_variables()
 def employee_view_update(request, obj_id, **kwargs):
     """
     This method is used to render update form for employee.
@@ -1741,6 +1746,8 @@ def employee_view_update(request, obj_id, **kwargs):
         and user.reporting_manager.filter(employee_id=employee).exists()
         or request.user.has_perm("employee.change_employee")
     ):
+        from employee.singapore_editor import editor_context
+
         form = EmployeeForm(instance=employee)
         work_form = EmployeeWorkInformationForm(
             instance=EmployeeWorkInformation.objects.filter(
@@ -1799,6 +1806,9 @@ def employee_view_update(request, obj_id, **kwargs):
                     instance.employee_id = employee
                     instance.save()
                     messages.success(request, _("Employee bank details updated."))
+        # Work edits can change the target company; re-check restricted access afterward.
+        employee._state.fields_cache.pop("employee_work_info", None)
+        singapore_context = editor_context(request, employee)
         use_edit_fragment = request.META.get("HTTP_HX_REQUEST") == "true"
         template_name = (
             "employee/update_form/form_view_fragment.html"
@@ -1806,9 +1816,14 @@ def employee_view_update(request, obj_id, **kwargs):
             else "employee/update_form/form_view.html"
         )
         submitted_form = request.POST.get("form", "") if request.POST else ""
-        active_tab = (
-            submitted_form if submitted_form in ("personal", "work", "bank") else ""
-        )
+        if submitted_form in ("singapore_details", "singapore_contributions"):
+            active_tab = "singapore"
+        elif submitted_form in ("personal", "work", "bank"):
+            active_tab = submitted_form
+        else:
+            requested_tab = request.GET.get("tab", "")
+            active_tab = requested_tab if requested_tab in ("personal", "work", "bank", "singapore") else ""
+
         response = render(
             request,
             template_name,
@@ -1820,6 +1835,7 @@ def employee_view_update(request, obj_id, **kwargs):
                 "work_info_history": work_info_history,
                 "container_mode": container_mode,
                 "active_tab": active_tab,
+                **singapore_context,
             },
         )
         return response

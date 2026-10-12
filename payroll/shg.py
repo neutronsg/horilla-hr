@@ -56,7 +56,7 @@ def validate_adjustments(adjustments):
 
 def uses_singapore_payroll(employee):
     from employee.singapore_models import SingaporeContributionProfile, SingaporeEmployeeDetails
-    company = getattr(employee.employee_work_info, "company_id", None)
+    company = getattr(getattr(employee, "employee_work_info", None), "company_id", None)
     return (str(getattr(company, "country", "")).strip().casefold() in {"singapore", "sg", "sgp"}
             or SingaporeEmployeeDetails.objects.filter(employee=employee).exists()
             or SingaporeContributionProfile.objects.filter(employee=employee).exists())
@@ -127,7 +127,7 @@ def calculate_shg(employee, contract, start, end, basic_wages, allowances, *, wa
         raise ValidationError("Review self-help group rate tables before calculating this salary year.")
     profile = profile_for(employee, month)
     if profile is None:
-        raise ValidationError("Confirm this employee's self-help group contribution profile for the salary month in Singapore employment details.")
+        raise ValidationError("Confirm this employee's self-help group contribution profile for the salary month in Singapore employment details.", code="missing_shg_profile")
     profile.full_clean()
     funds = applicable_funds(profile, end)
     exempt = _student_exemptions(profile, contract, start, end)

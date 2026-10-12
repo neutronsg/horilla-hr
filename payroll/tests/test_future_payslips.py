@@ -117,6 +117,24 @@ class FuturePayslipDateTests(TestCase):
         self.assertEqual(summary.call_args.kwargs["assume_future_present"], True)
         notify.assert_not_called()
 
+    def test_all_failed_batch_has_employee_link_and_no_success_toast(self):
+        from django.core.exceptions import ValidationError
+        from django.contrib.messages import ERROR, SUCCESS, get_messages
+        start, end = date(2026, 9, 1), date(2026, 9, 30)
+        Contract.objects.filter(employee_id=self.employee).update(contract_start_date=start)
+        self.client.force_login(self.user)
+        with patch("horilla.settings.PAYROLL_USE_ATTENDANCE", False), patch(
+            "payroll.views.component_views.payroll_calculation",
+            side_effect=ValidationError("Confirm the contribution declaration.", code="missing_shg_profile"),
+        ):
+            response = self.client.post(reverse("generate-payslip"), self.form_data(start, end))
+        self.assertEqual(response.status_code, 302)
+        alerts = list(get_messages(response.wsgi_request))
+        self.assertFalse(any(alert.level == SUCCESS for alert in alerts))
+        self.assertTrue(any(alert.level == ERROR and "No payslips were generated" in str(alert) for alert in alerts))
+        self.assertTrue(any("tab=singapore" in str(alert) and "salary_month=2026-09-01" in str(alert) and self.employee.get_full_name() in str(alert) for alert in alerts))
+        self.assertFalse(Payslip.objects.filter(employee_id=self.employee).exists())
+
     def test_batch_does_not_reuse_another_employees_joining_date(self):
         start, end = date(2030, 1, 1), date(2030, 1, 31)
         self.employee.employee_first_name = "A Midmonth"

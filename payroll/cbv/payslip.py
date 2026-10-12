@@ -34,6 +34,7 @@ from payroll.cbv.allowance_deduction import AllowanceDeductionTabView
 from payroll.filters import PayslipFilter
 from payroll.forms import component_forms as forms
 from payroll.methods.methods import calculate_employer_contribution, save_payslip
+from payroll.validation_messages import payroll_validation_message
 from payroll.models.models import Contract, Payslip
 from payroll.views.component_views import payroll_calculation
 
@@ -399,7 +400,7 @@ class PayrollCreateFormView(HorillaFormView):
                 if payslip_data is None:
                     raise ValidationError(_("No contract covers this payroll period."))
             except ValidationError as error:
-                form.add_error(None, error)
+                form.add_error(None, payroll_validation_message(employee, error, end_date))
                 self.form = form
                 return self.form_invalid(form)
             payslip_data["payslip"] = payslip
@@ -424,7 +425,7 @@ class PayrollCreateFormView(HorillaFormView):
             try:
                 payslip_data["instance"] = save_payslip(**data)
             except ValidationError as error:
-                form.add_error(None, error)
+                form.add_error(None, payroll_validation_message(employee, error, end_date))
                 self.form = form
                 return self.form_invalid(form)
             form = forms.PayslipForm()
