@@ -1,0 +1,77 @@
+{% load i18n %}
+{% if show_singapore_tab %}
+<div class="oh-general__tab-target{% if active_tab != 'singapore' %} d-none{% endif %}" id="singapore">
+ <div class="oh-card sg-editor">
+  <h2>{% trans "Singapore Employment" %}</h2>
+  {% if not can_view_singapore_details %}
+   <p>{% trans "Your company role needs View and Change Singapore employment details permissions to maintain this information. Ask your administrator to grant access." %}</p>
+  {% else %}
+   <div class="sg-readiness" role="status">
+    <strong>{% trans "Payroll contributions" %} · {{ salary_month|date:"F Y" }}</strong>
+    {% if contribution_profile %}
+     <p>{% trans "Declaration confirmed from" %} {{ contribution_profile.effective_month|date:"F Y" }}.</p>
+     {% if contribution_funds %}<p>{% trans "Applicable funds" %}: {% for fund in contribution_funds %}{{ fund|upper }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+     {% else %}<p>{% trans "No mandatory self-help group contribution applies. The declaration is confirmed." %}</p>{% endif %}
+    {% else %}
+     <p>{% trans "Contribution declaration missing for this salary month. Confirm it below before generating payroll, including when no fund applies." %}</p>
+     {% if contribution_latest %}<p>{% trans "A declaration exists from" %} {{ contribution_latest.effective_month|date:"F Y" }} {% trans "but does not cover this salary month." %}</p>{% endif %}
+    {% endif %}
+   </div>
+   {% if can_edit_singapore_details %}
+    <form method="post" action="{% url 'employee-view-update' obj_id %}?tab=singapore" hx-post="{% url 'employee-view-update' obj_id %}?tab=singapore" hx-target="#employee-update-form-root" hx-swap="outerHTML" autocomplete="off">
+     {% csrf_token %}<input type="hidden" name="form" value="singapore_details">
+     {% if container_mode %}<input type="hidden" name="container" value="true">{% endif %}
+     <input type="hidden" name="salary_month" value="{{ salary_month|date:'Y-m-d' }}">
+     <h3>{% trans "Employment details" %}</h3>{{ singapore_details_form.non_field_errors }}{{ singapore_details_form.revision }}
+     <div class="sg-fields">{% for field in singapore_details_form %}{% if not field.is_hidden %}<div><label class="oh-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}</div>{% endif %}{% endfor %}</div>
+     <button class="oh-btn oh-btn--secondary" type="submit">{% trans "Save employment details" %}</button>
+    </form>
+    <form method="post" action="{% url 'employee-view-update' obj_id %}?tab=singapore" hx-post="{% url 'employee-view-update' obj_id %}?tab=singapore" hx-target="#employee-update-form-root" hx-swap="outerHTML" autocomplete="off" class="sg-contribution-form">
+     {% csrf_token %}<input type="hidden" name="form" value="singapore_contributions">
+     {% if container_mode %}<input type="hidden" name="container" value="true">{% endif %}
+     <input type="hidden" name="salary_month" value="{{ salary_month|date:'Y-m-d' }}">
+     <h3>{% trans "Self-help group declaration" %}</h3>
+     <p>{% trans "Confirm the employee's actual residency, primary race and Muslim status. Nationality alone does not determine contributions. Foreign employees may have no applicable funds; a confirmed declaration with no applicable funds is accepted." %}</p>
+     <p>{% trans "Use the first day of the effective salary month. A declaration continues to apply until a later version replaces it. Existing payslips retain their saved calculations." %}</p>
+     {{ contribution_form.revision }}{{ contribution_form.non_field_errors }}
+     <div class="sg-fields">{% for field in contribution_form.declaration_fields %}<div><label class="oh-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}<small>{{ field.help_text }}</small></div>{% endfor %}</div>
+     <details><summary>{% trans "Fund adjustments and verified student exemptions" %}</summary>
+      <p>{% trans "Keep Automatic unless a documented opt-out, fixed or voluntary contribution applies." %}</p>
+      {% for fund in contribution_form.fund_fields %}<div class="sg-fund"><strong>{{ fund.name }}</strong><div class="sg-fields">
+       <div><label class="oh-label" for="{{ fund.mode.id_for_label }}">{{ fund.mode.label }}</label>{{ fund.mode }}{{ fund.mode.errors }}</div>
+       <div data-shg-amount><label class="oh-label" for="{{ fund.amount.id_for_label }}">{{ fund.amount.label }}</label>{{ fund.amount }}{{ fund.amount.errors }}</div>
+       <div data-shg-reference><label class="oh-label" for="{{ fund.reference.id_for_label }}">{{ fund.reference.label }}</label>{{ fund.reference }}{{ fund.reference.errors }}</div>
+      </div></div>{% endfor %}
+      <div class="sg-fields">{% for field in contribution_form.student_fields %}<div><label class="oh-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}<small>{{ field.help_text }}</small></div>{% endfor %}</div>
+     </details>
+     <button class="oh-btn oh-btn--secondary" type="submit">{% trans "Save contribution declaration" %}</button>
+    </form>
+   {% else %}
+    <dl><dt>{% trans "NRIC / FIN" %}</dt><dd>{{ singapore_details.masked_identity_number|default:'—' }}</dd><dt>{% trans "Residency" %}</dt><dd>{{ singapore_details.get_residency_status_display|default:'—' }}</dd></dl>
+    <p>{% trans "You have read-only access. Change Singapore employment details permission is required to save a declaration." %}</p>
+   {% endif %}
+   <p><a href="{% url 'singapore-employee-contributions' obj_id %}">{% trans "View declaration history" %}</a></p>
+  {% endif %}
+ </div>
+</div>
+<style>
+ .sg-editor{padding:1.5rem;background:var(--color-white,#fff);border-radius:1rem;}
+ .sg-editor h2{font-size:1.2rem;font-weight:600;margin-bottom:1rem;}.sg-editor h3{font-size:1rem;font-weight:600;margin:1.2rem 0 .8rem;}
+ .sg-editor p{margin:.7rem 0;line-height:1.5;}.sg-readiness{padding:1rem;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:.5rem;}
+ .sg-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1rem 0;}.sg-editor small{display:block;color:#64748b;line-height:1.4;margin-top:.35rem;}
+ .sg-editor .errorlist{color:#b91c1c;}.sg-editor input:not([type=checkbox]),.sg-editor select{max-width:100%;}.sg-editor summary{cursor:pointer;font-weight:600;}.sg-fund{border-top:1px solid #e2e8f0;padding-top:1rem;margin-top:1rem;}
+ .sg-contribution-form{border-top:1px solid #e2e8f0;margin-top:1.5rem;padding-top:.5rem;}.sg-editor details:has(.errorlist){outline:2px solid #b91c1c;}
+ @media(max-width:700px){.sg-fields{grid-template-columns:1fr;}}
+</style>
+<script>
+ (function(){
+  var root=document.getElementById('singapore');if(!root)return;
+  root.querySelectorAll('details').forEach(function(section){if(section.querySelector('.errorlist'))section.open=true;});
+  root.querySelectorAll('.sg-fund').forEach(function(row){
+   var mode=row.querySelector('select');
+   function update(){[['[data-shg-amount]',mode.value==='fixed'||mode.value==='voluntary'],['[data-shg-reference]',mode.value!=='auto']].forEach(function(setting){var wrapper=row.querySelector(setting[0]),input=wrapper.querySelector('input');wrapper.hidden=!setting[1];input.disabled=!setting[1];if(!setting[1])input.value='';});}
+   mode.addEventListener('change',update);update();
+  });
+ })();
+</script>
+{% endif %}

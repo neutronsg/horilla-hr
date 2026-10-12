@@ -139,6 +139,62 @@ class ShgPayrollTests(TestCase):
     def test_missing_profile_blocks_generation_instead_of_silent_exemption(self):
         with self.assertRaisesMessage(ValidationError,"contribution profile"): self.salary()
 
+    def test_confirmed_foreign_non_muslim_with_no_funds_generates_zero_shg(self):
+        self.details.residency_status = "foreigner"
+        self.details.save()
+        for race, work_pass in [("other", "S_PASS"), ("other", "EP"),
+                                ("chinese", "S_PASS"), ("eurasian", "EP"),
+                                ("indian", "S_PASS"), ("other", "WORK_PERMIT")]:
+            with self.subTest(race=race, work_pass=work_pass):
+                self.profile(primary_race=race, residency_status="foreigner", work_pass_type=work_pass)
+                data = self.salary()
+                self.assertEqual(data["statutory_shg"]["funds"], [])
+                self.assertEqual(data["statutory_shg"]["total"], 0)
+                self.assertIsNone(data["statutory_cpf"])
+                self.assertEqual(data["net_pay"], 4000)
+
+    def test_foreign_s_pass_muslim_still_contributes_mbmf(self):
+        self.details.residency_status = "foreigner"
+        self.details.save()
+        self.profile(primary_race="other", muslim_status="yes", residency_status="foreigner", work_pass_type="S_PASS")
+        data = self.salary()
+        self.assertEqual([row["fund"] for row in data["statutory_shg"]["funds"]], ["mbmf"])
+        self.assertEqual(data["statutory_shg"]["total"], 15)
+        self.assertEqual(data["net_pay"], 3985)
+
+    def test_batch_persists_confirmed_zero_fund_employee_and_skips_unconfirmed(self):
+        from django.contrib.auth.models import Permission
+        from django.contrib.messages import get_messages
+        from django.urls import reverse
+        self.details.residency_status = "foreigner"
+        self.details.save()
+        self.profile(primary_race="other", muslim_status="no", residency_status="foreigner", work_pass_type="S_PASS")
+        unconfirmed = make_employee(company=self.company, email="shg-unconfirmed@test.example", first_name="Unconfirmed")
+        unconfirmed.dob = date(1990, 1, 1)
+        unconfirmed.save()
+        Contract.objects.filter(employee_id=unconfirmed).delete()
+        Contract.objects.create(employee_id=unconfirmed, contract_name="Unconfirmed QA", contract_start_date=date(2025, 1, 1), contract_status="active", wage=4000, wage_type="monthly", payroll_workweek="five_day")
+        SingaporeEmployeeDetails.objects.create(employee=unconfirmed, residency_status="foreigner")
+        hr = make_employee(company=self.company, email="shg-batch-hr@test.example")
+        user = hr.employee_user_id
+        user.is_new_employee = False
+        user.save(update_fields=["is_new_employee"])
+        user.user_permissions.add(Permission.objects.get(content_type__app_label="payroll", codename="add_payslip"))
+        self.client.force_login(user)
+        with patch("horilla.settings.PAYROLL_USE_ATTENDANCE", False), patch("payroll.views.component_views.notify.send"):
+            response = self.client.post(reverse("generate-payslip"), {
+                "employee_id": [self.employee.pk, unconfirmed.pk],
+                "start_date": "2026-09-01", "end_date": "2026-09-30", "group_name": "Zero fund payroll QA",
+            })
+        self.assertEqual(response.status_code, 302)
+        slip = Payslip.objects.get(employee_id=self.employee)
+        self.assertEqual(slip.net_pay, 4000)
+        self.assertEqual(slip.pay_head_data["statutory_shg"]["total"], 0)
+        self.assertFalse(Payslip.objects.filter(employee_id=unconfirmed).exists())
+        alerts = [str(item) for item in get_messages(response.wsgi_request)]
+        self.assertTrue(any("1 payslip saved as draft" in item for item in alerts))
+        self.assertTrue(any("Unconfirmed" in item and "tab=singapore" in item for item in alerts))
+
     def test_reimbursements_excluded_but_cash_bonus_and_allowance_included(self):
         self.profile();self.allowance(100);self.allowance(900,cpf_wage_type="excluded")
         self.allowance(1000,cpf_wage_type="aw",one_time_date=date(2026,9,20))

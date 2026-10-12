@@ -1,0 +1,45 @@
+<script>
+(function () {
+    function initializeEmployeeEditor() {
+        var root = document.getElementById('employee-update-form-root');
+        if (!root) return;
+        var buttons = Array.from(root.querySelectorAll('[data-action="general-tab"]'));
+        var targets = buttons.map(function (button) { return button.dataset.target; });
+        function activate(target) {
+            if (!targets.includes(target)) target = '#personal';
+            root.querySelectorAll('.oh-general__tab-target').forEach(function (panel) {
+                if (targets.includes('#' + panel.id)) panel.classList.toggle('d-none', '#' + panel.id !== target);
+            });
+            buttons.forEach(function (button, index) {
+                var selected = button.dataset.target === target;
+                button.classList.toggle('oh-general__tab-link--active', selected);
+                button.classList.toggle('emp-step-btn--active', selected);
+                button.classList.toggle('emp-step-btn--done', !selected && index < targets.indexOf(target));
+                button.classList.toggle('text-dark-200', !selected);
+                button.setAttribute('aria-current', selected ? 'page' : 'false');
+            });
+            root.dataset.activeTab = target.slice(1);
+        }
+        var requested = root.dataset.activeTab ? '#' + root.dataset.activeTab : localStorage.getItem('activeEmpTab');
+        activate(requested);
+        // Rebind after HTMX replaces the entire editor, including its buttons.
+        $(root).off('click.employeeEditorTabs', '[data-action="general-tab"]')
+            .on('click.employeeEditorTabs', '[data-action="general-tab"]', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                localStorage.setItem('activeEmpTab', this.dataset.target);
+                activate(this.dataset.target);
+            });
+        $(root).find('#id_profile').off('change.employeeEditorPhoto').on('change.employeeEditorPhoto', function () {
+            var file = this.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.addEventListener('load', function () { $(root).find('.preview').attr('src', reader.result); });
+            reader.readAsDataURL(file);
+        });
+    }
+    $(document).off('htmx:afterSwap.employeeEditorTabs htmx:afterSettle.employeeEditorTabs')
+        .on('htmx:afterSwap.employeeEditorTabs htmx:afterSettle.employeeEditorTabs', initializeEmployeeEditor);
+    $(initializeEmployeeEditor);
+})();
+</script>

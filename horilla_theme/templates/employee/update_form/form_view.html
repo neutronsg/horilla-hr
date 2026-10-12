@@ -33,7 +33,7 @@
 </style>
 
 <div id="view-container">
-    <div id="employee-update-form-root">
+    <div id="employee-update-form-root"{% if active_tab %} data-active-tab="{{ active_tab }}"{% endif %}>
 
         <!-- Header + Stepper -->
         <div class="bg-white rounded-2xl shadow-card px-6 py-3 mb-2">
@@ -76,6 +76,14 @@
                         <div class="w-5 h-5 rounded-full border-2 border-secondary-200 flex items-center justify-center text-xxs font-semibold">3</div>
                         {% trans "Bank Information" %}
                     </a>
+{% if show_singapore_tab %}
+                    <a href="#" class="emp-step-btn flex items-center gap-2 text-dark-200 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap no-underline"
+                       data-action="general-tab" data-target="#singapore" id="step-singapore">
+                        <div class="w-5 h-5 rounded-full border-2 border-secondary-200 flex items-center justify-center text-xxs font-semibold">4</div>
+                        {% trans "Singapore Employment" %}
+                    </a>
+                    {% endif %}
+
                 </div>
             </div>
         </div>
@@ -84,66 +92,9 @@
         {% include 'employee/update_form/personal_info.html' %}
         {% include 'employee/update_form/work_details.html' %}
         {% include 'employee/update_form/bank_details.html' %}
+    {% include 'employee/update_form/singapore_details.html' %}
 
-        <script>
-            $(document).ready(function () {
-                $('#id_profile').change(function () {
-                    const file = this.files[0];
-                    const reader = new FileReader();
-                    reader.addEventListener("load", function () {
-                        $(".preview").attr("src", reader.result);
-                    });
-                    reader.readAsDataURL(file);
-                });
-
-                function applyEmployeeEditTab(targetId) {
-                    if (!["#personal", "#work", "#bank"].includes(targetId)) {
-                        targetId = "#personal";
-                    }
-
-                    $(".oh-general__tab-target").addClass("d-none");
-                    $(targetId).removeClass("d-none");
-
-                    var stepMap = { "#personal": "step-personal", "#work": "step-work", "#bank": "step-bank" };
-                    var steps = ["#personal", "#work", "#bank"];
-                    var activeIdx = steps.indexOf(targetId);
-
-                    $(".emp-step-btn").each(function () {
-                        $(this).removeClass("emp-step-btn--active emp-step-btn--done");
-                        $(this).addClass("text-dark-200");
-                        $(this).find("div:first").removeClass("bg-white/20 border-primary-600 text-primary-600").addClass("border-2 border-secondary-200");
-                    });
-
-                    steps.forEach(function (step, idx) {
-                        var btn = $("#" + stepMap[step]);
-                        if (idx === activeIdx) {
-                            btn.removeClass("text-dark-200").addClass("emp-step-btn--active");
-                            btn.find("div:first").removeClass("border-secondary-200").addClass("bg-white/20");
-                        } else if (idx < activeIdx) {
-                            btn.removeClass("text-dark-200").addClass("emp-step-btn--done");
-                        }
-                    });
-                }
-
-                function activeEmpTab() {
-                    var serverTab = "{{ active_tab }}";
-                    var activeTab = serverTab ? "#" + serverTab : localStorage.getItem("activeEmpTab");
-                    if (!["#personal", "#work", "#bank"].includes(activeTab)) {
-                        activeTab = "#personal";
-                    }
-                    applyEmployeeEditTab(activeTab);
-                }
-
-                activeEmpTab();
-
-                $("[data-action=general-tab]").off("click.empEditTab").on("click.empEditTab", function (e) {
-                    e.preventDefault();
-                    var targetId = $(this).attr("data-target");
-                    localStorage.setItem("activeEmpTab", targetId);
-                    applyEmployeeEditTab(targetId);
-                });
-            });
-        </script>
+        {% include 'employee/update_form/tab_navigation.html' %}
     </div>
 </div>
 {% endblock content %}

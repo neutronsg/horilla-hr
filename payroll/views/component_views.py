@@ -1068,6 +1068,8 @@ def generate_payslip(request):
             "payroll/payslip/bulk_create_payslip.html",
             {"bulk_form": bulk_form},
         )
+    from payroll.validation_messages import payroll_validation_message
+
     payslips = []
     json_data = []
     form = forms.GeneratePayslipForm()
@@ -1095,7 +1097,7 @@ def generate_payslip(request):
                 try:
                     contract = select_payroll_contract(employee, start_date, end_date)
                 except ValidationError as error:
-                    messages.error(request, "; ".join(error.messages))
+                    messages.error(request, payroll_validation_message(employee, error, end_date))
                     emp_count -= 1
                     continue
                 if contract is None:
@@ -1122,7 +1124,7 @@ def generate_payslip(request):
                         summary = rows[0] if rows else None
                     payslip = payroll_calculation(employee, employee_start, employee_end, month_summary=summary)
                 except ValidationError as error:
-                    messages.error(request, "; ".join(error.messages))
+                    messages.error(request, payroll_validation_message(employee, error, end_date))
                     emp_count -= 1
                     continue
                 payslips.append(payslip)
@@ -1147,7 +1149,7 @@ def generate_payslip(request):
                 try:
                     instance = save_payslip(**data)
                 except ValidationError as error:
-                    messages.error(request, "; ".join(error.messages))
+                    messages.error(request, payroll_validation_message(employee, error, end_date))
                     emp_count -= 1
                     continue
                 instances.append(instance)
@@ -1165,10 +1167,10 @@ def generate_payslip(request):
                         ),
                         icon="close",
                     )
-            messages.success(
-                request,
-                _("%(emp_count)s payslip saved as draft") % {"emp_count": emp_count},
-            )
+            if instances:
+                messages.success(request, _("%(emp_count)s payslip saved as draft") % {"emp_count": len(instances)})
+            else:
+                messages.error(request, _("No payslips were generated. Review the employee errors above."))
             return redirect(
                 f"/payroll/view-payslip/?group_by=group_name&active_group={group_name}"
             )
