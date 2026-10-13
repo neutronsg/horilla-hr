@@ -1,5 +1,10 @@
 """HR/Admin employee roles control Singapore access without extra permissions."""
+from types import SimpleNamespace
+
 from django.contrib.auth.models import AnonymousUser, Group, Permission
+from django.contrib.contenttypes.models import ContentType
+from django.apps import apps
+from django.db import connection
 from django.test import RequestFactory, TestCase, override_settings
 
 from base.models import CompanyGroupAssignment
@@ -89,3 +94,22 @@ class SingaporeHRAccessTests(TestCase):
         grant_hr_employee_access(self.hr)
         self.employee.employee_work_info.company_id = None
         self.assertFalse(can_access_singapore_details(self.request(), self.employee, edit=True))
+
+    def test_upgrade_removes_legacy_export_entries_but_preserves_hr_employee_access(self):
+        from importlib import import_module
+
+        grant_hr_employee_access(self.hr)
+        group = self.hr.employee_user_id.company_group_assignments.get().group
+        for model in ("singaporeemployeedetails", "singaporedetailsaudit", "singaporecontributionprofile"):
+            content_type = ContentType.objects.get(app_label="employee", model=model)
+            permission = Permission.objects.create(
+                content_type=content_type, codename=f"export_{model}", name=f"Export {model}",
+            )
+            group.permissions.add(permission)
+        cleanup = import_module("employee.migrations.0010_remove_legacy_singapore_permissions")
+        cleanup.remove_legacy_permissions(apps, SimpleNamespace(connection=connection))
+        self.assertFalse(Permission.objects.filter(
+            content_type__app_label="employee", content_type__model__startswith="singapore",
+        ).exists())
+        self.assertEqual(set(group.permissions.values_list("codename", flat=True)), {"view_employee", "change_employee"})
+        self.assertTrue(can_access_singapore_details(self.request(), self.employee, edit=True))
