@@ -3,7 +3,6 @@
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import Permission
 from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
@@ -11,7 +10,11 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
 from django.views.decorators.http import require_http_methods
 
-from base.auth_backends import company_scoped_active, get_allowed_company_ids
+from base.auth_backends import (
+    get_allowed_company_ids,
+    get_effective_permission_codenames,
+    get_user_groups_for_company,
+)
 from employee.models import Employee
 from employee.singapore_models import SingaporeDetailsAudit, SingaporeEmployeeDetails
 
@@ -42,6 +45,7 @@ class SingaporeDetailsForm(forms.ModelForm):
 
 
 def can_access_singapore_details(request, employee, *, edit=False):
+    """Use existing HR/Admin employee access in the target employee's company."""
     user = request.user
     if not user.is_authenticated or not user.is_active:
         return False
@@ -50,24 +54,18 @@ def can_access_singapore_details(request, employee, *, edit=False):
         return False
     if not user.is_superuser and company_id not in get_allowed_company_ids(user):
         return False
-    def has_target_permission(codename):
-        if user.is_superuser:
-            return True
-        if not company_scoped_active():
-            return user.has_perm(f"employee.{codename}")
-        # Resolve against the target company, not the currently selected company
-        # or the union used by the "All my companies" session.
-        if user.user_permissions.filter(content_type__app_label="employee", codename=codename).exists():
-            return True
-        return Permission.objects.filter(
-            content_type__app_label="employee", codename=codename,
-            group__company_assignments__user=user,
-            group__company_assignments__company_id=company_id,
-        ).exists()
-
-    if not has_target_permission("view_singaporeemployeedetails"):
+    if user.is_superuser:
+        return True
+    # Resolve both role and employee permissions against the target company,
+    # never the union used by the "All my companies" session.
+    if not get_user_groups_for_company(user, company_id).filter(
+        name__in=("HR Manager", "Admin")
+    ).exists():
         return False
-    return not edit or has_target_permission("change_singaporeemployeedetails")
+    permissions = set(get_effective_permission_codenames(user, company_id))
+    if edit:
+        return "change_employee" in permissions
+    return bool(permissions & {"view_employee", "change_employee"})
 
 
 @login_required
