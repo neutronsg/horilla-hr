@@ -298,7 +298,7 @@ def singapore_contributions(request, pk):
             else:
                 form.save()
                 SingaporeDetailsAudit.objects.create(employee=employee, actor=request.user,
-                    action="update_contribution", fields=list(ContributionProfileForm.Meta.fields) + ["fund_selection", "fund_adjustments"])
+                    action="update_contribution", fields=list(ContributionProfileForm.Meta.fields) + ["fund_selection", "fund_adjustments", "effective_month", "is_baseline"])
                 messages.success(request, "Contribution settings saved. Payroll applies them automatically; existing payslips are unchanged.")
                 return redirect("singapore-employee-contributions", pk=pk)
         if request.method == "GET":
