@@ -21,7 +21,7 @@ class FundConfigurationTests(TestCase):
         self.contract = Contract.objects.create(employee_id=self.employee, contract_name="QA funds", contract_start_date=date(2025,1,1), contract_status="active", wage=4000, wage_type="monthly", payroll_workweek="five_day")
 
     def data(self, **changes):
-        data = {"configuration_version":"funds-v2", "effective_month":"2026-09", "declaration_reference":"Verified fund eligibility"}
+        data = {"configuration_version":"funds-v3", "effective_month":"2026-09", "use_start_month":"on", "start_month":"2026-09", "declaration_reference":"Verified fund eligibility"}
         data.update({f"{fund}_mode":"not_applicable" for fund in ("cdac","ecf","sinda","mbmf")})
         data.update(changes)
         return data

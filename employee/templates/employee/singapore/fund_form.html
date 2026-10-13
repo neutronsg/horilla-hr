@@ -13,14 +13,17 @@
   </div>
  </div>{% endfor %}
  <div class="sg-exemption-fields" hidden><h4>{% trans "Student exemption period" %}</h4><p>{% trans "Retain the qualifying evidence. Standard contributions resume outside these dates." %}</p><div class="sg-config-meta">{% for field in form.student_fields %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}</div></div>
+ <div class="sg-start-month"><label>{{ form.use_start_month }} {{ form.use_start_month.label }}</label><small>{% trans "Only for backdated or scheduled changes." %}</small><div data-start-month hidden><label for="{{ form.start_month.id_for_label }}">{{ form.start_month.label }}</label>{{ form.start_month }}{{ form.start_month.errors }}</div></div>
  <div class="sg-config-footer"><button type="button" class="sg-text-button" data-no-funds>{% trans "No funds apply" %}</button><button type="submit" class="oh-btn oh-btn--secondary">{% trans "Save contributions" %}</button></div>
- <p class="sg-save-note">{% trans "Applies from the selected month. Existing payslips stay unchanged." %}</p>
+ <p class="sg-save-note">{% trans "Save once. Payroll applies these settings automatically each month. Update only when contribution arrangements change. Existing payslips stay unchanged." %}</p>
+ <p class="sg-save-note">{% trans "SDL is an employer contribution calculated automatically. Exemptions are managed in the payroll contract." %}</p>
 </form>
 <script>
 (function () {
  function initFundForms() {
   document.querySelectorAll('.sg-config').forEach(function(form){
    function update(){
+    var startMonth=form.querySelector('[data-start-month]');startMonth.hidden=!form.querySelector('[data-start-month-toggle]').checked;startMonth.querySelector('input').disabled=startMonth.hidden;
     var student=false;
     form.querySelectorAll('.sg-fund-row').forEach(function(row){
      var mode=row.querySelector('select');student=student||mode.value==='student_exempt';
@@ -29,6 +32,7 @@
     var exemption=form.querySelector('.sg-exemption-fields');exemption.hidden=!student;exemption.querySelectorAll('input').forEach(function(input){input.disabled=!student;});
    }
    if(!form.dataset.bound){
+    form.querySelector('[data-start-month-toggle]').addEventListener('change',update);
     form.querySelectorAll('.sg-fund-row select').forEach(function(select){select.addEventListener('change',function(){var row=select.closest('.sg-fund-row');row.querySelectorAll('.sg-fund-extra input').forEach(function(input){input.value='';});update();});});
     form.querySelector('[data-no-funds]').addEventListener('click',function(){form.querySelectorAll('.sg-fund-row select').forEach(function(select){select.value='not_applicable';select.closest('.sg-fund-row').querySelectorAll('.sg-fund-extra input').forEach(function(input){input.value='';});});update();});
     form.dataset.bound='true';

@@ -19,7 +19,7 @@
    {% endif %}
   </section>
   <section class="sg-surface">
-   <div class="sg-section-heading"><div><h2>{% trans "Contributions" %}</h2><p>{% trans "Choose the funds this employee contributes to. Standard amounts are calculated from salary." %}</p></div><span class="sg-status {% if contribution_profile %}sg-status--ready{% else %}sg-status--pending{% endif %}">{% if contribution_profile %}{% trans "Confirmed" %} · {{ contribution_profile.effective_month|date:'M Y' }}{% else %}{% trans "Setup needed" %}{% endif %}</span></div>
+   <div class="sg-section-heading"><div><h2>{% trans "Contributions" %}</h2><p>{% trans "Choose the funds this employee contributes to. Standard amounts are calculated from salary." %}</p></div><span class="sg-status {% if contribution_profile %}sg-status--ready{% else %}sg-status--pending{% endif %}">{% if contribution_profile %}{% trans "Configured" %}{% else %}{% trans "Setup needed" %}{% endif %}</span></div>
    {% if not contribution_profile %}<p class="sg-readiness-note">{% trans "Confirm all four fund settings before generating payroll." %}{% if contribution_latest %} {% trans "The saved setup does not cover" %} {{ salary_month|date:'M Y' }}.{% endif %}</p>{% elif not contribution_funds %}<p class="sg-readiness-note">{% trans "No mandatory self-help group contribution applies." %}</p>{% endif %}
    {% if can_edit_singapore_details %}{% include 'employee/singapore/fund_form.html' with form=contribution_form embedded=True %}{% else %}<p class="sg-readiness-note">{% trans "Read-only access. Your HR role needs employee editing access to save changes." %}</p><p>{{ contribution_funds|join:', '|upper|default:'No applicable funds' }}</p>{% endif %}
   </section>

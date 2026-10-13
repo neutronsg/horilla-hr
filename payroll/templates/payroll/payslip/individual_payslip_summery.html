@@ -200,7 +200,7 @@
             {% for deduction in basic_pay_deductions %}
                 <tr class="oh-payslip__table-tr" style="color: gray;">
                     <td class="oh-payslip__table-td">
-                        {{deduction.title}}
+                        {% include 'payroll/payslip/deduction_source.html' %}
                         <i style="font-style: italic; margin-left: 10px; font-weight: normal;"
                         title="{% trans "Basic Pay Deductions" %}">
                             <ion-icon name="information-circle-outline" style="color:blue;" role="img" class="md hydrated" aria-label="{% trans 'information circle outline' %}"></ion-icon>
@@ -214,7 +214,7 @@
             {% for deduction in gross_pay_deductions %}
                 <tr class="oh-payslip__table-tr" style="color: gray;">
                     <td class="oh-payslip__table-td">
-                        {{deduction.title}}
+                        {% include 'payroll/payslip/deduction_source.html' %}
                         <i style="font-style: italic; margin-left: 10px; font-weight: normal;"
                         title="{% trans "Gross Pay Deductions" %}">
                             <ion-icon name="information-circle-outline" style="color:blue;" role="img" class="md hydrated" aria-label="{% trans 'information circle outline' %}"></ion-icon>
@@ -227,7 +227,7 @@
             {% endfor %}
             {% for deduction in pretax_deductions %}
                 <tr class="oh-payslip__table-tr">
-                    <td class="oh-payslip__table-td">{{deduction.title}}</td>
+                    <td class="oh-payslip__table-td">{% include 'payroll/payslip/deduction_source.html' %}</td>
                     <td class="oh-payslip__table-td">
                         {{deduction.amount|floatformat:2|currency_symbol_position}}
                     </td>
@@ -235,7 +235,7 @@
             {% endfor %}
             {% for deduction in post_tax_deductions %}
                 <tr class="oh-payslip__table-tr">
-                    <td class="oh-payslip__table-td">{{deduction.title}}</td>
+                    <td class="oh-payslip__table-td">{% include 'payroll/payslip/deduction_source.html' %}</td>
                     <td class="oh-payslip__table-td">
                         {{deduction.amount|floatformat:2|currency_symbol_position}}
                     </td>
@@ -249,7 +249,7 @@
             </tr>
             {% for deduction in tax_deductions %}
                 <tr class="oh-payslip__table-tr">
-                    <td class="oh-payslip__table-td">{{deduction.title}}</td>
+                    <td class="oh-payslip__table-td">{% include 'payroll/payslip/deduction_source.html' %}</td>
                     <td class="oh-payslip__table-td">
                         {{deduction.amount|floatformat:2|currency_symbol_position}}
                     </td>
@@ -258,7 +258,7 @@
             {% for deduction in net_deductions %}
                 <tr class="oh-payslip__table-tr" style="color: gray;">
                     <td class="oh-payslip__table-td">
-                        {{deduction.title}}
+                        {% include 'payroll/payslip/deduction_source.html' %}
                         <i style="font-style: italic; margin-left: 10px; font-weight: normal;"
                         title="{% trans "Net Pay Deductions" %}">
                             <ion-icon name="information-circle-outline" style="color:blue;" role="img" class="md hydrated" aria-label="{% trans 'information circle outline' %}"></ion-icon>

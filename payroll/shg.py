@@ -64,8 +64,11 @@ def uses_singapore_payroll(employee):
 
 def profile_for(employee, month):
     from employee.singapore_models import SingaporeContributionProfile
-    return SingaporeContributionProfile.objects.filter(employee=employee,
-        effective_month__lte=month.replace(day=1)).order_by("-effective_month", "-pk").first()
+    profiles = SingaporeContributionProfile.objects.filter(employee=employee)
+    dated = profiles.filter(effective_month__lte=month.replace(day=1)).order_by("-effective_month", "-pk").first()
+    # First ordinary setup also covers earlier, newly generated payroll when
+    # there is no recorded setup for that period. Keep all dated history intact.
+    return dated or profiles.filter(is_baseline=True).order_by("created_at", "pk").first()
 
 
 def applicable_funds(profile, end):
@@ -131,6 +134,8 @@ def calculate_shg(employee, contract, start, end, basic_wages, allowances, *, wa
     if profile is None:
         raise ValidationError("Confirm this employee's self-help group contribution profile for the salary month in Singapore employment details.", code="missing_shg_profile")
     profile.full_clean()
+    if profile.residency_status == "pr" and profile.pr_effective_date > end:
+        raise ValidationError("This payroll period is before the employee's PR change. Record the earlier contribution settings using a specific start month.")
     funds = applicable_funds(profile, end)
     exempt = _student_exemptions(profile, contract, start, end)
     rows = []

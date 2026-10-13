@@ -69,8 +69,8 @@ def editor_context(request, employee):
                 else:
                     latest = contribution_form.save()
                     SingaporeDetailsAudit.objects.create(employee=employee, actor=request.user,
-                        action="update_contribution", fields=list(ContributionProfileForm.Meta.fields) + ["fund_selection", "fund_adjustments"])
-                    messages.success(request, "Contribution declaration saved. Existing payslips are unchanged.")
+                        action="update_contribution", fields=list(ContributionProfileForm.Meta.fields) + ["fund_selection", "fund_adjustments", "effective_month", "is_baseline"])
+                    messages.success(request, "Contribution settings saved. Payroll applies them automatically; existing payslips are unchanged.")
                     contribution_form = None
         if can_edit:
             if details_form is None and edit_details:
@@ -78,6 +78,8 @@ def editor_context(request, employee):
             if contribution_form is None:
                 initial = model_to_dict(latest, fields=ContributionProfileForm.Meta.fields) if latest else {
                     name: getattr(details, name) for name in ("residency_status", "pr_effective_date", "work_pass_type")}
+                if initial.get("declaration_reference") == "HR contribution settings":
+                    initial["declaration_reference"] = ""
                 initial.update(effective_month=month, revision=str(latest.pk) if latest else "")
                 contribution_form = ContributionProfileForm(prefix="shg", previous=latest, initial=initial,
                     instance=SingaporeContributionProfile(employee=employee, created_by=request.user), details=details)

@@ -395,6 +395,8 @@ def payroll_calculation(employee, start_date, end_date, month_summary=None):
         "range": f"{start_date.strftime('%b %d %Y')} - {end_date.strftime('%b %d %Y')}",
     }
     data_to_json = payslip_data.copy()
+    from payroll.advances import annotate_deduction_sources
+    annotate_deduction_sources(data_to_json)
     data_to_json["employee"] = employee.id
     data_to_json["start_date"] = start_date.strftime("%Y-%m-%d")
     data_to_json["end_date"] = end_date.strftime("%Y-%m-%d")

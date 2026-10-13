@@ -5,6 +5,8 @@ def eligible_deductions(queryset, employee, contract=None):
     from django.db.models import Q
     from payroll.models.models import Contract
 
+    queryset = queryset.filter(is_active=True)
+
     if contract is None:
         contract = Contract.objects.filter(employee_id=employee, contract_status="active").first()
     if contract and contract.salary_structure_id:

@@ -125,13 +125,15 @@ FUND_NAMES = {"cdac": "Chinese Development Assistance Council", "ecf": "Eurasian
 class ContributionProfileForm(forms.ModelForm):
     """Configure verified fund eligibility directly, without demographic questions."""
     revision = forms.CharField(required=False, widget=forms.HiddenInput)
-    configuration_version = forms.ChoiceField(choices=[("funds-v2", "funds-v2")], initial="funds-v2", widget=forms.HiddenInput)
-    effective_month = forms.DateField(label="Effective salary month", input_formats=["%Y-%m", "%Y-%m-%d"],
+    configuration_version = forms.ChoiceField(choices=[("funds-v3", "funds-v3")], initial="funds-v3", widget=forms.HiddenInput)
+    use_start_month = forms.BooleanField(required=False, label="Use a specific start month")
+    start_month = forms.DateField(required=False, label="Applies from", input_formats=["%Y-%m", "%Y-%m-%d"],
         widget=forms.DateInput(attrs={"type": "month"}, format="%Y-%m"))
+    declaration_reference = forms.CharField(required=False, max_length=255, label="Note (optional)")
 
     class Meta:
         model = SingaporeContributionProfile
-        fields = ("effective_month", "declaration_reference", "student_exempt_from",
+        fields = ("declaration_reference", "student_exempt_from",
                   "student_exempt_until", "student_exemption_reference")
         labels = {"declaration_reference": "Verification reference", "student_exempt_from": "Exemption starts",
                   "student_exempt_until": "Exemption ends", "student_exemption_reference": "Exemption evidence"}
@@ -142,7 +144,7 @@ class ContributionProfileForm(forms.ModelForm):
         previous = kwargs.pop("previous", None)
         details = kwargs.pop("details", None)
         super().__init__(*args, **kwargs)
-        if self.is_bound and self.data.get(self.add_prefix("configuration_version")) != "funds-v2":
+        if self.is_bound and self.data.get(self.add_prefix("configuration_version")) != "funds-v3":
             # A pre-upgrade demographic form used Auto on every fund. Never
             # reinterpret that old payload as four explicit fund selections.
             data = self.data.copy()
@@ -171,10 +173,25 @@ class ContributionProfileForm(forms.ModelForm):
         for field in self.fields.values():
             if not isinstance(field.widget, forms.HiddenInput):
                 field.widget.attrs["class"] = "sg-input"
-        self.fields["declaration_reference"].widget.attrs["placeholder"] = "HR review / employee declaration"
+        self.fields["declaration_reference"].widget.attrs["placeholder"] = "Add a note if needed"
+        self.fields["use_start_month"].widget.attrs["data-start-month-toggle"] = ""
 
     def clean(self):
         cleaned = super().clean()
+        month = timezone.localdate().replace(day=1)
+        if cleaned.get("use_start_month"):
+            if not cleaned.get("start_month"):
+                self.add_error("start_month", "Choose the month this change should start.")
+            elif cleaned["start_month"].day != 1:
+                self.add_error("start_month", "Use the first day of the start month.")
+            else:
+                month = cleaned["start_month"]
+        self.instance.effective_month = month
+        self.instance.is_baseline = (
+            not cleaned.get("use_start_month")
+            and not SingaporeContributionProfile.objects.filter(employee=self.instance.employee, is_baseline=True).exists()
+        )
+        cleaned["declaration_reference"] = cleaned.get("declaration_reference", "").strip() or "HR contribution settings"
         if not cleaned.get("configuration_version"):
             self.add_error(None, "The contribution form has changed. Reload the page before saving.")
         selection, adjustments = {}, {}
@@ -234,11 +251,11 @@ class ContributionProfileForm(forms.ModelForm):
 
     @property
     def declaration_fields(self):
-        return [self[name] for name in ("effective_month", "declaration_reference")]
+        return [self["declaration_reference"]]
 
     @property
     def student_fields(self):
-        return [self[name] for name in self.Meta.fields[2:]]
+        return [self[name] for name in self.Meta.fields[1:]]
 
 
 @login_required
@@ -269,6 +286,8 @@ def singapore_contributions(request, pk):
             details = SingaporeEmployeeDetails.objects.filter(employee=employee).first()
             if details:
                 initial.update({name: getattr(details, name) for name in ("residency_status", "pr_effective_date", "work_pass_type")})
+        if initial.get("declaration_reference") == "HR contribution settings":
+            initial["declaration_reference"] = ""
         initial.update(effective_month=today.replace(day=1), revision=str(latest.pk) if latest else "")
         form = ContributionProfileForm(request.POST if request.method == "POST" else None,
             instance=SingaporeContributionProfile(employee=employee, created_by=request.user),
@@ -279,8 +298,8 @@ def singapore_contributions(request, pk):
             else:
                 form.save()
                 SingaporeDetailsAudit.objects.create(employee=employee, actor=request.user,
-                    action="update_contribution", fields=list(ContributionProfileForm.Meta.fields) + ["fund_selection", "fund_adjustments"])
-                messages.success(request, "Contribution declaration saved. Existing payslips are unchanged.")
+                    action="update_contribution", fields=list(ContributionProfileForm.Meta.fields) + ["fund_selection", "fund_adjustments", "effective_month", "is_baseline"])
+                messages.success(request, "Contribution settings saved. Payroll applies them automatically; existing payslips are unchanged.")
                 return redirect("singapore-employee-contributions", pk=pk)
         if request.method == "GET":
             SingaporeDetailsAudit.objects.create(employee=employee, actor=request.user,

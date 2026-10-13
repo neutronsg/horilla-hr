@@ -4,6 +4,7 @@ views.py
 This module is used to define the method for the path in the urls
 """
 
+import copy
 import json
 from collections import defaultdict
 from datetime import date, datetime, timedelta
@@ -504,7 +505,8 @@ def update_payslip_status(request, payslip_id):
         from .component_views import filter_payslip
 
         return redirect(reverse("payslip-list"))
-    data = payslip.pay_head_data
+    from payroll.advances import annotate_deduction_sources
+    data = annotate_deduction_sources(copy.deepcopy(payslip.pay_head_data))
     data["employee"] = payslip.employee_id
     data["payslip"] = payslip
     data["json_data"] = data.copy()
@@ -634,7 +636,8 @@ def view_created_payslip(request, payslip_id, **kwargs):
         return HttpResponseForbidden(_("You do not have permission to view this payslip."))
     if payslip is not None:
         # the data must be dictionary in the payslip model for the json field
-        data = payslip.pay_head_data
+        from payroll.advances import annotate_deduction_sources
+        data = annotate_deduction_sources(copy.deepcopy(payslip.pay_head_data))
         data["employee"] = payslip.employee_id
         data["payslip"] = payslip
         data["json_data"] = data.copy()

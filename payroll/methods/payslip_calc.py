@@ -566,7 +566,6 @@ def calculate_pre_tax_deduction(*_args, **kwargs):
         .exclude(update_compensation__isnull=False)
     )
     # Installment deductions
-    installments = deductions.filter(is_installment=True)
 
     pre_tax_deductions = []
     pre_tax_deductions_amt = []
@@ -574,6 +573,7 @@ def calculate_pre_tax_deduction(*_args, **kwargs):
 
     from payroll.statutory import eligible_deductions
     deductions = eligible_deductions(deductions, employee, kwargs.get("contract"))
+    installments = deductions.filter(is_installment=True)
     for deduction in deductions:
         if deduction.is_condition_based:
             conditions = list(
@@ -676,7 +676,6 @@ def calculate_post_tax_deduction(*_args, **kwargs):
         .exclude(update_compensation__isnull=False)
     )
     # Installment deductions
-    installments = deductions.filter(is_installment=True)
 
     post_tax_deductions = []
     post_tax_deductions_amt = []
@@ -685,6 +684,7 @@ def calculate_post_tax_deduction(*_args, **kwargs):
 
     from payroll.statutory import eligible_deductions
     deductions = eligible_deductions(deductions, employee, kwargs.get("contract"))
+    installments = deductions.filter(is_installment=True)
     for deduction in deductions:
         if deduction.is_condition_based:
             condition_field = deduction.field
