@@ -47,7 +47,7 @@ class SingaporeEditorTests(TestCase):
 
     def declaration(self, **changes):
         data = {"form": "singapore_contributions", "salary_month": "2026-09-01",
-            "shg-effective_month": "2026-09", "shg-configuration_version": "funds-v2", "shg-declaration_reference": "Verified employee declaration",
+            "shg-use_start_month": "on", "shg-start_month": "2026-09", "shg-configuration_version": "funds-v3", "shg-declaration_reference": "Verified employee declaration",
             "shg-revision": ""}
         data.update({f"shg-{fund}_mode": "not_applicable" for fund in ("cdac", "ecf", "sinda", "mbmf")})
         data.update(changes)
@@ -90,7 +90,8 @@ class SingaporeEditorTests(TestCase):
             self.assertNotIn('name="shg-muslim_status"', html)
             self.assertIn('name="shg-mbmf_mode"', html)
             self.assertNotIn("<details", html)
-            self.assertIn('name="shg-effective_month"', html)
+            self.assertNotIn('name="shg-effective_month"', html)
+            self.assertIn('Save once.', html)
             self.assertIn('"singapore"', html)
             self.assertIn("no-store", response["Cache-Control"])
 
@@ -121,7 +122,7 @@ class SingaporeEditorTests(TestCase):
 
     def test_stale_declaration_rejected_and_future_version_does_not_cover_past(self):
         self.grant_hr()
-        context = editor_context(self.request("post", self.declaration(**{"shg-effective_month": "2026-10-01"})), self.employee)
+        context = editor_context(self.request("post", self.declaration(**{"shg-start_month": "2026-10-01"})), self.employee)
         self.assertIsNone(context["contribution_profile"])
         self.assertIsNotNone(context["contribution_latest"])
         context = editor_context(self.request("post", self.declaration()), self.employee)
@@ -155,8 +156,18 @@ class SingaporeEditorTests(TestCase):
         self.grant_hr()
         editor_context(self.request("post", self.declaration()), self.employee)
         original = SingaporeContributionProfile.objects.get()
-        editor_context(self.request("post", self.declaration(**{"shg-revision": str(original.pk), "shg-effective_month": "2026-10-01", "shg-mbmf_mode": "auto"})), self.employee)
+        editor_context(self.request("post", self.declaration(**{"shg-revision": str(original.pk), "shg-start_month": "2026-10-01", "shg-mbmf_mode": "auto"})), self.employee)
         original.refresh_from_db()
         self.assertFalse(original.fund_selection["mbmf"])
         self.assertEqual(SingaporeContributionProfile.objects.count(), 2)
         self.assertEqual(editor_context(self.request(), self.employee)["contribution_funds"], [])
+
+    def test_hr_can_save_through_editor_without_month_or_reference(self):
+        self.grant_hr()
+        data = self.declaration()
+        for key in ("shg-use_start_month", "shg-start_month", "shg-declaration_reference", "salary_month"):
+            data.pop(key, None)
+        response = employee_view_update(self.request("post", data, htmx=True), self.employee.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(SingaporeContributionProfile.objects.get(employee=self.employee).is_baseline)
+        self.assertIn("Configured", response.content.decode())

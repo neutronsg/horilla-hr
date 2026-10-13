@@ -38,7 +38,7 @@ class ContributionPrivacyTests(TestCase):
         return req
 
     def data(self,**kwargs):
-        data={"configuration_version":"funds-v2", "effective_month":"2026-09-01","primary_race":"chinese","muslim_status":"no",
+        data={"configuration_version":"funds-v3", "effective_month":"2026-09-01", "use_start_month":"on", "start_month":"2026-09","primary_race":"chinese","muslim_status":"no",
               "residency_status":"citizen","declaration_reference":"HR verified declaration", "revision":""}
         data.update({f"{fund}_mode":"auto" for fund in ("cdac","ecf","sinda","mbmf")})
         data.update(kwargs)
@@ -83,7 +83,7 @@ class ContributionPrivacyTests(TestCase):
         self.assertEqual(record.created_by,self.hr.employee_user_id)
         event=SingaporeDetailsAudit.objects.get();self.assertEqual(event.action,"update_contribution")
         self.assertNotIn("Private form reference",str(event.fields));self.assertNotIn("chinese",str(event.fields))
-        second=self.data(revision=str(record.pk),effective_month="2026-10-01")
+        second=self.data(revision=str(record.pk),start_month="2026-10")
         with patch("employee.contributions.messages.success"):
             singapore_contributions(self.request("post",second),self.employee.pk)
         self.assertEqual(SingaporeContributionProfile.objects.count(),2)

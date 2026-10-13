@@ -1,0 +1,2 @@
+{% load i18n %}
+{% if deduction.loan_account_id and perms.payroll.view_loanaccount %}<a href="{% url 'loan-detail-view' deduction.loan_account_id %}" title="{% trans 'Recorded in Loans & Salary Advances' %}">{{ deduction.title }}</a>{% elif deduction.deduction_id and perms.payroll.view_deduction %}<a href="{% url 'single-deduction-view' deduction.deduction_id %}" title="{% trans 'View the original deduction' %}">{{ deduction.title }}</a>{% else %}{{ deduction.title }}{% endif %}

@@ -103,6 +103,7 @@ class SingaporeContributionProfile(models.Model):
     restricted_hr_model = True
     employee = models.ForeignKey("employee.Employee", on_delete=models.PROTECT, related_name="+")
     effective_month = models.DateField(verbose_name=_("Effective salary month"))
+    is_baseline = models.BooleanField(default=False, editable=False)
     primary_race = models.CharField(max_length=12, blank=True, choices=[
         ("chinese", _("Chinese")), ("malay", _("Malay")), ("indian", _("Indian")),
         ("eurasian", _("Eurasian")), ("other", _("Other")),

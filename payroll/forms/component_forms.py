@@ -210,6 +210,16 @@ class DeductionForm(ModelForm):
             cleaned_data["start_range"] = None
             cleaned_data["end_range"] = None
 
+        from payroll.advances import is_manual_advance_title
+        if (cleaned_data.get("is_fixed") and cleaned_data.get("update_compensation") == "net_pay"
+                and is_manual_advance_title(cleaned_data.get("title"))):
+            if LoanAccount.objects.filter(
+                type="advanced_salary", employee_id__in=self.data.getlist("specific_employees"),
+                installment_start_date=cleaned_data.get("one_time_date"),
+                installments=1, loan_amount=cleaned_data.get("amount"), is_active=True,
+            ).exists():
+                self.add_error(None, "This advance already has a repayment in Loans & Salary Advances. Do not add a second deduction.")
+
         if (
             self.data.get("update_compensation") is not None
             and self.data.get("update_compensation") != ""
@@ -805,9 +815,9 @@ class LoanAccountForm(ModelForm):
     def clean(self, *args, **kwargs):
         cleaned_data = super().clean(*args, **kwargs)
 
-        if not self.instance.pk and cleaned_data.get(
-            "installment_start_date"
-        ) < cleaned_data.get("provided_date"):
+        if (not self.instance.pk and cleaned_data.get("installment_start_date")
+                and cleaned_data.get("provided_date")
+                and cleaned_data["installment_start_date"] < cleaned_data["provided_date"]):
             raise forms.ValidationError(
                 _(
                     "Installment start date should be greater than or equal to provided date"
@@ -818,6 +828,19 @@ class LoanAccountForm(ModelForm):
                 raise forms.ValidationError(
                     _("Installments needs to be a positive integer")
                 )
+
+        if cleaned_data.get("type") == "advanced_salary" and cleaned_data.get("employee_id"):
+            from payroll.advances import manual_advance_conflicts
+            if cleaned_data.get("installments") == 1 and manual_advance_conflicts(
+                cleaned_data["employee_id"], cleaned_data.get("installment_start_date"), cleaned_data.get("loan_amount"),
+            ).exists():
+                self.add_error(None, "A manual advance deduction already exists for this employee, amount and repayment date in Payroll → Deductions. Archive that duplicate before recording the advance here.")
+            if LoanAccount.objects.filter(
+                type="advanced_salary", employee_id=cleaned_data["employee_id"], is_active=True,
+                provided_date=cleaned_data.get("provided_date"), loan_amount=cleaned_data.get("loan_amount"),
+                installment_start_date=cleaned_data.get("installment_start_date"),
+            ).exclude(pk=self.instance.pk).exists():
+                self.add_error(None, "This salary advance is already recorded. Edit the existing record instead.")
 
         return cleaned_data
 
