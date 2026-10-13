@@ -2,6 +2,7 @@ from datetime import date
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.test import TestCase
 
 from employee.contributions import ContributionProfileForm
@@ -71,3 +72,13 @@ class SimpleContributionSetupTests(TestCase):
         self.save_setup()
         with self.assertRaisesMessage(ValidationError, "before the employee's PR change"):
             calculate_shg(self.employee, self.contract, date(2026, 9, 1), date(2026, 9, 30), 4000, [])
+
+    def test_older_application_can_insert_without_the_new_internal_column(self):
+        setup = self.save_setup()
+        model = SingaporeContributionProfile
+        quote = connection.ops.quote_name
+        columns = ", ".join(quote(field.column) for field in model._meta.local_fields if field.name not in {"id", "is_baseline"})
+        table = quote(model._meta.db_table)
+        with connection.cursor() as cursor:
+            cursor.execute(f"INSERT INTO {table} ({columns}) SELECT {columns} FROM {table} WHERE id = %s RETURNING is_baseline", [setup.pk])
+            self.assertFalse(cursor.fetchone()[0])
