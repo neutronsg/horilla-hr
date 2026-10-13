@@ -59,6 +59,20 @@ if _should_start_scheduler():
             max_instances=1,
             coalesce=True,
         )
+        from django.apps import apps
+
+        if apps.is_installed("payroll"):
+            from payroll.claim_reminders import poll_claim_reminders
+
+            scheduler.add_job(
+                poll_claim_reminders,
+                "interval",
+                minutes=5,
+                id="claim_reminders",
+                replace_existing=True,
+                max_instances=1,
+                coalesce=True,
+            )
         scheduler.start()
         logger.info("Report subscription scheduler started (hourly)")
     except Exception:

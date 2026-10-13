@@ -11,6 +11,7 @@ import contextlib
 import json
 import math
 import operator
+import uuid
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from itertools import groupby
@@ -60,6 +61,8 @@ from horilla.methods import dynamic_attr, get_horilla_model_class, get_urlencode
 # from leave.models import AvailableLeave
 from notifications.signals import notify
 from payroll.access import visible_payslips
+from payroll.hr_access import can_email_payslip
+from payroll.hr_delivery_models import PayslipEmailDelivery
 from payroll.filters import (
     AllowanceFilter,
     DeductionFilter,
@@ -1654,9 +1657,21 @@ def send_slip(request):
     email_backend = ConfiguredEmailBackend()
     view = request.GET.get("view")
     payslip_ids = request.GET.getlist("id")
+    try:
+        payslip_ids = [int(pk) for pk in payslip_ids]
+    except (TypeError, ValueError):
+        return HttpResponse("Invalid payslip selection", status=400)
 
     # payslip_ids = request.GET.get("id")
-    payslips = Payslip.objects.filter(id__in=payslip_ids)
+    payslips = list(
+        Payslip.objects.filter(id__in=payslip_ids).select_related(
+            "employee_id__employee_work_info"
+        )
+    )
+    if not payslips or any(
+        not can_email_payslip(request.user, slip) for slip in payslips
+    ):
+        return HttpResponse("You cannot send these payslips.", status=403)
     if not getattr(
         email_backend, "dynamic_from_email_with_display_name", None
     ) or not len(email_backend.dynamic_from_email_with_display_name):
@@ -1669,19 +1684,43 @@ def send_slip(request):
     result_dict = defaultdict(
         lambda: {"employee_id": None, "instances": [], "count": 0}
     )
+    batch = uuid.uuid4()
     for payslip in payslips:
+        if payslip.status not in ("confirmed", "paid"):
+            PayslipEmailDelivery.objects.create(
+                batch=batch,
+                actor=request.user,
+                employee=payslip.employee_id,
+                payslip_ids=[payslip.pk],
+                status="skipped",
+                detail="Confirm the payslip after HR review before sending.",
+            )
+            continue
         employee_id = payslip.employee_id
         result_dict[employee_id]["employee_id"] = employee_id
         result_dict[employee_id]["instances"].append(payslip)
         result_dict[employee_id]["count"] += 1
 
+    for record in result_dict.values():
+        record["delivery"] = PayslipEmailDelivery.objects.create(
+            batch=batch,
+            actor=request.user,
+            employee=record["employee_id"],
+            recipient=record["employee_id"].get_mail() or "",
+            payslip_ids=[slip.pk for slip in record["instances"]],
+        )
+
     mail_thread = MailSendThread(request, result_dict=result_dict, ids=payslip_ids)
-    mail_thread.start()
-    messages.info(request, _("Mail processing"))
-    if view:
-        return HorillaRedirect(request)
-    else:
-        return redirect(reverse("payslip-list"))
+    if result_dict:
+        mail_thread.start()
+    result_url = reverse("payslip-email-results", args=[batch])
+    if request.headers.get("HX-Request"):
+        response = HttpResponse()
+        response["HX-Redirect"] = result_url
+        return response
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"results_url": result_url})
+    return redirect(result_url)
 
 
 @login_required

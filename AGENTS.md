@@ -12,3 +12,8 @@ and preserve identifier masking, encrypted storage and audit records.
 Contribution setup is persistent employee configuration. Ordinary saves must not
 require a salary month or a boilerplate reference. Keep dated history internally,
 and offer a start month only for intentional backdated or scheduled changes.
+
+HR reminder settings use existing company-scoped HR Manager/Admin roles and
+reimbursement approval access. Resolve scheduled recipients from those roles
+in the target company rather than maintaining a hardcoded list of people.
+Do not introduce separate permissions for HR settings or delivery logs.

@@ -11,8 +11,19 @@ from payroll import dashboard as pay_dashboard
 from payroll.cbv import contracts, dashboard, payslip_automation, settings_tabs
 from payroll.models.models import Contract, Payslip
 from payroll.views import views
+from payroll import hr_delivery_views
 
 urlpatterns = [
+    path(
+        "claim-reminders/",
+        hr_delivery_views.claim_reminder_settings,
+        name="claim-reminder-settings",
+    ),
+    path(
+        "payslip-email-results/<uuid:batch>/",
+        hr_delivery_views.payslip_email_results,
+        name="payslip-email-results",
+    ),
     path("", include("payroll.urls.component_urls")),
     path("", include("payroll.urls.tax_urls")),
     path("contract-create/", views.contract_create, name="contract-create"),

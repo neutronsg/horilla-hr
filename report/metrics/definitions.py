@@ -654,7 +654,7 @@ def _load():
             explorer_url_name="payroll-report",
             export_model="payroll.Reimbursement",
             required_apps=("payroll",),
-            filter_fields=_PAYROLL,
+            filter_fields=("employment_status", "department_id", "company_id", "claim_date_basis", "claim_status", "claim_type"),
         )
     )
     register(

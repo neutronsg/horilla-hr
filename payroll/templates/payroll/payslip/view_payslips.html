@@ -462,6 +462,7 @@
             data: { id: ids },
             traditional: true,
             success: function (response) {
+                if (response.results_url) { window.location.href = response.results_url; return; }
                 var mailProcessingMessage = "Mail processing.";
 
               $("#messages").html(

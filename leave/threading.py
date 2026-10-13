@@ -104,21 +104,36 @@ class LeaveMailSendThread(Thread):
             email.attach_alternative(html_message, "text/html")
 
             # Attach company logo inline, fall back to static Horilla logo if file missing
-            if company and company.icon and os.path.exists(company.icon.path):
-                image_path = company.icon.path
-            else:
+            logo_data = None
+            logo_name = "company-logo"
+            if company and company.icon:
+                try:
+                    with company.icon.open("rb") as f:
+                        logo_data = f.read()
+                    logo_name = os.path.basename(company.icon.name)
+                except Exception:
+                    logger.warning(
+                        "Company logo unavailable for leave email", exc_info=True
+                    )
+            if not logo_data:
                 image_path = finders.find("images/ui/horilla-sticker-round.png")
+                if image_path:
+                    with open(image_path, "rb") as f:
+                        logo_data = f.read()
+                    logo_name = os.path.basename(image_path)
 
-            if image_path:
-                with open(image_path, "rb") as f:
-                    logo = MIMEImage(f.read())
+            if logo_data:
+                try:
+                    logo = MIMEImage(logo_data)
                     logo.add_header("Content-ID", "<company_logo>")
                     logo.add_header(
                         "Content-Disposition",
                         "inline",
-                        filename=os.path.basename(image_path),
+                        filename=logo_name,
                     )
                     email.attach(logo)
+                except (TypeError, ValueError):
+                    logger.warning("Company logo is not a supported email image")
 
             # Attach static leave icon inline if available
             leave_icon_path = finders.find("images/ui/leave_types.png")

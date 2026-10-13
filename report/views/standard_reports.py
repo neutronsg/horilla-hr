@@ -394,6 +394,11 @@ def standard_report_detail(request, slug):
             "data_url": reverse("standard-report-data", args=[slug]),
             "export_xlsx_url": reverse("standard-report-export", args=[slug])
             + "?format=xlsx",
+            "export_zip_url": (
+                reverse("standard-report-export", args=[slug]) + "?format=zip"
+                if slug == "reimbursement-register"
+                else None
+            ),
             "export_csv_url": reverse("standard-report-export", args=[slug])
             + "?format=csv",
             "export_pdf_url": reverse("standard-report-export", args=[slug])
@@ -456,6 +461,51 @@ def standard_report_export(request, slug):
     filters = filters_from_request(request)
     filters.extra["row_limit"] = 5000
     fmt = (request.GET.get("format") or "xlsx").lower()
+    if slug == "reimbursement-register":
+        filters.extra["claim_report"] = True
+        filters.extra["row_limit"] = None
+        # Match the existing report and model export policy in every selected company.
+        from report.claim_exports import can_export_claims
+
+        if not can_export_claims(request, definition, filters):
+            return JsonResponse({"error": "Forbidden"}, status=403)
+    if fmt == "zip":
+        if slug != "reimbursement-register":
+            return JsonResponse(
+                {"error": "ZIP is available for claim reports only."}, status=400
+            )
+        from report.claim_exports import (
+            BundleTooLarge,
+            claim_queryset,
+            export_claim_bundle,
+        )
+
+        claims = list(
+            claim_queryset(filters)
+            .select_related("employee_id", "approved_by")
+            .prefetch_related("other_attachments")
+        )
+        if len(claims) > 5000:
+            return JsonResponse(
+                {
+                    "error": "Choose a shorter period (maximum 5,000 claims per receipt bundle)."
+                },
+                status=413,
+            )
+        payload = run_report(slug, filters)
+        try:
+            response = export_claim_bundle(
+                payload, claims, _export_meta(request, definition, filters, slug)
+            )
+        except BundleTooLarge as exc:
+            return JsonResponse({"error": str(exc)}, status=413)
+        log_report_run(
+            request,
+            slug,
+            "export",
+            {**filters_dict_from_request(request), "format": "zip"},
+        )
+        return response
     async_mode = (request.GET.get("async") or "").lower() in {"1", "true", "yes"}
     log_filters = filters_dict_from_request(request)
     log_filters["format"] = fmt
@@ -479,7 +529,10 @@ def standard_report_export(request, slug):
             to_email=to_email,
             slug=slug,
             fmt=fmt,
-            filters_dict=filters_dict_from_request(request),
+            filters_dict={
+                **filters_dict_from_request(request),
+                "company_id": filters.company_id or company_id,
+            },
             meta=meta_safe,
         )
         log_report_run(request, slug, "export", log_filters)

@@ -1,0 +1,7 @@
+{% extends "index.html" %}{% load i18n %}
+{% block content %}
+{% if pending %}<script>setTimeout(function(){location.reload();},4000);</script>{% endif %}
+<main class="oh-wrapper" style="max-width:1100px;margin:28px auto"><div class="oh-card" style="border-radius:16px;padding:28px"><h1 style="font-size:24px;font-weight:600">{% trans "Payslip email results" %}</h1><p style="margin:16px 0;color:#64748b">{% trans "Only confirmed or paid payslips are sent. Sent means the SMTP server accepted the email; it does not confirm delivery to the inbox." %}</p>
+<div style="overflow:auto"><table style="width:100%;text-align:left"><thead><tr><th>{% trans "Employee" %}</th><th>{% trans "Recipient" %}</th><th>{% trans "Payslip IDs" %}</th><th>{% trans "Result" %}</th></tr></thead><tbody>{% for d in deliveries %}<tr><td style="padding:14px 0">{{ d.employee }}</td><td>{{ d.recipient }}</td><td>{{ d.payslip_ids|join:", " }}</td><td><strong>{{ d.status }}</strong><br>{{ d.detail }}{% if d.status == 'pending' and not pending %}{% trans "Processing may have been interrupted. Check email logs before resending." %}{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+<div style="margin-top:24px;display:flex;gap:12px"><a class="oh-btn" href="{% url 'view-payslip' %}">{% trans "Back to payslips" %}</a>{% if retry_ids %}<a class="oh-btn oh-btn--secondary" href="{% url 'send-slip' %}?{% for pk in retry_ids %}id={{ pk }}{% if not forloop.last %}&{% endif %}{% endfor %}">{% trans "Retry failed only" %}</a>{% endif %}</div></div></main>
+{% endblock %}

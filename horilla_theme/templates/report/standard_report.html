@@ -262,6 +262,7 @@
                     </li>
                     {% endif %}
                     {% if can_export %}
+                    {% if export_zip_url %}<li><a class="px-4 py-1.5 hover:text-primary-600 transition duration-300 text-xs flex w-full cursor-pointer" id="sr-export-zip">{% trans "Export details + receipts ZIP" %}</a></li>{% endif %}
                     <li>
                         <a class="px-4 py-1.5 hover:text-primary-600 transition duration-300 text-xs gap-4 items-center flex w-full cursor-pointer" id="sr-export-csv">{% trans "Export CSV" %}</a>
                     </li>
@@ -282,6 +283,7 @@
      data-url="{{ data_url }}"
      data-domain="{{ domain }}"
      data-export-xlsx="{{ export_xlsx_url }}"
+     data-export-zip="{{ export_zip_url|default:'' }}"
      data-export-csv="{{ export_csv_url }}"
      data-export-pdf="{{ export_pdf_url }}"
      data-favorite-url="{{ favorite_url }}"
@@ -1061,6 +1063,8 @@
     document.getElementById("sr-apply").addEventListener("click", load);
     document.getElementById("sr-reset").addEventListener("click", resetFilters);
     const exportXlsxBtn = document.getElementById("sr-export-xlsx");
+    const exportZipBtn = document.getElementById("sr-export-zip");
+    if (exportZipBtn) { exportZipBtn.addEventListener("click", function () { const base = page.dataset.exportZip; window.location.href = base + "&" + queryString(); }); }
     if (exportXlsxBtn) {
         exportXlsxBtn.addEventListener("click", function () {
             const base = page.dataset.exportXlsx;

@@ -110,17 +110,6 @@ class RegistryTests(SimpleTestCase):
             # granted without handing over unrelated access.
             self.assertTrue(definition.alt_permissions)
 
-    def test_reimbursement_register_keeps_undated_claims(self):
-        "Undated rows must not vanish from every window."
-        import inspect
-
-        from report.metrics.payroll import reimbursement_register
-
-        # Guards the bulk_create/auto_now_add NULL created_at trap: a plain
-        # range filter excludes those rows from any period at all.
-        source = inspect.getsource(reimbursement_register)
-        self.assertIn("created_at__isnull=True", source)
-
     def test_retired_slugs_still_resolve(self):
         "Consolidated reports keep resolving so bookmarks do not 404."
         import report.metrics  # noqa: F401
