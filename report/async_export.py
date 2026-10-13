@@ -38,6 +38,35 @@ def queue_export_email(
 
             filters = filters_from_dict(filters_dict)
             filters.extra["row_limit"] = 5000
+            if slug == "reimbursement-register":
+                # The claim bundle shares these export rules. Recheck the actor
+                # and scope in this worker rather than relying on thread locals.
+                from django.contrib.auth import get_user_model
+                from django.test import RequestFactory
+                from report.access import user_can_export_report
+                from report.claim_exports import can_export_claims
+
+                user = get_user_model().objects.get(pk=user_id)
+                request = RequestFactory().get("/")
+                request.user = user
+                request.session = {
+                    "selected_company": (
+                        str(filters.company_id) if filters.company_id else "all"
+                    )
+                }
+                filters.request = request
+                filters.extra["row_limit"] = None
+                if (
+                    not user.is_active
+                    or not user_can_export_report(
+                        user, definition, request=request, company_id=filters.company_id
+                    )
+                    or not can_export_claims(request, definition, filters)
+                ):
+                    logger.warning(
+                        "Async claim export permission denied for user %s", user_id
+                    )
+                    return
             payload = run_report(slug, filters)
             safe = slug.replace("/", "-")
             fmt_local = (fmt or "xlsx").lower()

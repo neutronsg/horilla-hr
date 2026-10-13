@@ -28,6 +28,10 @@
     </style>
 
 <meta name="csrf-token" content="{{ csrf_token }}">
+{% if can_configure_reminders or can_view_claim_report %}<div class="oh-wrapper" style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap">
+{% if can_view_claim_report %}<a class="oh-btn" href="{% url 'standard-report-detail' 'reimbursement-register' %}">{% trans "Claim reports & receipts" %}</a>{% endif %}
+{% if can_configure_reminders %}<a class="oh-btn" href="{% url 'claim-reminder-settings' %}">{% trans "Claim reminders" %}</a>{% endif %}
+</div>{% endif %}
 
 
 <div hx-get="{% url "reimbursement-nav" %}?{{ request.GET.urlencode }}" hx-trigger="load">

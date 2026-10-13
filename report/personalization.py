@@ -88,6 +88,9 @@ def filters_dict_from_request(request) -> dict:
         "stage_id",
         "payroll_status",
         "batch",
+        "claim_date_basis",
+        "claim_status",
+        "claim_type",
         "contract_status",
         "format",
     )

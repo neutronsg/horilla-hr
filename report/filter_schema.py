@@ -17,6 +17,23 @@ from report.registry import ReportDefinition
 
 # Catalog of supported filter controls (id → metadata).
 FILTER_CATALOG: dict[str, dict[str, Any]] = {
+    "claim_date_basis": {
+        "label": _("Date basis"),
+        "options_key": "claim_date_bases",
+        "default": "submitted",
+        "primary": True,
+    },
+    "claim_status": {
+        "label": _("Claim status"),
+        "options_key": "claim_statuses",
+        "empty_label": _("All statuses"),
+        "primary": True,
+    },
+    "claim_type": {
+        "label": _("Claim type"),
+        "options_key": "claim_types",
+        "empty_label": _("All claim types"),
+    },
     "employment_status": {
         "label": _("Employment status"),
         "control": "select",
@@ -278,6 +295,22 @@ def build_filter_options(definition: ReportDefinition) -> dict[str, list]:
     keys = set(resolve_filter_fields(definition))
     needed = {FILTER_CATALOG[k]["options_key"] for k in keys if k in FILTER_CATALOG}
     options: dict[str, list] = {}
+    if "claim_date_bases" in needed:
+        options["claim_date_bases"] = [
+            {"id": "submitted", "label": str(_("Submitted date"))},
+            {"id": "payroll", "label": str(_("Payroll date (allowance on)"))},
+        ]
+    if "claim_statuses" in needed or "claim_types" in needed:
+        from payroll.models.models import Reimbursement
+
+        options["claim_statuses"] = [
+            {"id": value, "label": str(label)}
+            for value, label in Reimbursement.status_types
+        ]
+        options["claim_types"] = [
+            {"id": value, "label": str(label)}
+            for value, label in Reimbursement.reimbursement_types
+        ]
 
     # Always include period presets for the primary bar
     options["period_presets"] = [

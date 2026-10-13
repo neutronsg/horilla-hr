@@ -29,6 +29,21 @@ class ReimbursementsView(TemplateView):
 
     template_name = "cbv/reimbursements/reimbursements.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from payroll.sidebar import claim_reminders_accessibility
+        import report.metrics
+        from report.registry import get_report
+        from report.access import user_can_view_report, company_id_from_request
+
+        context["can_configure_reminders"] = claim_reminders_accessibility(self.request)
+        context["can_view_claim_report"] = user_can_view_report(
+            self.request.user,
+            get_report("reimbursement-register"),
+            company_id=company_id_from_request(self.request),
+        )
+        return context
+
 
 @method_decorator(login_required, name="dispatch")
 class ReimbursementsAndEncashmentsTabView(HorillaTabView):

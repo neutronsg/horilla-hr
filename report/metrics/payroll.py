@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from django.db.models import Avg, Count, Q, Sum
 from django.utils.translation import gettext as _
+from django.utils import timezone
 
 from report.engine import ReportFilters, apply_org_filters, empty_report, iter_months
 
@@ -831,54 +832,58 @@ def reimbursement_register(filters: ReportFilters) -> dict:
             _("Reimbursement Register"), filters, _("Payroll app is not installed.")
         )
 
-    # created_at is nullable and auto_now_add, so rows created via
-    # bulk_create() carry no date. A plain range filter drops them from every
-    # window rather than just this one -- here that would hide 8 of 14 demo
-    # claims -- so undated rows are kept, matching the same fix in talent.py.
-    from django.db.models import Q
+    from report.claim_exports import claim_queryset, attachment_fields
 
+    filters.extra["claim_report"] = True
+    qs = claim_queryset(filters)
+    aggregates = list(
+        qs.values("status").annotate(total=Sum("amount"), count=Count("pk"))
+    )
     from payroll.models.models import Reimbursement
 
-    qs = Reimbursement.objects.filter(
-        Q(created_at__isnull=True)
-        | Q(created_at__gte=filters.from_date, created_at__lte=filters.to_date)
+    status_choices = dict(Reimbursement.status_types)
+    by_status = {
+        str(status_choices.get(item["status"], item["status"])): float(
+            item["total"] or 0
+        )
+        for item in aggregates
+    }
+    pending_amount = sum(
+        float(item["total"] or 0)
+        for item in aggregates
+        if item["status"] == "requested"
     )
-    qs = apply_org_filters(
-        qs,
-        filters,
-        prefix="employee_id__employee_work_info",
-        employee_prefix="employee_id",
-    )
-
-    by_status: dict[str, float] = {}
-    by_type: dict[str, float] = {}
+    total_count = sum(item["count"] for item in aggregates)
     rows = []
-    pending_amount = 0.0
-    for claim in qs.select_related("employee_id").order_by("-created_at")[:300]:
-        amount = float(claim.amount or 0)
-        status_label = str(
-            claim.get_status_display()
-            if hasattr(claim, "get_status_display")
-            else claim.status
-        )
-        type_label = str(
-            claim.get_type_display()
-            if hasattr(claim, "get_type_display")
-            else claim.type
-        )
-        by_status[status_label] = by_status.get(status_label, 0) + amount
-        by_type[type_label] = by_type.get(type_label, 0) + amount
-        if claim.status == "requested":
-            pending_amount += amount
-        emp = getattr(claim, "employee_id", None)
+    detail_qs = (
+        qs.select_related("employee_id", "approved_by")
+        .prefetch_related("other_attachments")
+        .order_by("-created_at", "-pk")
+    )
+    limit = filters.extra.get("row_limit", 500)
+    if limit is not None:
+        detail_qs = detail_qs[:limit]
+    for claim in detail_qs:
         rows.append(
             {
-                "employee": emp.get_full_name() if emp else "",
+                "claim_id": claim.pk,
+                "badge": claim.employee_id.badge_id or "",
+                "employee": claim.employee_id.get_full_name(),
                 "title": claim.title or "",
-                "type": type_label,
-                "amount": round(amount, 2),
-                "status": status_label,
-                "raised": claim.created_at.isoformat() if claim.created_at else "",
+                "description": claim.description or "",
+                "type": str(claim.get_type_display()),
+                "amount": round(float(claim.amount or 0), 2),
+                "status": str(claim.get_status_display()),
+                "raised": (
+                    timezone.localtime(claim.created_at).isoformat()
+                    if claim.created_at
+                    else ""
+                ),
+                "payroll_date": claim.allowance_on.isoformat(),
+                "approved_by": (
+                    claim.approved_by.get_full_name() if claim.approved_by else ""
+                ),
+                "attachment_count": len(list(attachment_fields(claim))),
             }
         )
 
@@ -893,8 +898,8 @@ def reimbursement_register(filters: ReportFilters) -> dict:
             },
             {
                 "label": _("Claims"),
-                "value": len(rows),
-                "hint": _("Raised in period (by created date)"),
+                "value": total_count,
+                "hint": _("Selected date basis; undated submissions included"),
             },
             {
                 "label": _("Total claimed"),
@@ -927,14 +932,25 @@ def reimbursement_register(filters: ReportFilters) -> dict:
         ),
         "table": {
             "columns": [
+                {"key": "claim_id", "label": _("Claim ID")},
+                {"key": "badge", "label": _("Badge ID")},
                 {"key": "employee", "label": _("Employee")},
                 {"key": "title", "label": _("Title")},
+                {"key": "description", "label": _("Description")},
                 {"key": "type", "label": _("Type")},
                 {"key": "amount", "label": _("Amount")},
                 {"key": "status", "label": _("Status")},
-                {"key": "raised", "label": _("Raised")},
+                {"key": "raised", "label": _("Submitted at")},
+                {"key": "payroll_date", "label": _("Payroll date")},
+                {"key": "approved_by", "label": _("Approved by")},
+                {"key": "attachment_count", "label": _("Attachment entries")},
             ],
             "rows": rows,
         },
+        "message": (
+            f"Showing {len(rows)} of {total_count} claims. Totals cover all matching claims; Excel/CSV/ZIP exports include all rows."
+            if len(rows) < total_count
+            else ""
+        ),
         "explorer_url_name": "payroll-report",
     }

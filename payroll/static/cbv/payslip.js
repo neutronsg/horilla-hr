@@ -55,7 +55,7 @@ function bulkSendViaMail() {
                     traditional: true,
                     success: function (response, textStatus, jqXHR) {
                         if (jqXHR.status === 200) {
-                            location.reload();
+                            location.href = response.results_url;
                         }
                     },
 

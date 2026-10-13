@@ -41,6 +41,8 @@ from horilla_views.cbv_methods import render_template
 
 logger = logging.getLogger(__name__)
 
+from payroll.hr_delivery_models import ClaimReminderDelivery, ClaimReminderPolicy, PayslipEmailDelivery
+
 
 # Create your models here.
 

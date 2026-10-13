@@ -54,6 +54,9 @@ class ReportFilters:
     source: Optional[str] = None
     offer_letter_status: Optional[str] = None
     payslip_status: Optional[str] = None
+    claim_date_basis: str = "submitted"
+    claim_status: Optional[str] = None
+    claim_type: Optional[str] = None
     period_preset: str = "this_month"
     compare_preset: str = "none"
     request: Optional[HttpRequest] = None
@@ -108,6 +111,21 @@ class ReportFilters:
             pairs.append(("Offer letter status", self.offer_letter_status.capitalize()))
         if self.payslip_status:
             pairs.append(("Payslip status", self.payslip_status.capitalize()))
+        if self.extra.get("claim_report"):
+            pairs.append(
+                (
+                    "Claim date basis",
+                    (
+                        "Payroll date"
+                        if self.claim_date_basis == "payroll"
+                        else "Submitted date"
+                    ),
+                )
+            )
+        if self.claim_status:
+            pairs.append(("Claim status", self.claim_status.capitalize()))
+        if self.claim_type:
+            pairs.append(("Claim type", self.claim_type.replace("_", " ")))
         return pairs
 
     def summary_labels(self) -> list[str]:
@@ -256,6 +274,13 @@ def filters_from_request(request: HttpRequest) -> ReportFilters:
         offer_letter_status=(request.GET.get("offer_letter_status") or "").strip()
         or None,
         payslip_status=(request.GET.get("payslip_status") or "").strip() or None,
+        claim_date_basis=(
+            "payroll"
+            if request.GET.get("claim_date_basis") == "payroll"
+            else "submitted"
+        ),
+        claim_status=request.GET.get("claim_status") or None,
+        claim_type=request.GET.get("claim_type") or None,
         period_preset=preset or "custom",
         compare_preset=_normalize_compare(request.GET.get("compare_preset")),
         request=request,
@@ -343,6 +368,11 @@ def filters_from_dict(
         source=(raw.get("source") or "").strip() or None,
         offer_letter_status=(raw.get("offer_letter_status") or "").strip() or None,
         payslip_status=(raw.get("payslip_status") or "").strip() or None,
+        claim_date_basis=(
+            "payroll" if raw.get("claim_date_basis") == "payroll" else "submitted"
+        ),
+        claim_status=raw.get("claim_status") or None,
+        claim_type=raw.get("claim_type") or None,
         period_preset=preset or "custom",
         compare_preset=_normalize_compare(raw.get("compare_preset")),
     )

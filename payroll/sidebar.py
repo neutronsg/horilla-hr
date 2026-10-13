@@ -92,12 +92,27 @@ def encashment_settings_accessibility(request, submenu, user_perms, *args, **kwa
     return request.user.has_perm("payroll.change_encashmentgeneralsettings")
 
 
+def claim_reminders_accessibility(request, *args, **kwargs):
+    from base.models import Company
+    from payroll.hr_access import can_manage_claim_reminders
+
+    return any(
+        can_manage_claim_reminders(request.user, pk)
+        for pk in Company.objects.values_list("pk", flat=True)
+    )
+
+
 @settings_menu.register
 class PayrollSettings:
     title = _("Payroll")
     order = 7
     condition = lambda self, request: apps.is_installed("payroll")
     items = [
+        {
+            "label": _("Claim Reminders"),
+            "url": reverse_lazy("claim-reminder-settings"),
+            "accessibility": claim_reminders_accessibility,
+        },
         {
             "label": _("Encashment Settings"),
             "url": reverse_lazy("encashment-settings-view"),
