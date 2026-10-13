@@ -17,6 +17,7 @@ from employee.singapore import SingaporeDetailsForm, can_access_singapore_detail
 from employee.singapore_models import SingaporeDetailsAudit, SingaporeEmployeeDetails
 from employee.views import about_tab
 from horilla.testkit import make_company, make_employee
+from employee.tests.sg_access import grant_hr_employee_access
 
 
 class SingaporeDetailsTests(TestCase):
@@ -32,6 +33,9 @@ class SingaporeDetailsTests(TestCase):
         req.user = user or self.hr.employee_user_id
         req.session = {}
         return req
+
+    def grant_hr(self, view_only=False):
+        grant_hr_employee_access(self.hr, view_only=view_only)
 
     def grant(self, *codenames):
         user = self.hr.employee_user_id
@@ -53,7 +57,7 @@ class SingaporeDetailsTests(TestCase):
         return request
 
     def test_about_tab_shows_masked_singapore_details_and_personal_email(self):
-        self.grant("view_employee", "view_singaporeemployeedetails")
+        self.grant_hr(view_only=True)
         record = self.details()
         record.personal_email = "private@sg.test"
         record.save(update_fields=["personal_email"])
@@ -105,8 +109,8 @@ class SingaporeDetailsTests(TestCase):
         _sync_export_permissions()
         self.assertFalse(Permission.objects.filter(codename="export_singaporeemployeedetails").exists())
 
-    def test_company_boundary_and_separate_edit_permission(self):
-        self.grant("view_singaporeemployeedetails")
+    def test_company_boundary_and_existing_employee_edit_permission(self):
+        self.grant_hr(view_only=True)
         self.assertTrue(can_access_singapore_details(self.request(), self.employee))
         self.assertFalse(can_access_singapore_details(self.request(), self.other))
         self.assertEqual(singapore_details(self.request(query="?edit=1"), self.employee.pk).status_code, 403)
@@ -115,8 +119,8 @@ class SingaporeDetailsTests(TestCase):
     @override_settings(COMPANY_SCOPED_PERMISSIONS=True)
     def test_role_in_one_company_cannot_reveal_details_in_another_allowed_company(self):
         from base.models import CompanyGroupAssignment
-        hr_group = Group.objects.create(name="SG HR restricted test")
-        hr_group.permissions.add(Permission.objects.get(codename="view_singaporeemployeedetails"))
+        hr_group = Group.objects.get_or_create(name="HR Manager")[0]
+        hr_group.permissions.add(Permission.objects.get(codename="view_employee"))
         staff_group = Group.objects.create(name="SG basic test")
         user = self.hr.employee_user_id
         CompanyGroupAssignment.objects.create(user=user, group=hr_group, company_id=self.employee.employee_work_info.company_id_id)
@@ -135,7 +139,7 @@ class SingaporeDetailsTests(TestCase):
             self.assertEqual(SingaporeEmployeeDetails.objects.get(pk=record.pk).identity_number, "S1234567D")
 
     def test_read_view_masks_identifiers_and_logs_no_values(self):
-        self.grant("view_singaporeemployeedetails")
+        self.grant_hr(view_only=True)
         self.details()
         captured = {}
         def render(request, template, context):
@@ -174,7 +178,7 @@ class SingaporeDetailsTests(TestCase):
         self.assertIn('value="2020-01-15"', str(form["pr_effective_date"]))
 
     def test_update_is_audited_without_values_and_stale_revision_rejected(self):
-        self.grant("view_singaporeemployeedetails", "change_singaporeemployeedetails")
+        self.grant_hr()
         record = self.details()
         data = {"identity_type": "NRIC", "identity_number": "S7654321B", "residency_status": "citizen", "revision": record.updated_at.isoformat()}
         with patch("employee.singapore.messages.success"):
@@ -203,7 +207,7 @@ class SingaporeDetailsTests(TestCase):
         self.assertEqual(export_data(req).status_code, 403)
 
     def test_authorised_full_view_is_audited(self):
-        self.grant("view_singaporeemployeedetails", "change_singaporeemployeedetails")
+        self.grant_hr()
         self.details()
         with patch("employee.singapore.render", return_value=HttpResponse("ok")) as render:
             singapore_details(self.request(query="?edit=1"), self.employee.pk)

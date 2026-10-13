@@ -4,7 +4,7 @@
  {% include 'employee/singapore/fund_styles.html' %}
  <div class="sg-payroll">
  {% if not can_view_singapore_details %}
-  <div class="sg-surface"><p class="sg-readiness-note">{% trans "Your company role needs access to Singapore employment details. Ask your administrator to grant access." %}</p></div>
+  <div class="sg-surface"><p class="sg-readiness-note">{% trans "Singapore employment details are available to your company's HR and administrators through their employee access." %}</p></div>
  {% else %}
   <section class="sg-surface">
    <div class="sg-section-heading"><h2>{% trans "Employment details" %}</h2>{% if can_edit_singapore_details and not edit_singapore_details %}<a class="sg-text-button" href="{% url 'employee-view-update' obj_id %}?tab=singapore&amp;sg_edit=1&amp;salary_month={{ salary_month|date:'Y-m-d' }}{% if container_mode %}&amp;container=true{% endif %}" hx-get="{% url 'employee-view-update' obj_id %}?tab=singapore&amp;sg_edit=1&amp;salary_month={{ salary_month|date:'Y-m-d' }}{% if container_mode %}&amp;container=true{% endif %}" hx-target="#employee-update-form-root" hx-swap="outerHTML">{% trans "Edit details" %}</a>{% endif %}</div>
@@ -21,7 +21,7 @@
   <section class="sg-surface">
    <div class="sg-section-heading"><div><h2>{% trans "Contributions" %}</h2><p>{% trans "Choose the funds this employee contributes to. Standard amounts are calculated from salary." %}</p></div><span class="sg-status {% if contribution_profile %}sg-status--ready{% else %}sg-status--pending{% endif %}">{% if contribution_profile %}{% trans "Confirmed" %} · {{ contribution_profile.effective_month|date:'M Y' }}{% else %}{% trans "Setup needed" %}{% endif %}</span></div>
    {% if not contribution_profile %}<p class="sg-readiness-note">{% trans "Confirm all four fund settings before generating payroll." %}{% if contribution_latest %} {% trans "The saved setup does not cover" %} {{ salary_month|date:'M Y' }}.{% endif %}</p>{% elif not contribution_funds %}<p class="sg-readiness-note">{% trans "No mandatory self-help group contribution applies." %}</p>{% endif %}
-   {% if can_edit_singapore_details %}{% include 'employee/singapore/fund_form.html' with form=contribution_form embedded=True %}{% else %}<p class="sg-readiness-note">{% trans "Read-only access. Change Singapore employment details permission is required to save contributions." %}</p><p>{{ contribution_funds|join:', '|upper|default:'No applicable funds' }}</p>{% endif %}
+   {% if can_edit_singapore_details %}{% include 'employee/singapore/fund_form.html' with form=contribution_form embedded=True %}{% else %}<p class="sg-readiness-note">{% trans "Read-only access. Your HR role needs employee editing access to save changes." %}</p><p>{{ contribution_funds|join:', '|upper|default:'No applicable funds' }}</p>{% endif %}
   </section>
   <p class="sg-history-link"><a href="{% url 'singapore-employee-contributions' obj_id %}">{% trans "View contribution history" %}</a></p>
  {% endif %}

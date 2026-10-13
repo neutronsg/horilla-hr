@@ -39,7 +39,7 @@ class SingaporeEmployeeDetails(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        default_permissions = ("view", "change")
+        default_permissions = ()
         verbose_name = _("Singapore employment details")
         verbose_name_plural = _("Singapore employment details")
 

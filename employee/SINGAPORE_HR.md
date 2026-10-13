@@ -1,14 +1,17 @@
 # Singapore staff details
 
-The employee profile's About section shows masked Singapore employment details
-and personal email for users with `employee.view_singaporeemployeedetails`.
-Opening the About section records a masked-view audit event and prevents caching.
-Editing or revealing complete identifiers also requires
-`employee.change_singaporeemployeedetails`. Both are
-explicit permissions: ordinary employee/profile/payroll permissions do not grant
-access. Non-superusers must also have access to the employee's company through
-their own work information or a company group assignment. No existing groups
-receive these permissions automatically.
+Singapore employment details and contribution settings use the existing HR Manager
+and Admin roles in the target employee's company, with ordinary employee view/edit
+permissions. Viewing requires `employee.view_employee` or `employee.change_employee`;
+editing and revealing full identifiers require `employee.change_employee`. No separate
+Singapore permissions are required or exposed. Ordinary employees and managers do
+not gain access through general employee permissions alone. Roles and permissions
+are resolved for the target company, even in the All my companies session.
+
+The employee profile's About section shows masked details and personal email to
+these HR users. Opening it records a masked-view audit event and prevents caching.
+Migration 0009 removes the obsolete Singapore view/change permission records;
+HR/Admin employee role assignments remain unchanged.
 
 NRIC/FIN and work-pass numbers are encrypted using Fernet at rest. The key is
 derived with domain separation from Django's stable `SECRET_KEY`. Backups of the

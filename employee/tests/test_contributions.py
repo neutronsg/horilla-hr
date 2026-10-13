@@ -12,6 +12,7 @@ from employee.contributions import LegacyContributionProfileForm as Contribution
 from employee.models import Employee
 from employee.singapore_models import SingaporeContributionProfile, SingaporeDetailsAudit, SingaporeEmployeeDetails
 from horilla.testkit import make_company, make_employee
+from employee.tests.sg_access import grant_hr_employee_access
 from payroll.shg import profile_for
 
 
@@ -22,6 +23,9 @@ class ContributionPrivacyTests(TestCase):
         self.employee=make_employee(company=self.company,email="shg-staff@test.example")
         SingaporeEmployeeDetails.objects.create(employee=self.employee, residency_status="citizen")
         self.other=make_employee(company=make_company("Other SHG QA"),email="shg-other@test.example")
+
+    def grant_hr(self, view_only=False):
+        grant_hr_employee_access(self.hr, view_only=view_only)
 
     def grant(self,*codenames):
         self.hr.employee_user_id.user_permissions.add(*Permission.objects.filter(codename__in=codenames))
@@ -40,14 +44,14 @@ class ContributionPrivacyTests(TestCase):
         data.update(kwargs)
         return data
 
-    def test_ordinary_and_general_hr_permissions_cannot_read_or_edit(self):
+    def test_general_employee_permissions_without_hr_role_cannot_read_or_edit(self):
         self.grant("view_employee","change_employee")
         for method in ("get","post"):
             self.assertEqual(singapore_contributions(self.request(method,self.data()),self.employee.pk).status_code,403)
         self.assertFalse(SingaporeDetailsAudit.objects.exists())
 
     def test_reuses_view_permission_but_edit_requires_existing_change_permission(self):
-        self.grant("view_singaporeemployeedetails")
+        self.grant_hr(view_only=True)
         with patch("employee.contributions.render",return_value=HttpResponse("ok")):
             response=singapore_contributions(self.request(),self.employee.pk)
         self.assertEqual(response.status_code,200);self.assertIn("no-store",response["Cache-Control"])
@@ -55,13 +59,13 @@ class ContributionPrivacyTests(TestCase):
         self.assertEqual(singapore_contributions(self.request("post",self.data()),self.employee.pk).status_code,403)
 
     def test_company_boundary_remains_enforced(self):
-        self.grant("view_singaporeemployeedetails","change_singaporeemployeedetails")
+        self.grant_hr()
         self.assertEqual(singapore_contributions(self.request(),self.other.pk).status_code,403)
 
     @override_settings(COMPANY_SCOPED_PERMISSIONS=True)
     def test_cross_company_role_union_cannot_access_profile(self):
-        group=Group.objects.create(name="SHG restricted QA")
-        group.permissions.add(*Permission.objects.filter(codename__in=["view_singaporeemployeedetails","change_singaporeemployeedetails"]))
+        group=Group.objects.get_or_create(name="HR Manager")[0]
+        group.permissions.add(*Permission.objects.filter(codename__in=["view_employee","change_employee"]))
         basic=Group.objects.create(name="SHG basic QA")
         CompanyGroupAssignment.objects.create(user=self.hr.employee_user_id,group=group,company_id=self.company.pk)
         CompanyGroupAssignment.objects.create(user=self.hr.employee_user_id,group=basic,company_id=self.other.employee_work_info.company_id_id)
@@ -69,7 +73,7 @@ class ContributionPrivacyTests(TestCase):
             self.assertEqual(singapore_contributions(self.request(method,self.data()),self.other.pk).status_code,403)
 
     def test_save_adds_version_and_audits_field_names_without_sensitive_values(self):
-        self.grant("view_singaporeemployeedetails","change_singaporeemployeedetails")
+        self.grant_hr()
         data=self.data(cdac_mode="opt_out",cdac_reference="Private form reference")
         with patch("employee.contributions.messages.success"):
             response=singapore_contributions(self.request("post",data),self.employee.pk)
@@ -86,7 +90,7 @@ class ContributionPrivacyTests(TestCase):
         self.assertEqual(profile_for(self.employee,date(2026,9,30)).pk,record.pk)
 
     def test_stale_revision_rejected_without_overwriting_history(self):
-        self.grant("view_singaporeemployeedetails","change_singaporeemployeedetails")
+        self.grant_hr()
         with patch("employee.contributions.messages.success"):
             singapore_contributions(self.request("post",self.data()),self.employee.pk)
         with patch("employee.contributions.render",return_value=HttpResponse("ok")) as render:
@@ -123,7 +127,7 @@ class ContributionPrivacyTests(TestCase):
                 self.assertFalse(form.is_valid())
 
     def test_history_view_is_scoped_to_the_employee_and_read_permission(self):
-        self.grant("view_singaporeemployeedetails")
+        self.grant_hr(view_only=True)
         record=SingaporeContributionProfile.objects.create(employee=self.employee,effective_month=date(2026,9,1),
             primary_race="chinese",muslim_status="no",residency_status="citizen",declaration_reference="QA")
         with patch("employee.contributions.render",return_value=HttpResponse("ok")) as render:
@@ -155,13 +159,13 @@ class ContributionPrivacyTests(TestCase):
         self.assertEqual(export_data(req).status_code,403)
 
     def test_read_only_page_does_not_include_edit_form(self):
-        self.grant("view_singaporeemployeedetails")
+        self.grant_hr(view_only=True)
         with patch("employee.contributions.render",return_value=HttpResponse("ok")) as render:
             singapore_contributions(self.request(),self.employee.pk)
         context=render.call_args.args[2];self.assertIsNone(context["form"]);self.assertFalse(context["can_edit"])
 
     def test_default_salary_month_uses_singapore_local_date(self):
-        self.grant("view_singaporeemployeedetails","change_singaporeemployeedetails")
+        self.grant_hr()
         with patch("employee.contributions.timezone.localdate",return_value=date(2026,10,1)), \
              patch("employee.contributions.render",return_value=HttpResponse("ok")) as render:
             singapore_contributions(self.request(query="?edit=1"),self.employee.pk)
