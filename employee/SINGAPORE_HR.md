@@ -10,7 +10,7 @@ are resolved for the target company, even in the All my companies session.
 
 The employee profile's About section shows masked details and personal email to
 these HR users. Opening it records a masked-view audit event and prevents caching.
-Migration 0009 removes the obsolete Singapore view/change permission records;
+Migrations 0009–0010 remove obsolete Singapore permissions, including legacy export entries;
 HR/Admin employee role assignments remain unchanged.
 
 NRIC/FIN and work-pass numbers are encrypted using Fernet at rest. The key is
