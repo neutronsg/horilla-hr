@@ -75,7 +75,7 @@
                         {% endif %}
                     </div>
                     <div class="oh-sticky-table__td" onclick="event.stopPropagation()">
-                        <div class="oh-btn-group">
+                        {% if leave.can_manager_review %}<div class="oh-btn-group">
                             {% if leave.status == 'cancelled' and leave.can_manager_review %}
                                 {% if leave.end_date >= current_date %}
                                     <a
@@ -154,7 +154,7 @@
                                     </a>
                                 {% endif %}
                             {% endif %}
-                        </div>
+                        </div>{% else %}<span>{% trans "For information" %}</span>{% endif %}
                     </div>
                 </div>
             {% endfor %}

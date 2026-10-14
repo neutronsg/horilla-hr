@@ -61,6 +61,7 @@
     {% endif %}
 </div>
 
+{% if leave_request.can_manager_review %}
 <div class="oh-modal__dialog-footer oh-timeoff-modal__footer">
     {% if leave_request.is_approved %}
         <a href="{% url 'request-approve' leave_request.id %}" class="oh-btn oh-btn--success">
@@ -93,3 +94,6 @@
         </a>
     {% endif %}
 </div>
+
+{% else %}<p>{% trans "For information" %}</p>{% endif %}
+{% include "leave/leave_request/admin_intervention_button.html" with item=leave_request %}

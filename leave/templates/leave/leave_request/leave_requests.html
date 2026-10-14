@@ -169,6 +169,7 @@
                                         class="oh-input holiday-checkbox oh-input__checkbox all-leave-requests-row"
                                     >
                                 </div>
+                                {% else %}<span>{% trans "For information" %}</span>{% endif %}
                             </div>
                         {% endif %}
                         <div class="oh-sticky-table__td">
@@ -318,8 +319,9 @@
                                 </div>
                             {% endif %}
                         </div>
-                        {% if leave_request.can_manager_review %}
+                        {% if request.user|is_reportingmanager or perms.leave.change_leaverequest or request.user|is_leave_approval_manager %}
                             <div class="oh-sticky-table__td oh-sticky-table__right" onclick="event.stopPropagation()">
+                                {% if leave_request.can_manager_review %}
                                 <div class="oh-btn-group">
                                     {% if leave_request.status == 'cancelled' %}
                                         {% if leave_request.end_date >= current_date %}
