@@ -631,7 +631,7 @@ class LeaveStorageEmailTests(TestCase):
             get_company=lambda: self.company,
             get_mail=lambda: "zeyu+qa-leave@neutron.sg",
         )
-        leave = SimpleNamespace(id=1)
+        leave = SimpleNamespace(id=1, employee_id=self.request.user.employee_get)
         with patch(
             "leave.threading.EmailMultiAlternatives.send", return_value=1
         ) as send, patch(
