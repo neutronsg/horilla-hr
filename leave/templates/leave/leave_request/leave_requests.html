@@ -318,7 +318,7 @@
                                 </div>
                             {% endif %}
                         </div>
-                        {% if request.user|is_reportingmanager or perms.leave.change_leaverequest or request.user|is_leave_approval_manager %}
+                        {% if leave_request.can_manager_review %}
                             <div class="oh-sticky-table__td oh-sticky-table__right" onclick="event.stopPropagation()">
                                 <div class="oh-btn-group">
                                     {% if leave_request.status == 'cancelled' %}
@@ -372,7 +372,7 @@
                                                 <ion-icon class="me-1" name="checkmark-outline"></ion-icon>
                                             </a>
                                         {% endif %}
-                                        {% if leave_request.status != 'rejected' and leave_request.end_date >= current_date %}
+                                        {% if leave_request.is_approved %}
                                             <a
                                                 type="submit"
                                                 data-toggle="oh-modal-toggle"

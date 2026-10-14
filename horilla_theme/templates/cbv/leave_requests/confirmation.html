@@ -2,7 +2,7 @@
 
 {% is_manager_of request.user instance as can_manage %}
 <div class="flex items-center justify-center gap-1" onclick="event.stopPropagation()">
-    {% if perms.leave.change_leaverequest or can_manage or request.user|is_leave_approval_manager %}
+    {% if instance.can_manager_review %}
         {% if instance.status == 'cancelled' %}
             {% if instance.end_date >= current_date %}
                 <button
@@ -90,7 +90,7 @@
                 </a>
             {% endif %}
 
-            {% if instance.status == 'requested' or instance.status != 'rejected' and instance.end_date >= current_date %}
+            {% if instance.is_approved and instance.status == 'requested' %}
                 <a
                     type="button"
                     data-toggle="oh-modal-toggle"
@@ -125,31 +125,11 @@
             {% endif %}
         {% endif %}
     {% else %}
-        <button
-            type="button"
-            disabled
-            title="{% trans 'Approve' %}"
-            class="h-7 w-7 flex items-center justify-center bg-success text-white rounded-md hover:bg-success-dark transition duration-300 oh-btn--disabled"
-        >
-            <img
-                src="{% static 'horilla_theme/assets/img/icons/check.svg' %}"
-                alt="{% trans 'Approve' %}"
-                width="13"
-                class="filter brightness-0 invert"
-            >
-        </button>
-        <button
-            type="button"
-            disabled
-            title="{% trans 'Reject' %}"
-            class="h-7 w-7 flex items-center justify-center bg-danger text-white rounded-md hover:bg-danger-dark transition duration-300 oh-btn--disabled"
-        >
-            <img
-                src="{% static 'horilla_theme/assets/img/icons/close-circle-icon-original.svg' %}"
-                alt="{% trans 'Reject' %}"
-                width="13"
-                class="filter brightness-0 invert"
-            >
-        </button>
+        <span class="text-xs text-gray-500">{% trans "For information" %}</span>
+    {% endif %}
+    {% if instance.can_admin_intervene %}
+        <button type="button" class="oh-btn oh-btn--light oh-btn--small"
+            hx-get="{% url 'leave-admin-intervention' instance.pk %}" hx-target="#genericModalBody"
+            data-toggle="oh-modal-toggle" data-target="#genericModal">{% trans "Admin intervention" %}</button>
     {% endif %}
 </div>

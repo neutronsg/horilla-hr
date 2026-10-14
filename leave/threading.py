@@ -4,6 +4,7 @@ from threading import Thread
 from django.contrib import messages
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.db.models import Q
+from django.db import transaction, close_old_connections
 from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
 
@@ -23,7 +24,10 @@ class LeaveMailSendThread(Thread):
         self.protocol = "https" if request.is_secure() else "http"
 
     def send_email(self, subject, content, recipients, leave_request_id="#"):
-        email_backend = ConfiguredEmailBackend()
+        from leave.hr_notifications import LeaveCompanyEmailBackend
+        from leave.workflow import company_id_for
+
+        email_backend = LeaveCompanyEmailBackend(company_id_for(self.leave_request))
         display_email_name = email_backend.dynamic_from_email_with_display_name
 
         host = self.host
@@ -49,7 +53,6 @@ class LeaveMailSendThread(Thread):
                     "subject": subject,
                     "content": content,
                 },
-                request=self.request,
             )
 
             email = EmailMultiAlternatives(
@@ -58,17 +61,32 @@ class LeaveMailSendThread(Thread):
                 from_email=display_email_name,
                 to=[recipient.get_mail()],
                 reply_to=[display_email_name],
+                connection=email_backend,
             )
 
             email.attach_alternative(html_message, "text/html")
 
             email.send()
 
-    def run(self) -> None:
+    def start(self):
+        # Never send a request or decision email for a transaction that rolls back.
+        transaction.on_commit(lambda: super(LeaveMailSendThread, self).start())
+
+    def run(self):
+        close_old_connections()
+        try:
+            self._send()
+        except Exception:
+            logger.exception("Leave email failed for request %s", self.leave_request.pk)
+        finally:
+            close_old_connections()
+
+    def _send(self) -> None:
         super().run()
         if self.type == "request":
             owner = self.leave_request.employee_id
-            reporting_manager = self.leave_request.employee_id.get_reporting_manager()
+            from leave.workflow import reporting_manager as resolve_manager
+            reporting_manager = resolve_manager(self.leave_request)
 
             content_manager = f"{owner.get_full_name()} has submitted a leave request. Review the dates and leave details, then approve or reject the request in Neutron HR."
             subject_manager = f"Leave request from {owner.get_full_name()}"
@@ -87,9 +105,19 @@ class LeaveMailSendThread(Thread):
                 subject_owner, content_owner, [owner], self.leave_request.id
             )
 
+        elif self.type == "manager_assigned":
+            from leave.workflow import reporting_manager as resolve_manager
+            owner = self.leave_request.employee_id
+            self.send_email(
+                f"Leave request from {owner.get_full_name()}",
+                f"A pending leave request from {owner.get_full_name()} has been routed to you as reporting manager. Review the details and approve or reject it in Neutron HR.",
+                [resolve_manager(self.leave_request)], self.leave_request.id,
+            )
+
         elif self.type == "approve":
             owner = self.leave_request.employee_id
-            reporting_manager = self.leave_request.employee_id.get_reporting_manager()
+            from leave.workflow import reporting_manager as resolve_manager
+            reporting_manager = resolve_manager(self.leave_request)
 
             subject = "Your leave request is approved"
             content = "Your leave request has been approved. View the confirmed dates and details in Neutron HR."
@@ -98,7 +126,8 @@ class LeaveMailSendThread(Thread):
 
         elif self.type == "reject":
             owner = self.leave_request.employee_id
-            reporting_manager = self.leave_request.employee_id.get_reporting_manager()
+            from leave.workflow import reporting_manager as resolve_manager
+            reporting_manager = resolve_manager(self.leave_request)
 
             subject = "Your leave request was not approved"
             content = "Your leave request was not approved. View the request in Neutron HR and contact your reporting manager or HR team to discuss the next steps."
@@ -107,7 +136,8 @@ class LeaveMailSendThread(Thread):
 
         elif self.type == "cancel":
             owner = self.leave_request.employee_id
-            reporting_manager = self.leave_request.employee_id.get_reporting_manager()
+            from leave.workflow import reporting_manager as resolve_manager
+            reporting_manager = resolve_manager(self.leave_request)
 
             content_manager = f"{owner.get_full_name()} has requested to cancel their leave. Review the request in Neutron HR before confirming the cancellation."
             subject_manager = "Leave cancellation needs review"

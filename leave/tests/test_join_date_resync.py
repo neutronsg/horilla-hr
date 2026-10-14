@@ -229,6 +229,10 @@ class JoinDateResyncTests(TestCase):
             user=make_user("approval-admin", is_superuser=True),
         )
 
+        work = self.employee.employee_work_info
+        work.reporting_manager_id = admin
+        work.save()
+
         def approve(leave_request):
             http_request = RequestFactory().post(
                 "/leave/request-approve", HTTP_HX_REQUEST="true"

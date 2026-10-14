@@ -142,6 +142,8 @@
                             <li class="oh-dropdown__item">
                                 <a href="#" class="oh-dropdown__link" id="createLeaveReport">{% trans "Create Leave Report" %}</a>
                             </li>
+                        {% endif %}
+                        {% if request.user|is_reportingmanager or request.user|is_leave_approval_manager %}
                             <li class="oh-dropdown__item">
                                 <a href="#" class="oh-dropdown__link" id="leaveRequestsBulkApprove">{% trans "Bulk Approve" %}</a>
                             </li>

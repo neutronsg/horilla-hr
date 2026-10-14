@@ -76,7 +76,7 @@
                     </div>
                     <div class="oh-sticky-table__td" onclick="event.stopPropagation()">
                         <div class="oh-btn-group">
-                            {% if leave.status == 'cancelled' %}
+                            {% if leave.status == 'cancelled' and leave.can_manager_review %}
                                 {% if leave.end_date >= current_date %}
                                     <a
                                         type="submit"
@@ -131,7 +131,7 @@
                                         <ion-icon class="me-1" name="checkmark-outline"></ion-icon>
                                     </a>
                                 {% endif %}
-                                {% if leave.status != 'rejected' and leave.end_date >= current_date %}
+                                {% if leave.is_approved %}
                                     <a
                                         type="submit"
                                         data-toggle="oh-modal-toggle"

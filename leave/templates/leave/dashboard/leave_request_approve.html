@@ -22,6 +22,7 @@
                                 </div>
                                 <span class="oh-profile__name oh-text--dark">{{leave_request.employee_id}}</span>
                             </div>
+                            {% else %}<span>{% trans "For information" %}</span>{% endif %}
                         </div>
                         <div class="oh-sticky-table__td">
                             <span class="dateformat_changer">{{leave_request.start_date}}</span>
@@ -29,6 +30,7 @@
                             <span class="dateformat_changer">{{leave_request.end_date}}</span>
                         </div>
                         <div class="oh-sticky-table__td" onclick="event.stopPropagation()">
+                            {% if leave_request.is_approved %}
                             <div class="oh-btn-group">
                                 <a href="#"
                                     hx-get="{% url 'request-approve' leave_request.id %}"
@@ -44,6 +46,7 @@
                                     <ion-icon class="me-1" name="close-circle-outline"></ion-icon>
                                 </a>
                             </div>
+                            {% else %}<span>{% trans "For information" %}</span>{% endif %}
                         </div>
                     </div>
                 {% endfor %}

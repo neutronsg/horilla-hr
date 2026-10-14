@@ -37,14 +37,9 @@ def has_company_hr_permission(user, company_id, permission):
 
 
 def can_approve_own_leave(user, leave_request):
-    """Other requests keep their existing authorization; scope the self exception."""
-    employee = getattr(user, "employee_get", None)
-    if employee != leave_request.employee_id:
-        return True
-    work = getattr(employee, "employee_work_info", None)
-    return has_company_hr_permission(
-        user, getattr(work, "company_id_id", None), "change_leaverequest"
-    )
+    """Legacy call sites now use the per-request reporting-manager policy."""
+    from leave.workflow import can_decide_leave
+    return can_decide_leave(user, leave_request)
 
 
 def next_leave_approval(leave_request):

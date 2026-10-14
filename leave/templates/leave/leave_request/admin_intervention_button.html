@@ -1,0 +1,4 @@
+{% load i18n %}
+{% if item.can_admin_intervene %}
+<button type="button" class="oh-btn oh-btn--light-bkg text-xs" data-toggle="oh-modal-toggle" data-target="#genericModal" hx-get="{% url 'leave-admin-intervention' item.id %}" hx-target="#genericModalBody" title="{% trans 'An explicit administrator decision requires a recorded reason.' %}">{% trans "Admin intervention" %}</button>
+{% endif %}

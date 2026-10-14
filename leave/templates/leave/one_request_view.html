@@ -62,14 +62,14 @@
 </div>
 
 <div class="oh-modal__dialog-footer oh-timeoff-modal__footer">
-    {% if leave_request.status != 'approved' %}
+    {% if leave_request.is_approved %}
         <a href="{% url 'request-approve' leave_request.id %}" class="oh-btn oh-btn--success">
             <ion-icon class="me-1" name="checkmark-outline"></ion-icon>
             {% trans "Approve" %}
         </a>
     {% else %}
         <a
-            href="{% url 'request-approve' leave_request.id %}"
+            href="#"
             class="oh-btn oh-btn--success oh-btn--disabled"
             onclick="event.preventDefault()"
         >
@@ -77,14 +77,14 @@
             {% trans "Approve" %}
         </a>
     {% endif %}
-    {% if leave_request.status != 'cancelled' %}
+    {% if leave_request.can_manager_review and leave_request.status == 'cancelled' or leave_request.is_approved %}
         <a href="{% url 'request-cancel' leave_request.id %}" class="oh-btn oh-btn--danger">
             <ion-icon class="me-1" name="close-circle-outline"></ion-icon>
             {% trans "Cancel" %}
         </a>
     {% else %}
         <a
-            href="{% url 'request-cancel' leave_request.id %}"
+            href="#"
             class="oh-btn oh-btn--danger oh-btn--disabled"
             onclick="event.preventDefault()"
         >
