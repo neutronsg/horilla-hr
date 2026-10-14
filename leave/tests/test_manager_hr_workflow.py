@@ -219,6 +219,7 @@ class ManagerHRWorkflowTests(TestCase):
                 HTTP_HX_REQUEST="true",
             )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["HX-Redirect"], f"/leave/request-view/?id={self.item.pk}")
         self.item.refresh_from_db()
         self.assertEqual(self.item.status, "approved")
         self.assertIn(
