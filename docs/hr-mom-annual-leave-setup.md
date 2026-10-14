@@ -29,7 +29,7 @@ For an employee who joins on **1 January 2025**:
 | 30 June 2025, after six completed months | 7 days |
 | 31 December 2025, after twelve completed months | 14 days |
 
-Employees can request paid annual leave from **1 April 2025**. Company HR/Admin can manually record early paid leave, including their own, when authorized as described below. If the contract ends on **31 March 2025**, the employee has earned **4 days** even though paid annual leave could not be taken during probation. The system calculates the balance; HR must handle [payment for unused leave](https://www.mom.gov.sg/employment-practices/termination-of-employment/termination-with-notice) in the final settlement.
+Employees normally qualify to request paid annual leave from **1 April 2025**, even if probation is extended. HR-confirmed probation can open annual leave earlier as described below. Company HR/Admin can manually record early paid leave, including their own, when authorized as described below. If the contract ends on **31 March 2025**, the employee has earned **4 days** even though paid annual leave could not be taken during probation. The system calculates the balance; HR must handle [payment for unused leave](https://www.mom.gov.sg/employment-practices/termination-of-employment/termination-with-notice) in the final settlement.
 
 The calculation uses **completed months ÷ 12 × the leave type's yearly days**, rounded to the nearest whole day with half a day rounded up. The joining year starts on the actual joining date; subsequent years start on **1 January**. January rollover carries eligible unused days according to the configured carryforward policy. A service-entitlement safeguard prevents split periods and rounding from reducing contractual/MOM entitlement, including probation spanning January. If the leave type's allowance is below MOM's statutory minimum for a service year, the statutory minimum applies.
 
@@ -37,7 +37,7 @@ The calculation uses **completed months ÷ 12 × the leave type's yearly days**,
 
 ## Manual HR entries and joining-date corrections
 
-HR can record paid leave inside the first three months, including their own requests, when assigned the **HR Manager** or **Admin** role in that employee's company, with the existing **Add Leave Request** and **Change Employee Work Information** permissions. No additional permission is needed. Combining other roles, including Leave Manager with Payroll Manager or Recruiter, does not qualify. These role names are explicit; a renamed or custom role is not automatically treated as HR. Superusers can record early leave, including their own. Ordinary employee self-service requests still follow the three-month rule; company HR/Admin can use the same service-gate exception in both self-service and HR creation forms. HR entries cannot start before joining. Annual leave requiring approval may exceed the balance, as described below; other leave types still require sufficient balance. An employee without a company must have their company assigned before company HR/Admin can use this override.
+HR can record paid leave inside the first three months, including their own requests, when assigned the **HR Manager** or **Admin** role in that employee's company, with the existing **Add Leave Request** and **Change Employee Work Information** permissions. No additional permission is needed. Combining other roles, including Leave Manager with Payroll Manager or Recruiter, does not qualify. These role names are explicit; a renamed or custom role is not automatically treated as HR. Superusers can record early leave, including their own. Ordinary employee self-service follows the employee probation eligibility date described below; company HR/Admin can use the same service-gate exception in both self-service and HR creation forms. HR entries cannot start before joining. Annual leave requiring approval may exceed the balance, as described below; other leave types still require sufficient balance. An employee without a company must have their company assigned before company HR/Admin can use this override.
 
 Saving a change to Joining Date or Contract End Date recalculates automatic leave, including changes made through bulk update or import. Annual leave recalculation preserves approved deductions and manual adjustments. January rollover applies the configured carryforward policy.
 
@@ -53,11 +53,19 @@ For example, 2 available days minus 3 approved days leaves **-1 day**. The next 
 
 Sick leave, childcare leave, other manual leave types, and leave configured without approval retain their balance checks. The three-month service requirement retains the company HR/Admin exception described above. Dates before joining, overlapping requests, and required attachments continue to be checked.
 
-## HR/Admin self approval
+## Employee probation and earlier annual leave
 
-A user assigned **HR Manager** or **Admin** in their own employee's company may approve their own leave using the existing **Change leave request** permission. The role alone is insufficient if that permission has been removed. Combining other roles does not qualify, and an HR/Admin role in a different company does not qualify. No new permission is required.
+Open **Employee → Edit → Work Information → Probation & annual leave**. Company HR/Admin uses existing employee editing permissions; no separate permission is needed. Set **On probation** and an **Expected probation end** for planning. The date arriving never automatically confirms probation. When HR confirms the employee, select **Confirmed passed** and record the actual confirmation date. Select **No probation required** only when the employee's contract has no probation; it opens annual leave eligibility from joining.
 
-Self approval follows the same balance, date and qualification checks as other approvals. An annual advance may create a negative balance as described above. In a multiple-approval chain, HR/Admin explicitly approves only their own next step; other required steps remain pending, and the balance is deducted only on final approval. Each explicit self approval adds a timestamped activity entry recording the actor, company role, deduction and resulting balance. Repeated approval does not charge again.
+The annual leave eligibility date is the earlier of HR's actual confirmation and three months after joining. **Not recorded** and **On probation** retain the three-month gate. An extension cannot postpone annual leave qualification beyond three months. This changes permission to apply, not accrual: an employee confirmed after two months may have a zero balance and use the existing approved annual leave advance. It does not grant the whole yearly allowance. Outpatient and hospitalisation leave retain their existing three-month rule and balances.
+
+Once a candidate is linked to an employee, Onboarding shows the employee's planned probation end and links to Employee for changes. Valid legacy plans are migrated as **On probation**, never **Confirmed passed**. Changes retain actor/date history. Direct employee creation does not require an onboarding record.
+
+## Leave decisions
+
+The employee's active reporting manager normally decides leave requests; company HR receives FYI notifications. HR roles and general change permissions do not permit normal self-approval. Existing configured sequential approval chains remain in force. Missing, inactive or self-reporting managers leave requests pending until an active manager is assigned.
+
+An authorized company Admin can use the separate intervention entry for exceptional cases, including their own request, with a required reason and audit record. This is an explicit exception rather than normal manager approval. Balance and date checks remain in force; repeated approvals cannot deduct twice.
 
 ## Company leave calendar
 

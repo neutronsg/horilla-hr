@@ -174,6 +174,11 @@ class HistoryTrackingFields(HorillaModel):
         "reporting_manager_id",
         "company_id",
         "basic_salary",
+        "probation_status",
+        "probation_end",
+        "probation_passed_on",
+        "probation_updated_by",
+        "probation_updated_at",
     ]
 
     tracking_fields = models.JSONField(null=True, blank=True, editable=False)

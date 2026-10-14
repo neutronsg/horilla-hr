@@ -92,6 +92,11 @@ class PipelineCandidateFilter(FilterSet):
     FilterSet class for Candidate model
     """
 
+    def filter_queryset(self, queryset):
+        from employee.probation import probation_date_expression
+        queryset = queryset.annotate(effective_probation_date=probation_date_expression("candidate_id__"))
+        return super().filter_queryset(queryset)
+
     search = django_filters.CharFilter(method="search_by_name", lookup_expr="icontains")
     tasks = filters.ModelMultipleChoiceFilter(
         field_name="candidate_id__candidate_task__onboarding_task_id",
@@ -120,16 +125,16 @@ class PipelineCandidateFilter(FilterSet):
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     probation_end = django_filters.DateFilter(
-        field_name="candidate_id__probation_end",
+        field_name="effective_probation_date",
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     probation_end_till = django_filters.DateFilter(
-        field_name="candidate_id__probation_end",
+        field_name="effective_probation_date",
         lookup_expr="lte",
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     probation_end_from = django_filters.DateFilter(
-        field_name="candidate_id__probation_end",
+        field_name="effective_probation_date",
         lookup_expr="gte",
         widget=forms.DateInput(attrs={"type": "date"}),
     )
@@ -186,6 +191,11 @@ class KanbanCandidateFilter(FilterSet):
     FilterSet class for Candidate model
     """
 
+    def filter_queryset(self, queryset):
+        from employee.probation import probation_date_expression
+        queryset = queryset.annotate(effective_probation_date=probation_date_expression())
+        return super().filter_queryset(queryset)
+
     search = django_filters.CharFilter(method="search_by_name", lookup_expr="icontains")
     tasks = filters.ModelMultipleChoiceFilter(
         field_name="candidate_task__onboarding_task_id",
@@ -214,16 +224,16 @@ class KanbanCandidateFilter(FilterSet):
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     probation_end = django_filters.DateFilter(
-        field_name="probation_end",
+        field_name="effective_probation_date",
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     probation_end_till = django_filters.DateFilter(
-        field_name="probation_end",
+        field_name="effective_probation_date",
         lookup_expr="lte",
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     probation_end_from = django_filters.DateFilter(
-        field_name="probation_end",
+        field_name="effective_probation_date",
         lookup_expr="gte",
         widget=forms.DateInput(attrs={"type": "date"}),
     )

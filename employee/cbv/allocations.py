@@ -109,6 +109,8 @@ class AllocationView(HorillaDetailedView):
                     converted_employee_id=instance
                 )
                 candidate.converted_employee_id = instance
+                from employee.probation import copy_candidate_plan
+                copy_candidate_plan(candidate)
                 instance.employee_user_id.is_active = False
                 instance.employee_user_id.save()
 

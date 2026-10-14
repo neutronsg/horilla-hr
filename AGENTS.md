@@ -32,3 +32,16 @@ do not introduce another permission. Missing/inactive/self reporting managers
 leave requests pending; assigning an active manager reroutes pending requests.
 Preserve existing explicitly configured sequential approval chains and balance
 locking. Do not silently enable a second HR approval stage.
+
+# Employee probation
+
+Keep employee Work Information as the master for probation status, expected end
+and actual HR confirmation. Linked onboarding candidates display and link to that
+record; never maintain a second editable copy. A planned date arriving is not
+confirmation, and migrating a plan must never mark an employee passed. Reuse
+company HR Manager/Admin roles and employee editing permissions with audit history.
+
+Early HR confirmation changes automatic annual-leave eligibility only, not its
+accrual or full-year grant. Three months of service remains sufficient even during
+an extended probation. Sick/hospitalisation policies and manager approvals retain
+their rules. No-probation waiver opens annual leave from joining.

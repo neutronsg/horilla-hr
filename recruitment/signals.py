@@ -1,7 +1,8 @@
-from django.db.models.signals import m2m_changed, post_save
+from django.db.models.signals import m2m_changed, post_save, pre_save
 from django.dispatch import receiver
 
 from recruitment.models import (
+    Candidate,
     CandidateDocument,
     CandidateDocumentRequest,
     Recruitment,
@@ -57,3 +58,30 @@ def candidate_document_create(instance):
         )
         document.title = f"Upload {instance.title}"
         document.save()
+
+
+@receiver(pre_save, sender=Candidate)
+def remember_probation_employee_link(sender, instance, raw=False, **kwargs):
+    if not raw:
+        instance._previous_probation_employee = (
+            sender._base_manager.filter(pk=instance.pk)
+            .values_list("converted_employee_id", flat=True)
+            .first()
+            if instance.pk
+            else None
+        )
+
+
+@receiver(post_save, sender=Candidate)
+def transfer_probation_plan_on_conversion(sender, instance, raw=False, **kwargs):
+    if (
+        not raw
+        and instance.converted_employee_id_id
+        and getattr(
+            instance, "_previous_probation_employee", instance.converted_employee_id_id
+        )
+        != instance.converted_employee_id_id
+    ):
+        from employee.probation import copy_candidate_plan
+
+        copy_candidate_plan(instance)

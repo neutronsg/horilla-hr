@@ -147,8 +147,16 @@ HR 手写或自动化邮件也会加上统一外框；原有正文、附件和�
 
 提交费用报销时必须至少提供一份收据或证明文件；页面会显示附件缺失错误，不能保存。编辑已附证明的报销无需再次上传；没有任何附件的旧记录，编辑时需要补齐。假期兑现和积分兑现不要求报销收据。
 
-## Probation 与年假：当前功能
+## Probation 与年假
 
-目前 **Onboarding → Candidates → Probation ends** 可记录预计试用期结束日期；它没有代表 HR 已确认通过，也不会自动开放年假。自动年假按入职日期和三个月工龄计算，HR/Admin 可通过现有权限代录获批的提前年假。
+统一在 **Employee → Edit → Work Information → Probation & annual leave** 管理。沿用员工所属公司的 HR Manager／Admin 及现有员工编辑权限；员工和 reporting manager 不能自行确认。
 
-公司的“通过 probation 后开放 AL”政策还需要与员工资料关联：预计结束日期、HR 确认通过及实际通过日期。开放申请资格与可用／预支余额需要分开，不能把通过 probation 等同于立即获得全年年假额度。这个联动目前尚未实现。
+1. 员工入职后设置实际 **Joining Date**。如有试用期，选择 **On probation**，填写 **Expected probation end**；延期时修改这个预计日期。
+2. HR 确认通过后，选择 **Confirmed passed**，填写 **Actual confirmation date** 并保存。这个日期必须已经发生，不能是未来日期，也不能早于入职。
+3. 如劳动合同没有试用期，选择 **No probation required**；这会从入职日开放 AL 申请。尚未核实的旧员工可保持 **Not recorded**。
+
+预计结束日期到了不会自动确认通过。员工满三个月工龄后可申请自动年假；HR 确认提前通过可更早开放。延长 probation 不会推迟三个月后的年假资格。页面会显示 **AL eligibility from**，变更保留操作人、时间和历史记录。
+
+开放资格不等于获得全年额度：既有按工龄计算的余额和预支规则继续适用。比如入职两个月确认通过，年假余额仍可能是 0；配置了审批的自动年假可申请预支，由 reporting manager 审批后扣成负数，后续额度增长再抵消。HR 收到 FYI；普通申请仍由 reporting manager 决定。病假／住院假继续使用原来的三个月工龄及余额规则。
+
+Onboarding 用来管理入职材料和任务。未转换候选人的预计日期仍可作为入职计划；关联员工后显示员工资料里的日期，并通过 **Manage in Employee** 跳转修改，不再保存另一份 probation 状态。旧的有效计划只迁移为 **On probation**，不会自动标记任何人通过。无需 Onboarding 也可以直接创建和管理员工。

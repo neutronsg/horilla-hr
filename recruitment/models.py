@@ -765,6 +765,12 @@ class Candidate(HorillaModel):
     ]
     hired_date = models.DateField(null=True, blank=True, editable=False)
 
+    def effective_probation_end(self):
+        if self.converted_employee_id_id:
+            work = getattr(self.converted_employee_id, "employee_work_info", None)
+            return work.probation_end if work else None
+        return self.probation_end
+
     def __str__(self):
         return f"{self.name}"
 

@@ -52,8 +52,8 @@
                         class="oh-sticky-table__th {% if request.sort_option.order == '-joining_date' %}arrow-up {% elif request.sort_option.order == 'joining_date' %}arrow-down {% else %} arrow-up-down {% endif %}"
                         hx-target="#candidates" hx-get="{% url 'candidate-filter' %}?{{pd}}&orderby=joining_date">{% trans "Date of joining" %}</div>
                     <div data-cell-index="3" data-cell-title='{% trans "Probation ends" %}'
-                        class="oh-sticky-table__th {% if request.sort_option.order == '-probation_end' %}arrow-up {% elif request.sort_option.order == 'probation_end' %}arrow-down {% else %} arrow-up-down {% endif %}"
-                        hx-target="#candidates" hx-get="{% url 'candidate-filter' %}?{{pd}}&orderby=probation_end">{% trans "Probation ends" %}</div>
+                        class="oh-sticky-table__th {% if request.sort_option.order == '-effective_probation_date' %}arrow-up {% elif request.sort_option.order == 'effective_probation_date' %}arrow-down {% else %} arrow-up-down {% endif %}"
+                        hx-target="#candidates" hx-get="{% url 'candidate-filter' %}?{{pd}}&orderby=effective_probation_date">{% trans "Probation ends" %}</div>
                     <div data-cell-index="4" data-cell-title='{% trans "Job position" %}' class="oh-sticky-table__th">{% trans "Job position" %}</div>
                     <div data-cell-index="5" data-cell-title='{% trans "Recruitment" %}' class="oh-sticky-table__th">{% trans "Recruitment" %}</div>
                     <div data-cell-index="6" data-cell-title='{% trans "Offer letter" %}' class="oh-sticky-table__th">{% trans "Offer letter" %}</div>
@@ -94,9 +94,9 @@
                                 data-candidate-id="{{candidate.id}}">
                         </a>
                         <a data-cell-index="3" class="oh-sticky-table__td" style="color: inherit; text-decoration: none">
-                            <input type="date" class="oh-input" style="width: 150px;"
+                            {% if candidate.converted_employee_id_id %}<span>{{ candidate.effective_probation_end|date:"d M Y"|default:"—" }}</span> <a href="{% url 'employee-view-update' candidate.converted_employee_id_id %}?tab=work">{% trans "Manage in Employee" %}</a>{% else %}<input type="date" class="oh-input" style="width: 150px;"
                                 value="{{ candidate.probation_end|date:'Y-m-d' }}" name="probation_end"
-                                oninput="probationEnd($(this))" data-candidate-id="{{ candidate.id }}">
+                                oninput="probationEnd($(this))" data-candidate-id="{{ candidate.id }}">{% endif %}
                         </a>
                         <a data-cell-index="4" style="color: inherit; text-decoration: none"
                             class="oh-sticky-table__td">{{candidate.job_position_id}}</a>

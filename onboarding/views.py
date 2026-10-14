@@ -1944,10 +1944,38 @@ def update_probation_end(request):
         messages.error(request, _("Candidate not found."))
         return JsonResponse({"type": "danger"}, status=404)
 
+    if candidate.converted_employee_id_id:
+        return JsonResponse(
+            {
+                "type": "danger",
+                "message": "Manage probation in Employee > Work Information.",
+            },
+            status=409,
+        )
+
     if probation_end == "":
         probation_end = None
 
-    candidate.probation_end = probation_end
+    from django.utils.dateparse import parse_date
+
+    try:
+        parsed = parse_date(probation_end) if probation_end else None
+        if probation_end and parsed is None:
+            raise ValueError()
+        if parsed and candidate.joining_date and parsed < candidate.joining_date:
+            return JsonResponse(
+                {
+                    "type": "danger",
+                    "message": "Probation end cannot precede joining date.",
+                },
+                status=400,
+            )
+    except (ValueError, TypeError):
+        return JsonResponse(
+            {"type": "danger", "message": "Enter a valid probation end date."},
+            status=400,
+        )
+    candidate.probation_end = parsed
     candidate.save()
     messages.success(request, _("Probation end date updated"))
     return JsonResponse({"type": "success"})

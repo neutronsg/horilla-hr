@@ -361,10 +361,14 @@ class EmployeeWorkInformationForm(ModelForm):
         widgets = {
             "date_joining": DateInput(attrs={"type": "date"}),
             "contract_end_date": DateInput(attrs={"type": "date"}),
+            "probation_end": DateInput(attrs={"type": "date"}),
+            "probation_passed_on": DateInput(attrs={"type": "date"}),
         }
 
     def __init__(self, *args, disable=False, **kwargs):
         super().__init__(*args, **kwargs)
+        from employee.probation import configure_form
+        configure_form(self)
         self.fields["email"].widget.attrs["autocomplete"] = "email"
 
         self.fields["job_position_id"].widget.attrs.update(
@@ -424,7 +428,8 @@ class EmployeeWorkInformationForm(ModelForm):
         cleaned_data = super().clean()
         if "employee_id" in self.errors:
             del self.errors["employee_id"]
-        return cleaned_data
+        from employee.probation import clean_form
+        return clean_form(self, cleaned_data)
 
     def as_p(self, *args, **kwargs):
         context = {"form": self}
@@ -466,10 +471,14 @@ class EmployeeWorkInformationUpdateForm(ModelForm):
         widgets = {
             "date_joining": DateInput(attrs={"type": "date"}),
             "contract_end_date": DateInput(attrs={"type": "date"}),
+            "probation_end": DateInput(attrs={"type": "date"}),
+            "probation_passed_on": DateInput(attrs={"type": "date"}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        from employee.probation import configure_form
+        configure_form(self)
         self.fields["department_id"].widget.attrs.update(
             {
                 "hx-target": "#id_job_position_id_parent_div",
@@ -488,6 +497,10 @@ class EmployeeWorkInformationUpdateForm(ModelForm):
                 "hx-get": "/employee/get-job-roles-hx",
             }
         )
+
+    def clean(self):
+        from employee.probation import clean_form
+        return clean_form(self, super().clean())
 
     def as_p(self, *args, **kwargs):
         context = {"form": self}

@@ -1669,11 +1669,14 @@ class LeaveRequest(HorillaModel):
             if not joining_date:
                 raise ValidationError(_("Joining date is required for automatic leave."))
             eligible_date = add_months(joining_date, 3)
+            if leave_type.auto_leave_policy == "annual":
+                from employee.probation import annual_leave_eligible_on
+                eligible_date = annual_leave_eligible_on(self.employee_id) or eligible_date
             if (
                 timezone.localdate() < eligible_date or self.start_date < eligible_date
             ) and not self.can_override_service_gate(request):
                 raise ValidationError(
-                    _("Paid leave is available after three months of service.")
+                    _("Paid leave is available after three months of service. HR-confirmed probation can open annual leave earlier.")
                 )
             employment_end = getattr(work_info, "contract_end_date", None)
             if employment_end and (
