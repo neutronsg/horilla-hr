@@ -277,6 +277,14 @@ class ReimbursementSerializer(serializers.ModelSerializer):
                 data["leave_type_id"] if data.get("leave_type_id", None) else None
             )
 
+        if type == "reimbursement":
+            receipt = data.get("attachment", getattr(self.instance, "attachment", None))
+            kept_other = self.instance and self.instance.other_attachments.exists()
+            if not receipt and not kept_other:
+                raise serializers.ValidationError(
+                    {"attachment": _("Attach at least one receipt or supporting document.")}
+                )
+
         available_points = BonusPoint.objects.filter(employee_id=employee_id).first()
         if type == "bonus_encashment":
             try:

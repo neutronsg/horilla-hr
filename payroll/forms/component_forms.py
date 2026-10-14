@@ -904,6 +904,8 @@ class MultipleFileField(forms.FileField):
     def clean(self, data, initial=None):
         single_file_clean = super().clean
         if isinstance(data, (list, tuple)):
+            if not data:
+                return single_file_clean(None, initial)
             result = [single_file_clean(d, initial) for d in data]
         else:
             result = [single_file_clean(data, initial)]
@@ -981,7 +983,13 @@ class ReimbursementForm(ModelForm):
             attrs={"type": "date", "class": "oh-input w-100"}
         )
 
-        self.fields["attachment"] = MultipleFileField(label="Attachments")
+        existing_receipt = self.instance.pk and (
+            bool(self.instance.attachment) or self.instance.other_attachments.exists()
+        )
+        self.fields["attachment"] = MultipleFileField(
+            label="Attachments", required=not existing_receipt,
+            error_messages={"required": _("Attach at least one receipt or supporting document.")},
+        )
         self.fields["attachment"].widget.attrs["accept"] = ".jpg, .jpeg, .png, .pdf"
 
         self.exclude_fields_by_type(exclude_fields)
@@ -1046,6 +1054,13 @@ class ReimbursementForm(ModelForm):
 
         type_ = cleaned_data.get("type")
         employee = cleaned_data.get("employee_id")
+
+        if type_ == "reimbursement" and "attachment" not in self.errors:
+            receipt = cleaned_data.get("attachment")
+            kept_primary = bool(self.instance.attachment) and receipt is not False
+            kept_other = self.instance.pk and self.instance.other_attachments.exists()
+            if not receipt and not kept_primary and not kept_other:
+                self.add_error("attachment", _("Attach at least one receipt or supporting document."))
 
         if not type_ or not employee:
             return cleaned_data
