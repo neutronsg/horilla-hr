@@ -131,3 +131,13 @@ HR 手写或自动化邮件也会加上统一外框；原有正文、附件和�
 补录更早月份的无薪假或迟到，需要修正发生月份的工资／CPF 记录，不能用当前月份扣款替代历史 CPF 调整。已确认、已支付或已向 CPF Board 提交的月份，应先由 HR 核对并按正式调整流程处理；不要直接覆盖已结算工资单。
 
 依据：[CPF Board：无薪假](https://www.cpf.gov.sg/service/article/are-cpf-contributions-payable-for-my-employee-who-is-on-no-pay-leave)、[CPF Board：工资扣款](https://www.cpf.gov.sg/service/article/are-cpf-contributions-payable-on-salary-deductions)、[MOM：无薪假工资计算](https://www.mom.gov.sg/faq/salary/how-to-compute-the-salary-of-an-employee-who-is-on-no-pay-leave-for-the-month)。
+
+## 报销附件
+
+提交费用报销时必须至少提供一份收据或证明文件；页面会显示附件缺失错误，不能保存。编辑已附证明的报销无需再次上传；没有任何附件的旧记录，编辑时需要补齐。假期兑现和积分兑现不要求报销收据。
+
+## Probation 与年假：当前功能
+
+目前 **Onboarding → Candidates → Probation ends** 可记录预计试用期结束日期；它没有代表 HR 已确认通过，也不会自动开放年假。自动年假按入职日期和三个月工龄计算，HR/Admin 可通过现有权限代录获批的提前年假。
+
+公司的“通过 probation 后开放 AL”政策还需要与员工资料关联：预计结束日期、HR 确认通过及实际通过日期。开放申请资格与可用／预支余额需要分开，不能把通过 probation 等同于立即获得全年年假额度。这个联动目前尚未实现。
