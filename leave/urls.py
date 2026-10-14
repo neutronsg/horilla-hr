@@ -1,3 +1,4 @@
+from leave.admin_intervention import admin_intervention
 from django import views
 from django.apps import apps
 from django.urls import path
@@ -28,6 +29,7 @@ from leave.forms import RestrictLeaveForm
 from . import models, views
 
 urlpatterns = [
+    path("admin-intervention/<int:id>/", admin_intervention, name="leave-admin-intervention"),
     path(
         "individual-leave-tab-list/<int:pk>/",
         leave_tab.IndividualLeaveTab.as_view(),

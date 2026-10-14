@@ -4,7 +4,7 @@
 <div class="flex items-center gap-2 flex-wrap">
 
     {# Approve Button #}
-    {% if instance.is_approved and instance.status == 'requested' and can_change or can_manage or leave_manager %}
+    {% if instance.is_approved %}
         <a
             href="#"
             hx-get="{% url 'request-approve' instance.id %}"
@@ -22,16 +22,9 @@
             <ion-icon name="checkmark-outline"></ion-icon>
             {% trans "Approve" %}
         </a>
-    {% else %}
-        <button
-            class="oh-btn oh-btn--light-bkg px-4 py-2 rounded-md text-xs flex items-center justify-center gap-2 transition duration-300"
-            title="{% trans 'Approve' %}"
-            disabled
-        >
-            <ion-icon name="checkmark-outline"></ion-icon>
-            {% trans "Approve" %}
-        </button>
     {% endif %}
+
+    {% include "leave/leave_request/admin_intervention_button.html" with item=instance %}
 
     {# Penalty Button #}
     {% if can_manage or can_penalty or leave_manager %}
@@ -59,7 +52,7 @@
     {% endif %}
 
     {# Reject Button #}
-    {% if instance.status != 'rejected' and instance.end_date >= current_date and can_change or can_manage or leave_manager %}
+    {% if instance.is_approved %}
         <a
             type="submit"
             data-toggle="oh-modal-toggle"
@@ -72,15 +65,6 @@
             <ion-icon name="close-circle-outline"></ion-icon>
             {% trans "Reject" %}
         </a>
-    {% else %}
-        <button
-            class="oh-btn oh-btn--light-bkg px-4 py-2 rounded-md text-xs flex items-center justify-center gap-2 transition duration-300"
-            title="{% trans 'Reject' %}"
-            disabled
-        >
-            <ion-icon name="close-circle-outline"></ion-icon>
-            {% trans "Reject" %}
-        </button>
     {% endif %}
 
     {# Edit Button #}

@@ -1,6 +1,8 @@
+from leave.threading import LeaveMailSendThread
+from leave.workflow import decision_allowed, record_decision
 from leave.services import (
     can_approve_leave_balance, deduct_leave_balance, can_approve_own_leave,
-    next_leave_approval, record_self_approval,
+    next_leave_approval,
 )
 from leave.locking import locked_leave_operation, employee_leave_lock
 import contextlib
@@ -80,6 +82,7 @@ class EmployeeLeaveRequestGetCreateAPIView(APIView):
         serializer = LeaveRequestCreateUpdateSerializer(data=data)
         if serializer.is_valid():
             leave_request = serializer.save()
+            LeaveMailSendThread(request, leave_request, "request").start()
             with contextlib.suppress(Exception):
                 notify.send(
                     request.user.employee_get,
@@ -499,6 +502,7 @@ class LeaveRequestGetCreateAPIView(APIView):
         serializer = LeaveRequestCreateUpdateSerializer(data=data)
         if serializer.is_valid():
             leave_request = serializer.save()
+            LeaveMailSendThread(request, leave_request, "request").start()
             with contextlib.suppress(Exception):
                 notify.send(
                     request.user.employee_get,
@@ -727,30 +731,22 @@ class LeaveRequestApproveAPIView(APIView):
         available_leave.save()
 
     def leave_multiple_approve(self, request, leave_request, available_leave):
-        if request.user.is_superuser:
-            LeaveRequestConditionApproval.objects.filter(
-                leave_request_id=leave_request
-            ).update(is_approved=True)
+        step = next_leave_approval(leave_request)
+        if step is None or step.manager_id != request.user.employee_get or step.is_rejected:
+            raise serializers.ValidationError(_("You are not the next approver for this leave request."))
+        step.is_approved = True
+        step.save()
+        if next_leave_approval(leave_request) is None:
             self.leave_approve_calculation(leave_request, available_leave)
             leave_request.status = "approved"
             leave_request.save()
-        else:
-            step = next_leave_approval(leave_request)
-            if step is None or step.manager_id != request.user.employee_get or step.is_rejected:
-                raise serializers.ValidationError(_("You are not the next approver for this leave request."))
-            step.is_approved = True
-            step.save()
-            if next_leave_approval(leave_request) is None:
-                self.leave_approve_calculation(leave_request, available_leave)
-                leave_request.status = "approved"
-                leave_request.save()
 
     @manager_permission_required("leave.change_leaverequest")
     @locked_leave_operation("LeaveRequest", "pk")
     def put(self, request, pk):
         leave_request = self.get_leave_request(pk)
-        if not can_approve_own_leave(request.user, leave_request):
-            raise serializers.ValidationError(_("You cannot approve your own leave request."))
+        if not decision_allowed(request, leave_request):
+            return Response({"error": "This request is not awaiting your approval."}, status=403)
         serializer = LeaveRequestApproveSerializer(leave_request, data=request.data)
         if serializer.is_valid():
             available_leave = serializer.validated_data.get("available_leave")
@@ -760,8 +756,9 @@ class LeaveRequestApproveAPIView(APIView):
                 leave_request.save()
             else:
                 self.leave_multiple_approve(request, leave_request, available_leave)
-            record_self_approval(request.user, leave_request)
+            record_decision(request, leave_request, "approved")
             if leave_request.status == "approved":
+                LeaveMailSendThread(request, leave_request, "approve").start()
                 with contextlib.suppress(Exception):
                     notify.send(
                         request.user.employee_get,
@@ -806,8 +803,20 @@ class LeaveRequestRejectAPIView(APIView):
     def put(self, request, pk):
         leave_request = self.get_leave_request(pk)
         employee_id = leave_request.employee_id
+        if not decision_allowed(request, leave_request):
+            return Response({"error": "This request is not awaiting your decision."}, status=403)
+        reason = str(request.data.get("reason", "")).strip()
+        if not reason or len(reason) > 1000:
+            return Response({"reason": "Provide a rejection reason (up to 1000 characters)."}, status=400)
+        leave_request.reject_reason = reason
+        step = next_leave_approval(leave_request)
+        if step:
+            step.is_rejected = True
+            step.save()
         if leave_request.status != "rejected":
             self.leave_calculation(leave_request, employee_id)
+            record_decision(request, leave_request, "rejected")
+            LeaveMailSendThread(request, leave_request, "reject").start()
             with contextlib.suppress(Exception):
                 notify.send(
                     request.user.employee_get,
@@ -947,7 +956,7 @@ class LeaveRequestBulkApproveDeleteAPIview(APIView):
                 leave_request = self.get_locked_request(candidate.pk)
                 if leave_request.status != "requested":
                     continue
-                if not can_approve_own_leave(request.user, leave_request):
+                if not decision_allowed(request, leave_request):
                     continue
                 employee_id = leave_request.employee_id
                 leave_type_id = leave_request.leave_type_id
@@ -958,16 +967,22 @@ class LeaveRequestBulkApproveDeleteAPIview(APIView):
                     approver = LeaveRequestApproveAPIView()
                     if leave_request.multiple_approvals():
                         step = next_leave_approval(leave_request)
-                        if not request.user.is_superuser and (
-                            step is None or step.manager_id != request.user.employee_get or step.is_rejected
-                        ):
+                        if (step is None or step.manager_id != request.user.employee_get or step.is_rejected):
                             continue
                         approver.leave_multiple_approve(request, leave_request, available_leave)
                     else:
                         self.leave_approve_calculation(leave_request, available_leave)
                         leave_request.status = "approved"
                         leave_request.save()
-                    record_self_approval(request.user, leave_request)
+                    record_decision(request, leave_request, "approved")
+                    if leave_request.status == "approved":
+                        LeaveMailSendThread(request, leave_request, "approve").start()
+                        with contextlib.suppress(Exception):
+                            notify.send(request.user.employee_get,
+                                recipient=leave_request.employee_id.employee_user_id,
+                                verb="Your leave request has been approved.", icon="people-circle",
+                                redirect=f"/leave/user-request-view?id={leave_request.id}",
+                                api_redirect=f"/api/leave/user-request/{leave_request.id}/")
         return Response(status=200)
 
     @manager_permission_required("leave.delete_leaverequest")

@@ -1943,27 +1943,21 @@ class LeaveRequest(HorillaModel):
         return bool(request and can_approve_own_leave(request.user, self))
 
     def is_approved(self):
+        from leave.workflow import can_decide_leave
         request = getattr(horilla_middlewares._thread_locals, "request", None)
-        if request:
-            if not hasattr(request.user, "_horilla_employee_cache"):
-                request.user._horilla_employee_cache = Employee.objects.filter(
-                    employee_user_id=request.user
-                ).first()
-            employee = request.user._horilla_employee_cache
+        return bool(request and can_decide_leave(request.user, self))
 
-            if not self.can_approve_self():
-                return False
-            multiple_approvals = self.multiple_approvals()
-            if multiple_approvals and not request.user.is_superuser:
-                from leave.services import next_leave_approval
-                next_step = next_leave_approval(self)
-                return bool(
-                    next_step
-                    and not next_step.is_rejected
-                    and employee
-                    and next_step.manager_id_id == employee.id
-                )
-            return True
+    @property
+    def can_manager_review(self):
+        from leave.workflow import can_review_leave
+        request = getattr(horilla_middlewares._thread_locals, "request", None)
+        return bool(request and can_review_leave(request.user, self))
+
+    @property
+    def can_admin_intervene(self):
+        from leave.workflow import can_admin_intervene
+        request = getattr(horilla_middlewares._thread_locals, "request", None)
+        return bool(request and can_admin_intervene(request.user, self))
 
     def delete(self, *args, **kwargs):
         if self.status == "requested":

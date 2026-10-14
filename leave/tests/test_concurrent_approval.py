@@ -18,6 +18,7 @@ class ConcurrentApprovalTests(TransactionTestCase):
         self.employee=make_employee(company=self.company,email='concurrent-employee@test.example')
         self.admin=make_employee(company=self.company,email='concurrent-admin@test.example')
         user=self.admin.employee_user_id;user.is_superuser=True;user.is_staff=True;user.is_new_employee=False;user.save()
+        work=self.employee.employee_work_info;work.reporting_manager_id=self.admin;work.save()
         self.kind=LeaveType.objects.create(name='Concurrency annual',total_days=1)
         self.balance=AvailableLeave.objects.create(employee_id=self.employee,leave_type_id=self.kind,
             available_days=1,carryforward_days=0)

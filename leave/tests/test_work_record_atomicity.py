@@ -69,7 +69,8 @@ class BulkApiApprovalTests(TestCase):
         request=APIRequestFactory().put('/api/leave/request-bulk-action/',
             {'leave_request_id':[str(item.pk) for item in requests]},format='multipart')
         force_authenticate(request,user=manager.employee_user_id)
-        response=LeaveRequestBulkApproveDeleteAPIview.as_view()(request)
+        with patch("leave.threading.LeaveMailSendThread.start"):
+            response=LeaveRequestBulkApproveDeleteAPIview.as_view()(request)
         self.assertEqual(response.status_code,200)
         for item in requests+balances:item.refresh_from_db()
         self.assertEqual([item.status for item in requests],['requested','approved'])

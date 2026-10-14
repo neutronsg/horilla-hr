@@ -1,6 +1,7 @@
+from leave.workflow import decision_allowed, is_intervention, record_decision, can_review_leave
 from leave.services import (
     can_approve_leave_balance, deduct_leave_balance, can_approve_own_leave,
-    next_leave_approval, record_self_approval,
+    next_leave_approval,
 )
 from leave.locking import locked_leave_operation
 """
@@ -1024,11 +1025,11 @@ def leave_request_approve(request, id, emp_id=None):
             request, message=_("No leave rquest found matching the query.")
         )
     employee_id = leave_request.employee_id
-    if not can_approve_own_leave(request.user, leave_request):
-        messages.error(request, _("You cannot approve your own leave request."))
+    if not decision_allowed(request, leave_request):
+        messages.error(request, _("Only this employee's reporting manager can approve this request. HR is notified for information."))
         if emp_id is not None:
             return redirect(f"/employee/employee-view/{emp_id}/")
-        return HorillaRedirect(request)
+        return HttpResponse("This request is not awaiting your approval.", status=403)
     leave_type_id = leave_request.leave_type_id
     try:
         available_leave = AvailableLeave.objects.get(
@@ -1070,7 +1071,7 @@ def leave_request_approve(request, id, emp_id=None):
                 send_notification = True
                 approved = True
             else:
-                if request.user.is_superuser:
+                if is_intervention(request, leave_request):
                     LeaveRequestConditionApproval.objects.filter(
                         leave_request_id=leave_request
                     ).update(is_approved=True)
@@ -1123,7 +1124,7 @@ def leave_request_approve(request, id, emp_id=None):
             if approved:
                 # Intermediate steps are not persisted on the request itself.
                 leave_request.refresh_from_db()
-                record_self_approval(request.user, leave_request)
+                record_decision(request, leave_request, "approved")
                 messages.success(request, _("Leave request approved successfully.."))
                 if send_notification:
                     with contextlib.suppress(Exception):
@@ -1182,8 +1183,6 @@ def leave_request_bulk_approve(request):
             leave_request = LeaveRequest.objects.get(id=int(request_id))
             if can_approve_own_leave(request.user, leave_request):
                 filtered_ids.append(request_id)
-        if request.user.is_superuser:
-            filtered_ids = request_ids
         for request_id in filtered_ids:
             try:
                 leave_request = (
@@ -1254,6 +1253,10 @@ def leave_request_cancel(request, id, emp_id=None):
           Otherwise, it returns to the default leave request view template.
 
     """
+    target = LeaveRequest.objects.get(pk=id)
+    allowed = (target.status in {"requested", "cancelled"} and can_review_leave(request.user, target)) or is_intervention(request, target)
+    if not allowed:
+        return HttpResponse("This request is not awaiting your decision.", status=403)
     form = RejectForm()
     if request.method == "POST":
         form = RejectForm(request.POST)
@@ -1274,7 +1277,7 @@ def leave_request_cancel(request, id, emp_id=None):
                 leave_request.status = "rejected"
                 leave_request.leave_clashes_count = 0
 
-                if leave_request.multiple_approvals() and not request.user.is_superuser:
+                if target.status == "requested" and leave_request.multiple_approvals() and not is_intervention(request, leave_request):
                     conditional_requests = leave_request.multiple_approvals()
                     approver = [
                         manager
@@ -1291,11 +1294,7 @@ def leave_request_cancel(request, id, emp_id=None):
                 leave_request.reject_reason = form.cleaned_data["reason"]
                 leave_request.save()
                 available_leave.save()
-                comment = LeaverequestComment()
-                comment.request_id = leave_request
-                comment.employee_id = request.user.employee_get
-                comment.comment = leave_request.reject_reason
-                comment.save()
+                record_decision(request, leave_request, "rejected")
 
                 messages.success(request, _("Leave request rejected successfully.."))
                 with contextlib.suppress(Exception):
@@ -5737,6 +5736,7 @@ def leave_request_and_approve(request):
             leave for leave in leave_requests if leave.id not in multi_ids
         ]
 
+    leave_requests = [item for item in leave_requests if decision_allowed(request, item)]
     leave_requests = paginator_qry(leave_requests, page_number)
     leave_requests_ids = json.dumps([instance.id for instance in leave_requests])
     return render(

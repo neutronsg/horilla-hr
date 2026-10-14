@@ -125,9 +125,9 @@ def auto_approve_self_approval_stage(sender, instance, created, **kwargs):
     if created and instance.manager_id == instance.leave_request_id.employee_id:
         from leave.services import can_approve_own_leave
 
-        # HR/Admin now explicitly approves and audits their own step. Retain
-        # the existing automatic skip for other employees so their request
-        # can reach a different required approver.
+        # Nobody approves their own normal step. Skip it so a different
+        # required approver can handle the request. An all-self chain stays
+        # pending for explicit administrator intervention.
         if not can_approve_own_leave(
             instance.manager_id.employee_user_id, instance.leave_request_id
         ):
@@ -161,3 +161,61 @@ def resync_auto_leave_on_date_change(sender, instance, created, raw=False, **kwa
     current = tuple(getattr(instance, field) for field in AUTO_LEAVE_DATE_FIELDS)
     if previous is not None and previous != current:
         schedule_auto_leave_sync([instance.employee_id])
+
+
+@receiver(pre_save, sender=LeaveRequest)
+def remember_leave_notice_status(sender, instance, raw=False, **kwargs):
+    if not raw:
+        previous = (
+            sender._base_manager.filter(pk=instance.pk).values_list("status", flat=True).first()
+            if instance.pk else None
+        )
+        stack = getattr(instance, "_notice_status_stack", [])
+        stack.append(previous)
+        instance._notice_status_stack = stack
+
+
+@receiver(post_save, sender=LeaveRequest)
+def notify_hr_leave_status(sender, instance, created, raw=False, **kwargs):
+    if raw:
+        return
+    from leave.workflow import schedule_hr_notice
+    from horilla.horilla_middlewares import _thread_locals
+    stack = getattr(instance, "_notice_status_stack", [])
+    previous = stack.pop() if stack else None
+    event = "submitted" if created and instance.status == "requested" else "result"
+    if (created and instance.status == "requested") or (
+        previous and previous != instance.status and instance.status in {"approved", "rejected", "cancelled"}
+    ):
+        schedule_hr_notice(instance, event, getattr(_thread_locals, "request", None))
+
+
+@receiver(pre_save, sender=EmployeeWorkInformation)
+def remember_leave_reporting_manager(sender, instance, raw=False, **kwargs):
+    if not raw and instance.pk:
+        instance._previous_leave_manager = sender._base_manager.filter(pk=instance.pk).values_list("reporting_manager_id", flat=True).first()
+
+
+@receiver(post_save, sender=EmployeeWorkInformation)
+def route_pending_leave_to_new_manager(sender, instance, created, raw=False, **kwargs):
+    if raw or created or not instance.reporting_manager_id_id:
+        return
+    if getattr(instance, "_previous_leave_manager", instance.reporting_manager_id_id) == instance.reporting_manager_id_id:
+        return
+    from horilla.horilla_middlewares import _thread_locals
+    from django.db import transaction
+    request = getattr(_thread_locals, "request", None)
+    if not request or not request.user.is_authenticated:
+        return
+    employee_id = instance.employee_id_id
+    def route():
+        from leave.hr_notifications import notify_new_manager
+        import logging
+        for item in LeaveRequest._base_manager.filter(employee_id=employee_id, status="requested"):
+            try:
+                # Keep an existing explicitly configured approval chain intact.
+                if not item.leaverequestconditionapproval_set.exists():
+                    notify_new_manager(request, item)
+            except Exception:
+                logging.getLogger(__name__).exception("Could not reroute pending leave %s", item.pk)
+    transaction.on_commit(route)

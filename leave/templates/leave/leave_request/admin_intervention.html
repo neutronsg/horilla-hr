@@ -1,0 +1,7 @@
+{% load i18n %}
+<div class="oh-modal__dialog-header"><h2 class="oh-modal__dialog-title">{% trans "Administrator intervention" %}</h2><button type="button" class="oh-modal__close" aria-label="Close"><ion-icon name="close-outline"></ion-icon></button></div>
+<div class="oh-modal__dialog-body">
+<p>{% trans "Normal leave decisions belong to the reporting manager. Use this exception only when an administrator needs to handle a pending request." %}</p>
+<p><strong>{{ item.employee_id.get_full_name }}</strong> · {{ item.start_date }} – {{ item.end_date }}</p>
+<form method="post" hx-post="{% url 'leave-admin-intervention' item.pk %}" hx-target="#genericModalBody">{% csrf_token %}{{ form.as_p }}<button class="oh-btn oh-btn--secondary" type="submit">{% trans "Record decision with reason" %}</button></form>
+</div>

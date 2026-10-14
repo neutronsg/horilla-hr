@@ -1,3 +1,4 @@
+from leave.workflow import has_manager_work
 from leave.locking import locked_leave_operation
 from horilla.http.response import HorillaRedirect
 """
@@ -68,7 +69,7 @@ class LeaveRequestsListView(HorillaListView):
         super().__init__(**kwargs)
         self.search_url = reverse("request-filter")
         self.view_id = "leaveRequest"
-        if self.request.user.has_perm("leave.change_leaverequest"):
+        if has_manager_work(self.request.user):
             self.bulk_update_fields = ["status"]
 
     def handle_bulk_submission(self, request):
@@ -85,8 +86,6 @@ class LeaveRequestsListView(HorillaListView):
             leave_request = LeaveRequest.objects.get(id=request_id)
             if can_approve_own_leave(request.user, leave_request):
                 filtered_ids.append(request_id)
-        if request.user.is_superuser:
-            filtered_ids = instance_ids
         status = request.POST.get("status")
         if status == "approved":
             from leave.views import leave_request_approve
@@ -271,6 +270,8 @@ class LeaveRequestsNavView(HorillaNavView):
                 """,
             },
         ]
+        if not has_manager_work(self.request.user):
+            self.actions = []
         if has_export_access(self.request, LeaveRequest):
             self.actions.append(
                 {

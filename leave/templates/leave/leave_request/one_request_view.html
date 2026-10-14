@@ -164,8 +164,8 @@
     {% if request.user|is_reportingmanager or perms.leave.change_leaverequest or request.user|is_leave_approval_manager or perms.base.add_penaltyaccounts %}
         <div class="oh-modal__button-container text-center mt-3">
             <div class="oh-btn-group">
-                {% if request.user|is_reportingmanager or perms.leave.change_leaverequest or request.user|is_leave_approval_manager %}
-                    {% if leave_request.status == 'requested' %}
+                {% if leave_request.can_manager_review %}
+                    {% if leave_request.is_approved %}
                         {% if dashboard %}
                             <a
                                 href="#"
@@ -219,8 +219,8 @@
                         ></ion-icon>
                     </button>
                 {% endif %}
-                {% if request.user|is_reportingmanager or perms.leave.change_leaverequest or request.user|is_leave_approval_manager %}
-                    {% if leave_request.status != 'rejected' and leave_request.status != 'cancelled' and leave_request.end_date >= current_date %}
+                {% if leave_request.can_manager_review %}
+                    {% if leave_request.is_approved %}
                         <a
                             type="submit"
                             data-toggle="oh-modal-toggle"
@@ -250,3 +250,5 @@
         </div>
     {% endif %}
 </div>
+
+{% include "leave/leave_request/admin_intervention_button.html" with item=leave_request %}

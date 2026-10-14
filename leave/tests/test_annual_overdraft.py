@@ -115,7 +115,7 @@ class AnnualOverdraftTests(TestCase):
         item.save()
         self.approve_web(item)
         self.assertEqual((item.status, self.balance.available_days, self.balance.total_leave_days), ("approved", -1, -1))
-        self.approve_web(item)
+        self.approve_web(item, expected_status=403)
         self.assertEqual(self.balance.available_days, -1)
         self.assertEqual(item.approved_available_days, 3)
 
@@ -185,14 +185,18 @@ class AnnualOverdraftTests(TestCase):
         self.approve_web(item)
         self.assertEqual((self.balance.available_days, self.balance.total_leave_days, item.approved_available_days), (-0.5, -0.5, 0.5))
 
-    def test_rejection_returns_approved_debit_once(self):
+    def test_cancellation_confirmation_returns_approved_debit_once(self):
         item = self.application()
         item.save()
         self.approve_web(item)
-        for _ in range(2):
+        # Approved decisions cannot be overwritten by a stale rejection.
+        # The employee requests cancellation first; manager confirmation refunds.
+        item.status = "cancelled"
+        item.save()
+        for expected_status in (200, 403):
             with patch("leave.views.LeaveMailSendThread.start"):
-                response = self.client.post(f"/leave/request-cancel/{item.pk}/", {"reason": "QA reversal"}, HTTP_HX_REQUEST="true")
-            self.assertEqual(response.status_code, 200)
+                response = self.client.post(f"/leave/request-cancel/{item.pk}/", {"reason": "QA cancellation"}, HTTP_HX_REQUEST="true")
+            self.assertEqual(response.status_code, expected_status)
         self.balance.refresh_from_db()
         item.refresh_from_db()
         self.assertEqual((self.balance.available_days, item.status), (2, "rejected"))
@@ -279,7 +283,8 @@ class AnnualOverdraftTests(TestCase):
         item = self.application()
         item.save()
         with patch("django.db.models.query.QuerySet.update_or_create", side_effect=DataError("QA work record failure")):
-            self.approve_web(item, expected_status=404)
+            with self.assertRaises(DataError):
+                self.approve_web(item)
         item.refresh_from_db()
         self.balance.refresh_from_db()
         self.assertEqual((item.status, self.balance.available_days), ("requested", 2))
