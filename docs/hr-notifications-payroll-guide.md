@@ -121,3 +121,13 @@ ZIP 内容：
 HR 手写或自动化邮件也会加上统一外框；原有正文、附件和收件人保持不变。密码重置和入职链接属于个人链接，请勿转发。邮件按钮打开系统后仍需按原有权限登录。
 
 邮件使用已配置的 SMTP 发件地址；部分通知可显示操作人的名字，并使用 Reply-To 接收回复。不要将个人邮箱配置为未经 SMTP 服务验证的发件地址。
+
+## 补录无薪假与手动扣款
+
+正常无薪假申请按发生月份计算工资，CPF 自动使用扣减后的计薪工资。若 HR 补录漏记的无薪假，在对应月份草稿工资单添加 deduction，选择 **Reduce earned basic salary** 或 **Reduce earned gross salary**；系统重算员工及雇主 CPF，不需要手改 CPF 金额。
+
+贷款、预支工资及普通多付薪资追回，应选择 **Other deduction** 或 **Reduce net pay only**，这些扣款不减少当前月份 CPF 工资。不能只凭扣款标题判断用途。
+
+补录更早月份的无薪假或迟到，需要修正发生月份的工资／CPF 记录，不能用当前月份扣款替代历史 CPF 调整。已确认、已支付或已向 CPF Board 提交的月份，应先由 HR 核对并按正式调整流程处理；不要直接覆盖已结算工资单。
+
+依据：[CPF Board：无薪假](https://www.cpf.gov.sg/service/article/are-cpf-contributions-payable-for-my-employee-who-is-on-no-pay-leave)、[CPF Board：工资扣款](https://www.cpf.gov.sg/service/article/are-cpf-contributions-payable-on-salary-deductions)、[MOM：无薪假工资计算](https://www.mom.gov.sg/faq/salary/how-to-compute-the-salary-of-an-employee-who-is-on-no-pay-leave-for-the-month)。

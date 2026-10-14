@@ -77,6 +77,87 @@ class CpfPayrollIntegrationTests(TestCase):
         item.specific_employees.add(self.employee)
         return item
 
+    def wage_adjustment(self, amount, treatment, **kwargs):
+        item = Deduction.objects.create(
+            title="unpaid MC", amount=amount, is_fixed=True,
+            update_compensation=treatment, **kwargs)
+        item.specific_employees.add(self.employee)
+        return item
+
+    def test_manual_unpaid_mc_reduces_cpf_earned_wages_and_both_shares(self):
+        # CPFB no-pay-leave and whole-dollar rounding examples, reproduced at
+        # the reported $8,000 salary / $380.95 unpaid-MC adjustment.
+        self.contract.wage = 8000
+        self.contract.save()
+        self.wage_adjustment(380.95, "basic_pay")
+        data = self.salary()
+        self.assertAlmostEqual(data["gross_pay"], 7619.05)
+        self.assertEqual(data["statutory_cpf"]["ow"], 7619.05)
+        self.assertEqual(data["statutory_cpf"]["employee_amount"], 1523)
+        self.assertEqual(data["statutory_cpf"]["employer_amount"], 1296)
+        self.assertAlmostEqual(data["net_pay"], 6096.05)
+
+    def test_gross_salary_adjustment_keeps_reimbursement_out_of_cpf(self):
+        self.allowance(100, cpf_wage_type="excluded")
+        self.wage_adjustment(500, "gross_pay")
+        data = self.salary()
+        self.assertEqual(data["gross_pay"], 3600)
+        self.assertEqual(data["statutory_cpf"]["ow"], 3500)
+        self.assertEqual(data["statutory_cpf"]["employee_amount"], 700)
+        self.assertEqual(data["sdl_wages"], 3500)
+        self.assertEqual(Payslip(gross_pay=data["gross_pay"], pay_head_data=data).sdl_display, 8.75)
+
+    def test_other_deductions_do_not_reduce_cpf_even_with_unpaid_title(self):
+        for treatment, pretax in [(None, True), (None, False), ("net_pay", False)]:
+            with self.subTest(treatment=treatment, pretax=pretax):
+                item = self.wage_adjustment(500, treatment, is_pretax=pretax)
+                data = self.salary()
+                self.assertEqual(data["statutory_cpf"]["ow"], 4000)
+                self.assertEqual(data["statutory_cpf"]["employee_amount"], 800)
+                self.assertEqual(data["statutory_cpf"]["employer_amount"], 680)
+                self.assertEqual(data["net_pay"], 2700)
+                item.delete()
+
+    def test_automatic_and_manual_unpaid_leave_are_each_deducted_once(self):
+        from leave.models import LeaveRequest, LeaveType
+        unpaid = LeaveType.objects.create(name="QA unpaid", payment="unpaid", payment_type="unpaid")
+        LeaveRequest.objects.create(employee_id=self.employee, leave_type_id=unpaid,
+            start_date=date(2026, 9, 8), end_date=date(2026, 9, 8), status="approved", requested_days=1)
+        self.wage_adjustment(100, "basic_pay")
+        for from_basic in [True, False]:
+            with self.subTest(from_basic=from_basic):
+                self.contract.deduct_leave_from_basic_pay = from_basic
+                self.contract.save()
+                data = self.salary()
+                self.assertEqual(data["statutory_cpf"]["ow"], 3718.18)
+                self.assertAlmostEqual(data["sdl_wages"], 3718.18)
+
+    def test_adjustments_still_apply_the_ordinary_wage_ceiling(self):
+        self.contract.wage = 9000
+        self.contract.save()
+        self.wage_adjustment(500, "gross_pay")
+        data = self.salary()["statutory_cpf"]
+        self.assertEqual(data["ow"], 8500)
+        self.assertEqual(data["ow_subject"], 8000)
+        self.assertEqual((data["employee_amount"], data["employer_amount"]), (1600, 1360))
+
+    def test_pr_conversion_only_deducts_adjustments_in_eligible_period(self):
+        self.details.residency_status = "pr"
+        self.details.pr_effective_date = date(2026, 9, 7)
+        self.details.save()
+        self.wage_adjustment(200, "basic_pay", one_time_date=date(2026, 9, 1))
+        self.wage_adjustment(100, "gross_pay", one_time_date=date(2026, 9, 8))
+        self.assertEqual(self.salary()["statutory_cpf"]["ow"], 3172.73)
+
+    def test_shg_uses_adjusted_earned_wages(self):
+        SingaporeContributionProfile.objects.create(
+            employee=self.employee, effective_month=date(2026, 9, 1),
+            primary_race="other", muslim_status="no", residency_status="citizen",
+            fund_selection={"cdac": True, "ecf": False, "sinda": False, "mbmf": False}, declaration_reference="QA verified CDAC selection")
+        self.wage_adjustment(500, "gross_pay")
+        row = self.salary()["statutory_shg"]["funds"][0]
+        self.assertEqual((row["wages"], row["amount"]), (3500, 1))
+
     def test_ordinary_cash_and_reimbursement_are_separate_from_taxability(self):
         self.allowance(is_taxable=False)
         self.allowance(100,cpf_wage_type='excluded')
