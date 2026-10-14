@@ -1,8 +1,8 @@
 from django.template.loader import render_to_string
-from django.test import SimpleTestCase
+from django.test import TestCase
 
 
-class PasswordResetEmailTemplateTests(SimpleTestCase):
+class PasswordResetEmailTemplateTests(TestCase):
     def test_email_contains_reset_link_without_repeating_username(self):
         body = render_to_string(
             "registration/password_reset_email.html",

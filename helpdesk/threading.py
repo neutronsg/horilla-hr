@@ -46,9 +46,10 @@ class TicketSendThread(Thread):
         email_backend = ConfiguredEmailBackend()
 
         display_email_name = email_backend.dynamic_from_email_with_display_name
+        reply_to = display_email_name
         if self.request:
             try:
-                display_email_name = f"{self.request.user.employee_get.get_full_name()} <{self.request.user.employee_get.email}>"
+                reply_to = self.request.user.employee_get.get_mail()
             except:
                 logger.error(Exception)
 
@@ -69,11 +70,11 @@ class TicketSendThread(Thread):
             )
 
             email = EmailMessage(
-                subject=subject,
+                subject=f"Neutron HR | {subject}",
                 body=html_message,
                 from_email=display_email_name,
                 to=[recipient.email],
-                reply_to=[display_email_name],
+                reply_to=[reply_to],
             )
             email.content_subtype = "html"
             try:
@@ -93,15 +94,15 @@ class TicketSendThread(Thread):
             manager = self.department_manager
 
             if manager:
-                content_manager = f"This is to inform you that a ticket has been raised on your department. Take the necessary actions to address the issue or request outlined in the ticket. Should you have any additional information or updates, please feel free to communicate directly with the {owner}."
-                subject_manager = "Ticket created raised on your department"
+                content_manager = f"{owner.get_full_name()} has raised a ticket for your department. Review the details and coordinate the next steps with the helpdesk team."
+                subject_manager = "A new ticket needs your review"
 
                 self.send_email(
                     subject_manager, content_manager, [manager], self.ticket.id
                 )
 
-            content_owner = "This is to inform you that the ticket you created has been successfully logged into our system. The assigned team/individual will now take the necessary actions to address the issue or request outlined in the ticket. Should you have any additional information or updates, please feel free to communicate directly with the Support/Helpdesk team."
-            subject_owner = "Ticket created successfully"
+            content_owner = "Your ticket has been submitted. The assigned team will review it. You can check its status and add updates in Neutron HR."
+            subject_owner = "Your ticket is submitted"
 
             self.send_email(subject_owner, content_owner, [owner], self.ticket.id)
 
@@ -116,8 +117,8 @@ class TicketSendThread(Thread):
             new_status = tracking[0]["changes"][0]["new"]
             old_status = tracking[0]["changes"][0]["old"]
 
-            subject = "The Status of the Ticket has been updated"
-            content = f"This is to inform you that the status of the following ticket has been updated by {updated_by} from {old_status} to {new_status}. If you have any questions or require further information, feel free to reach out to the Support/Helpdesk team."
+            subject = "Ticket status updated"
+            content = f"{updated_by} updated this ticket from {old_status} to {new_status}. Open the ticket to view the latest details or add an update."
 
             self.send_email(subject, content, recipients, self.ticket.id)
 
@@ -127,8 +128,8 @@ class TicketSendThread(Thread):
             manager = self.department_manager
             recipients = assignees | {x for x in [owner, manager] if x}
 
-            subject = "The Ticket has been deleted"
-            content = f'This is to inform you that the Ticket "{self.ticket.title}" has been deleted. If you have any questions or require further information, feel free to reach out to the Support/Helpdesk team.'
+            subject = "Ticket deleted"
+            content = f'The ticket "{self.ticket.title}" has been deleted. Contact the helpdesk team if you need further information.'
 
             self.send_email(subject, content, recipients)
 
@@ -151,16 +152,17 @@ class AddAssigneeThread(Thread):
     def run(self) -> None:
         super().run()
 
-        content = "Please review the ticket details and take appropriate action accordingly. If you have any questions or require further information, feel free to reach out to the owner or the Support/Helpdesk team."
-        subject = "You have been assigned to a Ticket"
+        content = "You are now assigned to this ticket. Review the details and coordinate the next steps with the requester or helpdesk team."
+        subject = "A ticket has been assigned to you"
 
         host = self.host
         protocol = self.protocol
         email_backend = ConfiguredEmailBackend()
         display_email_name = email_backend.dynamic_from_email_with_display_name
+        reply_to = display_email_name
         if self.request:
             try:
-                display_email_name = f"{self.request.user.employee_get.get_full_name()} <{self.request.user.employee_get.email}>"
+                reply_to = self.request.user.employee_get.get_mail()
             except:
                 pass
         link = f"{protocol}://{host}/helpdesk/ticket-detail/{self.ticket.id}/"
@@ -179,11 +181,11 @@ class AddAssigneeThread(Thread):
             )
 
             email = EmailMessage(
-                subject=subject,
+                subject=f"Neutron HR | {subject}",
                 body=html_message,
                 from_email=display_email_name,
                 to=[recipient.email],
-                reply_to=[display_email_name],
+                reply_to=[reply_to],
             )
             email.content_subtype = "html"
             try:
@@ -212,14 +214,15 @@ class RemoveAssigneeThread(Thread):
     def run(self) -> None:
         super().run()
 
-        content = "Please review the ticket details and take appropriate action accordingly. If you have any questions or require further information, feel free to reach out to the owner or the Support/Helpdesk team."
-        subject = "You have been removed from a Ticket"
+        content = "You are no longer assigned to this ticket. Open it if you need to check the latest status."
+        subject = "Your ticket assignment has changed"
         email_backend = ConfiguredEmailBackend()
 
         display_email_name = email_backend.dynamic_from_email_with_display_name
+        reply_to = display_email_name
         if self.request:
             try:
-                display_email_name = f"{self.request.user.employee_get.get_full_name()} <{self.request.user.employee_get.email}>"
+                reply_to = self.request.user.employee_get.get_mail()
             except:
                 pass
         host = self.host
@@ -240,11 +243,11 @@ class RemoveAssigneeThread(Thread):
             )
 
             email = EmailMessage(
-                subject=subject,
+                subject=f"Neutron HR | {subject}",
                 body=html_message,
                 from_email=display_email_name,
                 to=[recipient.email],
-                reply_to=[display_email_name],
+                reply_to=[reply_to],
             )
             email.content_subtype = "html"
             try:

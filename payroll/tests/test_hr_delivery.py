@@ -622,7 +622,7 @@ class LeaveStorageEmailTests(TestCase):
         clear_selected_company()
         super().tearDown()
 
-    def test_leave_email_reads_private_storage_without_path(self):
+    def test_leave_email_does_not_require_private_logo_path(self):
         from leave.threading import LeaveMailSendThread
 
         self.company.icon.name = "private/logo.png"
