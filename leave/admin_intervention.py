@@ -3,6 +3,7 @@
 from django import forms
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 from horilla.decorators import login_required
 from leave.locking import locked_leave_operation
 from leave.models import LeaveRequest
@@ -44,10 +45,17 @@ def admin_intervention(request, id):
         request.leave_intervention_id = item.pk
         try:
             if form.cleaned_data["decision"] == "approve":
-                return leave_request_approve(request, item.pk)
-            request.POST = request.POST.copy()
-            request.POST["reason"] = form.cleaned_data["reason"]
-            return leave_request_cancel(request, item.pk)
+                response = leave_request_approve(request, item.pk)
+            else:
+                request.POST = request.POST.copy()
+                request.POST["reason"] = form.cleaned_data["reason"]
+                response = leave_request_cancel(request, item.pk)
+            item.refresh_from_db()
+            if response.status_code == 200 and item.status in {"approved", "rejected"}:
+                # Close the completed form and show the updated record. Invalid
+                # forms or balance failures stay open for correction.
+                response["HX-Redirect"] = reverse("request-view") + f"?id={item.pk}"
+            return response
         finally:
             del request.leave_intervention_reason
             del request.leave_intervention_id
