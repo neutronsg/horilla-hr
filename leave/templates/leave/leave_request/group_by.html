@@ -140,7 +140,7 @@
                                         </button>
                                       </div>
                                       <div class="oh-sticky-table__td" onclick="event.stopPropagation()">
-                                          {% if leave_request.can_manager_review %}<div class="oh-btn-group">
+                                          <div class="oh-btn-group">
                                               {% if request.user|is_reportingmanager or perms.base.change_penaltyaccounts or request.user|is_leave_approval_manager %}
                                                   <button  data-toggle="oh-modal-toggle" data-target="#penaltyModal"
                                                     hx-target="#penaltyModalBody" hx-get="{% url "leave-cut-penalty" leave_request.id %}?{{pd}}"
@@ -158,7 +158,7 @@
                                               hx-confirm="{% trans "Are you sure you want to delete ?" %}" hx-get="{% url 'request-delete' leave_request.id %}?{{pd}}" hx-target="#leaveRequest"  title="{% trans 'Delete' %}"><ion-icon
                                                   name="trash-outline">group_by</ion-icon></a>
 
-                                          </div>{% else %}<span>{% trans "For information" %}</span>{% endif %}
+                                          </div>
                                       </div>
                                       <div class="oh-sticky-table__td" onclick="event.stopPropagation()">
                                         {% if leave_request.get_penalties_count %}
@@ -170,7 +170,7 @@
                                         {% endif %}
                                       </div>
                                       <div class="oh-sticky-table__td oh-sticky-table__right" onclick="event.stopPropagation()">
-                                        <div class="oh-btn-group" >
+                                        {% if leave_request.can_manager_review %}<div class="oh-btn-group" >
                                           {% if leave_request.status == 'cancelled' and leave_request.can_manager_review %}
                                             {% if leave_request.end_date >= current_date %}
                                             <a type="submit" data-toggle="oh-modal-toggle"
@@ -215,7 +215,7 @@
                                             {% endif %}
 
                                           {% endif %}
-                                        </div>
+                                        </div>{% else %}<span>{% trans "For information" %}</span>{% endif %}
                                       </div>
                                     {% endif %}
                                 </div>
