@@ -96,11 +96,11 @@ def queue_export_email(
                 )
                 return
 
-            subject = _("Horilla report ready: %(name)s") % {
+            subject = _("Neutron HR | Your report is ready: %(name)s") % {
                 "name": str(definition.name)
             }
             body = _(
-                "Your requested export is attached.\n\nReport: %(name)s\nFormat: %(fmt)s"
+                "Your requested report is attached.\n\nReport: %(name)s\nFormat: %(fmt)s"
             ) % {"name": str(definition.name), "fmt": fmt_local}
             msg = EmailMessage(
                 subject=subject,

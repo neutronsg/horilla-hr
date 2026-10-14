@@ -12,7 +12,6 @@ import os
 import threading
 import uuid
 from datetime import datetime, timedelta
-from email.mime.image import MIMEImage
 from os import path
 from urllib.parse import parse_qs, unquote, urlencode, urlparse
 
@@ -871,6 +870,8 @@ class HorillaPasswordResetView(PasswordResetView):
 
     template_name = "forgot_password.html"
     form_class = PassWordResetForm
+    html_email_template_name = "registration/password_reset_email_html.html"
+    subject_template_name = "registration/password_reset_subject.txt"
     success_url = reverse_lazy("reset-send-success")
 
     def form_valid(self, form):
@@ -914,6 +915,9 @@ class EmployeePasswordResetView(PasswordResetView):
 
     template_name = "forgot_password.html"
     form_class = PassWordResetForm
+
+    html_email_template_name = "registration/password_reset_email_html.html"
+    subject_template_name = "registration/password_reset_subject.txt"
 
     def form_valid(self, form):
         try:
@@ -1072,8 +1076,8 @@ def send_otp(request):
 
     otp_code = set_otp(request)
     email = EmailMessage(
-        subject="Your OTP Code",
-        body=f"Your OTP code is {otp_code}",
+        subject="Neutron HR | Your sign-in code",
+        body=f"Your Neutron HR sign-in code is {otp_code}.\n\nUse it to complete your sign-in. Keep this code private. If you didn't try to sign in, contact your HR team.",
         from_email=display_email_name,
         to=[email],
     )
@@ -1990,59 +1994,16 @@ def mail_server_conf(request):
 @permission_required("base.view_dynamicemailconfiguration")
 def mail_server_test_email(request):
     instance_id = request.GET.get("instance_id")
-    white_labelling = getattr(settings, "WHITE_LABELLING", False)
-    image_path = path.join(settings.STATIC_ROOT, "images/ui/horilla-logo.png")
-    company_name = "Horilla"
-
-    if white_labelling:
-        hq = Company.objects.filter(hq=True).last()
-        try:
-            company = (
-                request.user.employee_get.get_company()
-                if request.user.employee_get.get_company()
-                else hq
-            )
-        except:
-            company = hq
-
-        if company:
-            company_name = company.company
-            image_path = path.join(settings.MEDIA_ROOT, company.icon.name)
-
     form = DynamicMailTestForm()
     if request.method == "POST":
         form = DynamicMailTestForm(request.POST)
         if form.is_valid():
             email_to = form.cleaned_data["to_email"]
-            subject = _("Test mail from Horilla")
-
-            # HTML content
-            html_content = f"""
-            <html>
-                <body style="font-family: Arial, sans-serif; margin: 0; padding: 0;">
-                    <table align="center" width="600" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;">
-                        <tr>
-                            <td align="center" bgcolor="#4CAF50" style="padding: 20px 0;">
-                                <h1 style="color: #ffffff; margin: 0;">{company_name}</h1>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 20px;">
-                                <h3 style="color: #4CAF50;">Email tested successfully</h3>
-                                <b><p style="font-size: 14px;">Hi,<br>
-                                    This email is being sent as part of mail sever testing from {company_name}.</p></b>
-                                <img src="cid:unique_image_id" alt="Test Image" style="width: 200px; height: auto; margin: 20px 0;">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td bgcolor="#f0f0f0" style="padding: 10px; text-align: center;">
-                                <p style="font-size: 12px; color: black;">&copy; {datetime.today().year} {company_name}</p>
-                            </td>
-                        </tr>
-                    </table>
-                </body>
-            </html>
-            """
+            subject = "Neutron HR | Email connection test"
+            html_content = render_to_string("email/neutron_generic.html", {
+                "subject": "Your email connection is working",
+                "content": "This test email confirms that Neutron HR can send messages using your configured mail server. No action is needed.",
+            })
 
             # Plain text content (fallback for email clients that do not support HTML)
             text_content = strip_tags(html_content)
@@ -2062,11 +2023,6 @@ def mail_server_test_email(request):
                     connection=email_backend,
                 )
                 msg.attach_alternative(html_content, "text/html")
-
-                with open(image_path, "rb") as img:
-                    msg_img = MIMEImage(img.read())
-                    msg_img.add_header("Content-ID", "<unique_image_id>")
-                    msg.attach(msg_img)
 
                 msg.send()
             except Exception as e:

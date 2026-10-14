@@ -5,7 +5,8 @@ import logging
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.db import close_old_connections, transaction
 from django.db.models import Q, Sum
 from django.utils import timezone
@@ -67,7 +68,7 @@ def approval_recipients(policy):
     ]
 
 
-def deliver_once(policy, kind, cycle, employee, subject, body):
+def deliver_once(policy, kind, cycle, employee, subject, body, html_body=None):
     # Reserve before SMTP. A crash after SMTP acceptance must not duplicate mail
     # when another worker polls. Failed/uncertain attempts remain visible to HR.
     with transaction.atomic():
@@ -89,13 +90,15 @@ def deliver_once(policy, kind, cycle, employee, subject, body):
     else:
         try:
             backend = CompanyReminderBackend(policy.company_id)
-            email = EmailMessage(
+            email = EmailMultiAlternatives(
                 subject,
                 body,
                 backend.dynamic_from_email_with_display_name,
                 [delivery.recipient],
                 connection=backend,
             )
+            if html_body:
+                email.attach_alternative(html_body, "text/html")
             if not email.send():
                 raise RuntimeError("SMTP did not accept the reminder")
             delivery.status = "sent"
@@ -138,8 +141,17 @@ def run_due_claim_reminders(now=None):
                         "submission",
                         cutoff.strftime("%Y-%m"),
                         employee,
-                        f"{policy.company}: claim submission reminder — {cutoff:%d %b %Y}",
-                        f"Hello {employee.get_full_name()},\n\nIf you have expenses to claim, please submit them with receipts by {cutoff:%d %b %Y}. If you have no expenses, no action is needed. If you already submitted a claim, please check whether any further expenses remain.\n\nSubmit or review your claims: {link}\n\n{policy.company} HR",
+                        f"Neutron HR | Claim submission reminder — {cutoff:%d %b %Y}",
+                        f"Hi {employee.get_full_name()},\n\nIf you have expenses to claim, submit them with receipts by {cutoff:%d %b %Y}. If you have no expenses, no action is needed. If you've already submitted a claim, check whether any other expenses remain.\n\nOpen your claims: {link}\n\nNeutron HR",
+                        html_body=render_to_string(
+                            "payroll/mail_templates/claim_reminder.html",
+                            {
+                                "kind": "submission",
+                                "employee": employee,
+                                "cutoff": cutoff,
+                                "link": link,
+                            },
+                        ),
                     )
                     if result:
                         results.append(result)
@@ -161,8 +173,18 @@ def run_due_claim_reminders(now=None):
                             "approval",
                             local.date().isoformat(),
                             employee,
-                            f"{policy.company}: {count} reimbursement claims awaiting approval",
-                            f"Hello {employee.get_full_name()},\n\n{count} reimbursement claims are awaiting approval (total S${total:,.2f}). Please review the current list in Horilla; it may change after this email was generated.\n\nReview claims: {link}\n\n{policy.company} HR",
+                            f"Neutron HR | {count} claims awaiting review",
+                            f"Hi {employee.get_full_name()},\n\n{count} reimbursement claims are waiting for your review. Pending amount: S${total:,.2f}.\n\nReview the current list in Neutron HR: {link}\nThe count may change as claims are processed.\n\nNeutron HR",
+                            html_body=render_to_string(
+                                "payroll/mail_templates/claim_reminder.html",
+                                {
+                                    "kind": "approval",
+                                    "employee": employee,
+                                    "pending_count": count,
+                                    "pending_amount": total,
+                                    "link": link,
+                                },
+                            ),
                         )
                         if result:
                             results.append(result)

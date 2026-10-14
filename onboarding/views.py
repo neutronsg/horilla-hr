@@ -22,7 +22,6 @@ from urllib.parse import parse_qs
 from django import template
 from django.contrib import messages
 from django.contrib.auth import login
-from django.contrib.staticfiles import finders
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage, send_mail
 from django.core.paginator import Paginator
@@ -794,7 +793,6 @@ def candidate_filter(request):
 import logging
 import os
 import secrets
-from email.mime.image import MIMEImage
 
 from django.contrib import messages
 from django.core.mail import EmailMultiAlternatives
@@ -889,7 +887,7 @@ def email_send(request):
 
         # ✅ Use EmailMultiAlternatives (IMPORTANT)
         email = EmailMultiAlternatives(
-            subject=f"Hello {candidate.name}, Congratulations on your selection!",
+            subject="Neutron HR | Welcome to Neutron",
             body=html_message,
             from_email=display_email_name,
             to=[candidate.email],
@@ -901,27 +899,6 @@ def email_send(request):
         # Attach files
         for attachment in attachments:
             email.attach(*attachment)
-
-        # ✅ Attach company logo INLINE
-        try:
-            company = candidate.recruitment_id.company_id
-            if company and company.icon and os.path.exists(company.icon.path):
-                image_path = company.icon.path
-            else:
-                image_path = finders.find("images/ui/horilla-sticker-round.png")
-
-            if image_path:
-                with open(image_path, "rb") as f:
-                    logo = MIMEImage(f.read())
-                    logo.add_header("Content-ID", "<company_logo>")
-                    logo.add_header(
-                        "Content-Disposition",
-                        "inline",
-                        filename=os.path.basename(image_path),
-                    )
-                    email.attach(logo)
-        except Exception as e:
-            logger.error(f"Company logo attach failed: {e}")
 
         # Send mail, unless the caller only wants onboarding started. The
         # "Start Onboarding" action posts ?no_portal=True for exactly this.

@@ -1,10 +1,7 @@
 import logging
-import os
-from email.mime.image import MIMEImage
 from threading import Thread
 
 from django.contrib import messages
-from django.contrib.staticfiles import finders
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.db.models import Q
 from django.template.loader import render_to_string
@@ -25,44 +22,6 @@ class LeaveMailSendThread(Thread):
         self.host = request.get_host()
         self.protocol = "https" if request.is_secure() else "http"
 
-    # def send_email(self, subject, content, recipients, leave_request_id="#"):
-    #     email_backend = ConfiguredEmailBackend()
-    #     display_email_name = email_backend.dynamic_from_email_with_display_name
-
-    #     host = self.host
-    #     protocol = self.protocol
-    #     if leave_request_id != "#":
-    #         link = int(leave_request_id)
-    #     for recipient in recipients:
-    #         if recipient:
-    #             html_message = render_to_string(
-    #                 "base/mail_templates/leave_request_template.html",
-    #                 {
-    #                     "link": link,
-    #                     "instance": recipient,
-    #                     "host": host,
-    #                     "protocol": protocol,
-    #                     "subject": subject,
-    #                     "content": content,
-    #                 },
-    #                 request=self.request,
-    #             )
-
-    #             email = EmailMessage(
-    #                 subject=subject,
-    #                 body=html_message,
-    #                 from_email=display_email_name,
-    #                 to=[recipient.get_mail()],
-    #                 reply_to=[display_email_name],
-    #             )
-    #             email.content_subtype = "html"
-    #             try:
-    #                 email.send()
-    #             except:
-    #                 messages.error(
-    #                     self.request, f"Mail not sent to {recipient.get_full_name()}"
-    #                 )
-
     def send_email(self, subject, content, recipients, leave_request_id="#"):
         email_backend = ConfiguredEmailBackend()
         display_email_name = email_backend.dynamic_from_email_with_display_name
@@ -78,12 +37,12 @@ class LeaveMailSendThread(Thread):
             if not recipient:
                 continue
 
-            company = recipient.get_company()
-
             html_message = render_to_string(
                 "base/mail_templates/leave_request_template.html",
                 {
                     "link": link,
+                    "link_string": str(link) if link else "",
+                    "leave_request": self.leave_request,
                     "instance": recipient,
                     "host": host,
                     "protocol": protocol,
@@ -94,7 +53,7 @@ class LeaveMailSendThread(Thread):
             )
 
             email = EmailMultiAlternatives(
-                subject=subject,
+                subject=f"Neutron HR | {subject}",
                 body=html_message,
                 from_email=display_email_name,
                 to=[recipient.get_mail()],
@@ -102,52 +61,6 @@ class LeaveMailSendThread(Thread):
             )
 
             email.attach_alternative(html_message, "text/html")
-
-            # Attach company logo inline, fall back to static Horilla logo if file missing
-            logo_data = None
-            logo_name = "company-logo"
-            if company and company.icon:
-                try:
-                    with company.icon.open("rb") as f:
-                        logo_data = f.read()
-                    logo_name = os.path.basename(company.icon.name)
-                except Exception:
-                    logger.warning(
-                        "Company logo unavailable for leave email", exc_info=True
-                    )
-            if not logo_data:
-                image_path = finders.find("images/ui/horilla-sticker-round.png")
-                if image_path:
-                    with open(image_path, "rb") as f:
-                        logo_data = f.read()
-                    logo_name = os.path.basename(image_path)
-
-            if logo_data:
-                try:
-                    logo = MIMEImage(logo_data)
-                    logo.add_header("Content-ID", "<company_logo>")
-                    logo.add_header(
-                        "Content-Disposition",
-                        "inline",
-                        filename=logo_name,
-                    )
-                    email.attach(logo)
-                except (TypeError, ValueError):
-                    logger.warning("Company logo is not a supported email image")
-
-            # Attach static leave icon inline if available
-            leave_icon_path = finders.find("images/ui/leave_types.png")
-
-            if leave_icon_path:
-                with open(leave_icon_path, "rb") as f:
-                    leave_icon = MIMEImage(f.read())
-                    leave_icon.add_header("Content-ID", "<leave_icon>")
-                    leave_icon.add_header(
-                        "Content-Disposition",
-                        "inline",
-                        filename="leave_types.png",
-                    )
-                    email.attach(leave_icon)
 
             email.send()
 
@@ -157,8 +70,8 @@ class LeaveMailSendThread(Thread):
             owner = self.leave_request.employee_id
             reporting_manager = self.leave_request.employee_id.get_reporting_manager()
 
-            content_manager = f"This is to inform you that a new leave request has been submitted by {owner}. Take the necessary actions for the leave request. Should you have any additional information or updates, please feel free to communicate directly with the {owner}."
-            subject_manager = f"Leave request has been submitted by {owner}"
+            content_manager = f"{owner.get_full_name()} has submitted a leave request. Review the dates and leave details, then approve or reject the request in Neutron HR."
+            subject_manager = f"Leave request from {owner.get_full_name()}"
 
             self.send_email(
                 subject_manager,
@@ -167,8 +80,8 @@ class LeaveMailSendThread(Thread):
                 self.leave_request.id,
             )
 
-            content_owner = f"This is to inform you that the leave request you created has been successfully logged into our system. The manager will now take the necessary actions to address leave request. Should you have any additional information or updates, please feel free to communicate directly with the {reporting_manager}."
-            subject_owner = "Leave request created successfully"
+            content_owner = "Your leave request has been submitted and is awaiting review. You can check its status in Neutron HR. Contact your reporting manager or HR team if you need help."
+            subject_owner = "Your leave request is submitted"
 
             self.send_email(
                 subject_owner, content_owner, [owner], self.leave_request.id
@@ -178,8 +91,8 @@ class LeaveMailSendThread(Thread):
             owner = self.leave_request.employee_id
             reporting_manager = self.leave_request.employee_id.get_reporting_manager()
 
-            subject = "The Leave request has been successfully approved"
-            content = f"This is to inform you that the leave request has been approved. If you have any questions or require further information, feel free to reach out to the {reporting_manager}."
+            subject = "Your leave request is approved"
+            content = "Your leave request has been approved. View the confirmed dates and details in Neutron HR."
 
             self.send_email(subject, content, [owner], self.leave_request.id)
 
@@ -187,8 +100,8 @@ class LeaveMailSendThread(Thread):
             owner = self.leave_request.employee_id
             reporting_manager = self.leave_request.employee_id.get_reporting_manager()
 
-            subject = "The Leave request has been rejected"
-            content = f"This is to inform you that the leave request has been rejected. If you have any questions or require further information, feel free to reach out to the {reporting_manager}."
+            subject = "Your leave request was not approved"
+            content = "Your leave request was not approved. View the request in Neutron HR and contact your reporting manager or HR team to discuss the next steps."
 
             self.send_email(subject, content, [owner], self.leave_request.id)
 
@@ -196,8 +109,8 @@ class LeaveMailSendThread(Thread):
             owner = self.leave_request.employee_id
             reporting_manager = self.leave_request.employee_id.get_reporting_manager()
 
-            content_manager = f"This is to inform you that a leave request has been requested to cancel by {owner}. Take the necessary actions for the leave request. Should you have any additional information or updates, please feel free to communicate directly with the {owner}."
-            subject_manager = f"Leave request cancellation"
+            content_manager = f"{owner.get_full_name()} has requested to cancel their leave. Review the request in Neutron HR before confirming the cancellation."
+            subject_manager = "Leave cancellation needs review"
 
             self.send_email(
                 subject_manager,
@@ -206,8 +119,8 @@ class LeaveMailSendThread(Thread):
                 self.leave_request.id,
             )
 
-            content_owner = f"This is to inform you that a cancellation request created for your leave request has been successfully logged into our system. The manager will now take the necessary actions to address the leave request. Should you have any additional information or updates, please feel free to communicate directly with the {reporting_manager}."
-            subject_owner = "Leave request cancellation requested"
+            content_owner = "Your leave cancellation request has been submitted and is awaiting review. Check the request in Neutron HR for the latest status."
+            subject_owner = "Your cancellation request is submitted"
 
             self.send_email(
                 subject_owner, content_owner, [owner], self.leave_request.id

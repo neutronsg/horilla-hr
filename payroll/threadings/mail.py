@@ -112,7 +112,7 @@ class MailSendThread(Thread):
         reply_to = [self.request.user.employee_get.get_mail() or display_email_name]
 
         email = EmailMessage(
-            f"Hello, {record['instances'][0].get_name()} Your Payslips is Ready!",
+            "Neutron HR | Your payslip is ready" if len(instances) == 1 else "Neutron HR | Your payslips are ready",
             html_message,
             display_email_name,
             [employee.get_mail()],

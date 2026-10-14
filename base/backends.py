@@ -83,7 +83,7 @@ class DefaultHorillaMailBackend(EmailBackend):
                     configuration.use_dynamic_display_name
                     and request.user.is_authenticated
                 ):
-                    display_email_name = f"{request.user.employee_get.get_full_name()} <{request.user.employee_get.get_email()}>"
+                    display_email_name = f"{request.user.employee_get.get_full_name()} <{configuration.from_email}>"
                 if request.user.is_authenticated:
                     user_id = request.user.pk
                     reply_to = [
@@ -197,6 +197,9 @@ if EMAIL_BACKEND and EMAIL_BACKEND != default:
 class ConfiguredEmailBackend(BACKEND_CLASS):
 
     def send_messages(self, email_messages):
+        from base.email_branding import prepare_neutron_email
+
+        email_messages = [prepare_neutron_email(message) for message in email_messages]
         response = super(BACKEND_CLASS, self).send_messages(email_messages)
         for message in email_messages:
             from_email = (
