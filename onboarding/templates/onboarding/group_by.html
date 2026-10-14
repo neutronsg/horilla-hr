@@ -117,7 +117,7 @@
                                                 class="oh-sticky-table__td"
                                                 style="color: inherit; text-decoration: none"
                                             >
-                                                <input
+                                                {% if candidate.converted_employee_id_id %}<span>{{ candidate.effective_probation_end|date:"d M Y"|default:"—" }}</span> <a href="{% url 'employee-view-update' candidate.converted_employee_id_id %}?tab=work">{% trans "Manage in Employee" %}</a>{% else %}<input
                                                     type="date"
                                                     class="oh-input"
                                                     style="width: 150px"
@@ -125,7 +125,7 @@
                                                     name="probation_end"
                                                     oninput="probationEnd($(this))"
                                                     data-candidate-id="{{ candidate.id }}"
-                                                >
+                                                >{% endif %}
                                             </a>
                                             <a
                                                 data-cell-index="4"

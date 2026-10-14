@@ -98,12 +98,12 @@ class EmployeeFilter(HorillaFilterSet):
         ],
     )
     probation_from = django_filters.DateFilter(
-        field_name="candidate_get__probation_end",
+        field_name="employee_work_info__probation_end",
         lookup_expr="gte",
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     probation_till = django_filters.DateFilter(
-        field_name="candidate_get__probation_end",
+        field_name="employee_work_info__probation_end",
         lookup_expr="lte",
         widget=forms.DateInput(attrs={"type": "date"}),
     )

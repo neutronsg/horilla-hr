@@ -54,7 +54,6 @@ class OnboardingCandidatesList(HorillaListView):
 
     bulk_update_fields = [
         "joining_date",
-        "probation_end",
         "job_position_id",
         "recruitment_id",
     ]
@@ -73,9 +72,10 @@ class OnboardingCandidatesList(HorillaListView):
                 )
                 .filter(Q(hired=True) | Q(stage_id__stage_type="hired"))
                 .distinct()
-            ).order_by("-id")
+            ).select_related("converted_employee_id__employee_work_info").order_by("-id")
 
-        return self.queryset
+        from employee.probation import probation_date_expression
+        return self.queryset.annotate(effective_probation_date=probation_date_expression())
 
     model = Candidate
     filter_class = CandidateFilter
@@ -182,7 +182,7 @@ class OnboardingCandidatesList(HorillaListView):
         ("country", _("Country")),
         ("stage_id", _("Stage")),
         ("joining_date", _("Joining Date")),
-        ("probation_end", _("Probation End")),
+        ("effective_probation_date", _("Probation End")),
         ("offer_letter_status", _("Offer Letter Status")),
         ("rejected_candidate__reject_reason_id", _("Rejected Reason")),
         ("job_position_id__department_id", _("Department")),
@@ -217,7 +217,7 @@ class OnboardingCandidatesNav(HorillaNavView):
         ("country", _("Country")),
         ("stage_id", _("Stage")),
         ("joining_date", _("Joining Date")),
-        ("probation_end", _("Probation End")),
+        ("effective_probation_date", _("Probation End")),
         ("offer_letter_status", _("Offer Letter Status")),
         ("rejected_candidate__reject_reason_id", _("Rejected Reason")),
         ("skillzonecandidate_set__skill_zone_id", _("Talent Pool")),
@@ -230,7 +230,7 @@ class OnboardingCandidatesNav(HorillaNavView):
         ("country", _("Country")),
         ("stage_id", _("Stage")),
         ("joining_date", _("Joining Date")),
-        ("probation_end", _("Probation End")),
+        ("effective_probation_date", _("Probation End")),
         ("offer_letter_status", _("Offer Letter Status")),
         ("rejected_candidate__reject_reason_id", _("Rejected Reason")),
         ("job_position_id__department_id", _("Department")),

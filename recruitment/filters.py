@@ -62,6 +62,11 @@ class CandidateFilter(HorillaFilterSet):
         FilterSet (class): custom filter set class to apply styling
     """
 
+    def filter_queryset(self, queryset):
+        from employee.probation import probation_date_expression
+        queryset = queryset.annotate(effective_probation_date=probation_date_expression())
+        return super().filter_queryset(queryset)
+
     name = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
     search = django_filters.CharFilter(method="search_by_name", lookup_expr="icontains")
     has_referral = django_filters.BooleanFilter(
@@ -99,16 +104,16 @@ class CandidateFilter(HorillaFilterSet):
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     probation_end = django_filters.DateFilter(
-        field_name="probation_end",
+        field_name="effective_probation_date",
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     probation_end_till = django_filters.DateFilter(
-        field_name="probation_end",
+        field_name="effective_probation_date",
         lookup_expr="lte",
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     probation_end_from = django_filters.DateFilter(
-        field_name="probation_end",
+        field_name="effective_probation_date",
         lookup_expr="gte",
         widget=forms.DateInput(attrs={"type": "date"}),
     )

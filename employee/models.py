@@ -922,6 +922,37 @@ class EmployeeWorkInformation(models.Model):
     contract_end_date = models.DateField(
         blank=True, null=True, verbose_name=_("Contract End Date")
     )
+
+    class ProbationStatus(models.TextChoices):
+        NOT_RECORDED = "not_recorded", _("Not recorded")
+        ON_PROBATION = "on_probation", _("On probation")
+        PASSED = "passed", _("Confirmed passed")
+        NOT_REQUIRED = "not_required", _("No probation required")
+
+    probation_status = models.CharField(
+        max_length=20,
+        choices=ProbationStatus.choices,
+        default=ProbationStatus.NOT_RECORDED,
+        db_default="not_recorded",
+        blank=True,
+        verbose_name=_("Probation status"),
+    )
+    probation_end = models.DateField(
+        null=True, blank=True, verbose_name=_("Expected probation end")
+    )
+    probation_passed_on = models.DateField(
+        null=True, blank=True, verbose_name=_("Actual confirmation date")
+    )
+    probation_updated_at = models.DateTimeField(null=True, blank=True, editable=False)
+    probation_updated_by = models.ForeignKey(
+        "horilla_auth.HorillaUser",
+        null=True,
+        blank=True,
+        editable=False,
+        on_delete=models.SET_NULL,
+        related_name="probation_updates",
+    )
+
     basic_salary = models.IntegerField(
         null=True, blank=True, default=0, verbose_name=_("Basic Salary")
     )
@@ -941,7 +972,31 @@ class EmployeeWorkInformation(models.Model):
     def __str__(self) -> str:
         return f"{self.employee_id} - {self.job_position_id}"
 
+    def clean(self):
+        super().clean()
+        from employee.probation import validate_probation
+
+        validate_probation(self)
+
+    @property
+    def annual_leave_eligible_on(self):
+        from employee.probation import annual_leave_eligible_on
+
+        return (
+            annual_leave_eligible_on(self.employee_id, work_info=self)
+            if self.employee_id_id
+            else None
+        )
+
     def save(self, *args, **kwargs):
+        from employee.probation import prepare_probation_save
+
+        if "update_fields" in kwargs:
+            kwargs["update_fields"] = prepare_probation_save(
+                self, kwargs["update_fields"]
+            )
+        else:
+            prepare_probation_save(self)
         self.full_clean()
         super().save(*args, **kwargs)
 

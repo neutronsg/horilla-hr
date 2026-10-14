@@ -1,1 +1,8 @@
-<div class="flex items-center" onclick="event.stopPropagation();"><input type="date" class="oh-input" style="width: 150px; height: 26px; padding: 2px 8px; margin-bottom: 0;" value="{{instance.probation_end|date:'Y-m-d'}}" name="probation_end" onchange="probotionEnd($(this))" data-candidate-id="{{instance.id}}"></div>
+{% load i18n %}
+<div class="flex items-center gap-2" onclick="event.stopPropagation();">
+{% if instance.converted_employee_id_id %}
+<span>{{ instance.effective_probation_end|date:"d M Y"|default:"—" }}</span>
+<a href="{% url 'employee-view-update' instance.converted_employee_id_id %}?tab=work" class="text-xs text-primary-600">{% trans "Manage in Employee" %}</a>
+{% else %}
+<input type="date" class="oh-input" style="width:150px;height:30px;" value="{{instance.probation_end|date:'Y-m-d'}}" name="probation_end" onchange="probotionEnd($(this))" data-candidate-id="{{instance.id}}">
+{% endif %}</div>

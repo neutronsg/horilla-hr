@@ -103,6 +103,55 @@ class EmployeeWorkInformationSerializer(serializers.ModelSerializer):
             for tag in obj.tags.all()
         ]
 
+    def validate(self, attrs):
+        from employee.probation import FIELDS, can_manage_probation, validate_probation
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        import copy
+
+        work = copy.copy(self.instance) if self.instance else EmployeeWorkInformation()
+        for key, value in attrs.items():
+            setattr(work, key, value)
+        changed = any(
+            getattr(work, f)
+            != (
+                getattr(self.instance, f)
+                if self.instance
+                else ("not_recorded" if f == "probation_status" else None)
+            )
+            for f in FIELDS
+        )
+        if changed:
+            request = self.context.get("request")
+            user = getattr(request, "user", None)
+            companies = {
+                work.company_id_id,
+                self.instance.company_id_id if self.instance else work.company_id_id,
+            }
+            if not all(can_manage_probation(user, c) for c in companies):
+                raise serializers.ValidationError(
+                    {"probation_status": "Only company HR/Admin can change probation."}
+                )
+        if work.probation_status != "passed" and "probation_status" in attrs:
+            attrs["probation_passed_on"] = work.probation_passed_on = None
+        try:
+            validate_probation(work)
+        except DjangoValidationError as error:
+            raise serializers.ValidationError(error.message_dict)
+        return attrs
+
+    def create(self, validated_data):
+        work = EmployeeWorkInformation(**validated_data)
+        work._probation_actor = getattr(self.context.get("request"), "user", None)
+        work.save()
+        return work
+
+    def update(self, instance, validated_data):
+        instance._probation_actor = getattr(self.context.get("request"), "user", None)
+        try:
+            return super().update(instance, validated_data)
+        finally:
+            del instance._probation_actor
+
     class Meta:
         model = EmployeeWorkInformation
         fields = "__all__"

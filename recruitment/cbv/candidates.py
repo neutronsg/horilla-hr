@@ -113,7 +113,6 @@ class ListCandidates(HorillaListView):
         "city",
         "zip",
         "joining_date",
-        "probation_end",
     ]
 
     def get_bulk_form(self):

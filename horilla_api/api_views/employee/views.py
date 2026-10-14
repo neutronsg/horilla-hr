@@ -357,7 +357,7 @@ class EmployeeWorkInformationAPIView(APIView):
 
     @manager_permission_required("employee.add_employeeworkinformation")
     def post(self, request):
-        serializer = EmployeeWorkInformationSerializer(data=request.data)
+        serializer = EmployeeWorkInformationSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -371,7 +371,7 @@ class EmployeeWorkInformationAPIView(APIView):
             or request.user.has_perm("employee.change_employeeworkinformation")
         ):
             serializer = EmployeeWorkInformationSerializer(
-                work_info, data=request.data, partial=True
+                work_info, data=request.data, partial=True, context={"request": request}
             )
             if serializer.is_valid():
                 serializer.save()

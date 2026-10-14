@@ -1,0 +1,20 @@
+{% load i18n widget_tweaks %}
+<section class="border border-[#ebebeb] rounded-md mb-5">
+    <h3 class="text-sm font-semibold bg-[#f3f3f3] px-3 py-3 text-[#333] rounded-t-md">{% trans "Probation & annual leave" %}</h3>
+    <div class="px-3 py-3">
+        <p class="text-xs text-color-600 mb-3">{% trans "HR records the outcome here. An expected end date does not automatically confirm probation." %}</p>
+        <div class="grid grid-cols-3 gap-x-4 gap-y-3 emp-grid-3">
+            <div><label class="block text-xs font-medium text-color-600 mb-1" for="id_probation_status">{% trans "Probation status" %}</label>
+                {{ work_form.probation_status|add_class:"emp-input w-full h-9 px-3 text-xs border border-secondary-200 rounded-md bg-white text-dark-500" }}{{ work_form.probation_status.errors }}</div>
+            <div><label class="block text-xs font-medium text-color-600 mb-1" for="id_probation_end">{% trans "Expected probation end" %}</label>
+                {{ work_form.probation_end|add_class:"emp-input w-full h-9 px-3 text-xs border border-secondary-200 rounded-md bg-white text-dark-500" }}{{ work_form.probation_end.errors }}</div>
+            <div><label class="block text-xs font-medium text-color-600 mb-1" for="id_probation_passed_on">{% trans "Actual confirmation date" %}</label>
+                {{ work_form.probation_passed_on|add_class:"emp-input w-full h-9 px-3 text-xs border border-secondary-200 rounded-md bg-white text-dark-500" }}{{ work_form.probation_passed_on.errors }}
+                <p class="text-xs text-color-600 mt-1">{% trans "Required for Confirmed passed; use the date HR actually confirmed." %}</p></div>
+        </div>
+        <p class="text-xs text-color-600 mt-3">{% trans "Annual leave opens after three months of service, or earlier after HR confirmation. No probation required opens access from joining. Leave balances and manager approval still apply." %}</p>
+        {% if work_form.instance.annual_leave_eligible_on %}<p class="text-xs font-medium text-color-600 mt-2">{% trans "AL eligibility from" %}: {{ work_form.instance.annual_leave_eligible_on|date:"d M Y" }}</p>{% endif %}
+        {% if not work_form.can_manage_probation %}<p class="text-xs text-color-600 mt-2">{% trans "Company HR/Admin manages these fields." %}</p>{% endif %}
+        {% if work_form.instance.probation_updated_at %}<p class="text-xs text-color-600 mt-2">{% trans "Last updated" %}: {{ work_form.instance.probation_updated_at|date:"d M Y H:i" }}{% if work_form.instance.probation_updated_by %} · {{ work_form.instance.probation_updated_by.employee_get.get_full_name }}{% endif %}</p>{% endif %}
+    </div>
+</section>
