@@ -732,6 +732,22 @@ class PayslipDeductionForm(ModelForm):
 
     verbose_name = _("Deduction")
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        field = self.fields["update_compensation"]
+        field.label = _("Deduction treatment")
+        field.choices = [
+            ("", _("Other deduction — CPF wages unchanged")),
+            ("basic_pay", _("Reduce earned basic salary — e.g. unpaid leave")),
+            ("gross_pay", _("Reduce earned gross salary — e.g. unpaid leave")),
+            ("net_pay", _("Reduce net pay only — CPF wages unchanged")),
+        ]
+        field.help_text = _(
+            "Unpaid leave reduces earned wages. Loans, salary advances and other "
+            "recoveries are ordinary deductions and must not reduce CPF wages. "
+            "Use the salary period in which the wages were reduced."
+        )
+
     class Meta:
         model = Deduction
         fields = [

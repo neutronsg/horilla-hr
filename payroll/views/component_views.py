@@ -258,15 +258,29 @@ def payroll_calculation(employee, start_date, end_date, month_summary=None):
     gross_pay_deductions = updated_gross_pay_data["deductions"]
     kwargs["gross_pay"] = gross_pay
     residency = cpf_details(employee, contract)
-    cpf_salary = basic_pay_details["basic_pay"] - (loss_of_pay if not contract.deduct_leave_from_basic_pay else 0)
+    # Earned-wage adjustments (e.g. unpaid leave) reduce statutory wages.
+    # Loans/advances and ordinary pre/post-tax or net-pay deductions do not.
+    # Keep excluded expense reimbursements out of CPF rather than using gross
+    # pay blindly. Automatic leave loss has already been applied when the
+    # contract deducts it from basic pay.
+    cpf_salary = basic_pay - (loss_of_pay if not contract.deduct_leave_from_basic_pay else 0)
+    cpf_salary -= sum(item["amount"] for item in gross_pay_deductions)
     cpf_allowances = allowances["allowances"]
     sdl_wages = max(0, cpf_salary + sum(item["amount"] for item in cpf_allowances if item["cpf_wage_type"] != "excluded"))
     def wages_from(first_day):
         earned = compute_salary_on_period(employee, first_day, end_date)
-        salary = earned["basic_pay"] - (earned["loss_of_pay"] if not contract.deduct_leave_from_basic_pay else 0)
+        adjusted_basic = update_compensation_deduction(
+            employee, earned["basic_pay"], "basic_pay", first_day, end_date
+        )["compensation_amount"]
+        salary = adjusted_basic - (earned["loss_of_pay"] if not contract.deduct_leave_from_basic_pay else 0)
         components = calculate_allowance(employee=employee, start_date=first_day,
-            end_date=end_date, basic_pay=earned["basic_pay"], day_dict=earned["month_data"],
+            end_date=end_date, basic_pay=adjusted_basic, day_dict=earned["month_data"],
             contract=contract, salary_details=earned)["allowances"]
+        adjusted_gross = update_compensation_deduction(
+            employee, adjusted_basic + sum(item["amount"] for item in components),
+            "gross_pay", first_day, end_date
+        )
+        salary -= adjusted_gross["difference_amount"]
         return salary, components
     from payroll.shg import calculate_shg
     statutory_shg = calculate_shg(employee, contract, start_date, end_date,
@@ -275,12 +289,7 @@ def payroll_calculation(employee, start_date, end_date, month_summary=None):
             and start_date < residency.pr_effective_date <= end_date):
         # CPF starts on the day PR is granted. Recompute earned wages in that
         # part of the month; don't prorate attendance/overtime by calendar days.
-        post_pr = compute_salary_on_period(employee, residency.pr_effective_date, end_date)
-        cpf_salary = post_pr["basic_pay"] - (post_pr["loss_of_pay"] if not contract.deduct_leave_from_basic_pay else 0)
-        cpf_allowances = calculate_allowance(employee=employee,
-            start_date=residency.pr_effective_date, end_date=end_date,
-            basic_pay=post_pr["basic_pay"], day_dict=post_pr["month_data"],
-            contract=contract, salary_details=post_pr)["allowances"]
+        cpf_salary, cpf_allowances = wages_from(residency.pr_effective_date)
     statutory_cpf = calculate_cpf(employee, contract, start_date, end_date,
         cpf_salary, cpf_allowances, residency)
     pretax_deductions = calculate_pre_tax_deduction(**kwargs)
