@@ -31,7 +31,13 @@ from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.core.management import call_command
 from django.core.validators import validate_ipv46_address
 from django.db.models import Count, ProtectedError, Q
-from django.http import FileResponse, Http404, HttpResponse, JsonResponse
+from django.http import (
+    FileResponse,
+    Http404,
+    HttpResponse,
+    HttpResponseBadRequest,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
@@ -7606,19 +7612,22 @@ def pagination_settings_view(request):
     """
     if request.method == "POST":
         setting_id = request.POST.get("setting_id")
-        pagination = request.POST.get("pagination")
+        try:
+            pagination = int(request.POST.get("pagination", ""))
+        except ValueError:
+            pagination = 0
+        if pagination < 1:
+            return HttpResponseBadRequest(_("Records per page must be at least 1."))
         if setting_id:
             updated = DynamicPagination.objects.filter(
                 id=setting_id, user_id=request.user
             ).update(pagination=pagination)
         else:
-            # First save from the settings page (no preference row yet).
-            company_id = request.POST.get("company_id") or None
-            if company_id is not None and not str(company_id).isdigit():
-                company_id = None
+            # First save from the settings page (no preference row yet). The
+            # row belongs to the company selected in this session, as on GET.
             DynamicPagination.objects.update_or_create(
                 user_id=request.user,
-                company_id_id=company_id,
+                company_id=get_session_company(request),
                 defaults={"pagination": pagination},
             )
             updated = 1

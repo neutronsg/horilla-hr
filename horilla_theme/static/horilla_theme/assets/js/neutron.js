@@ -80,37 +80,42 @@
     document.addEventListener('click', event => { if (event.target.closest('.quick-bulk-action')) setTimeout(updateSelection, 0); });
     document.addEventListener('htmx:afterSettle', () => updateSelection());
     document.addEventListener('DOMContentLoaded', () => updateSelection());
+    const status = document.querySelector('.neutron-status');
+    const message = text => typeof gettext === 'function' ? gettext(text) : text;
     const assets = new Map();
+    const loaded = new Set();
+    const resolve = url => new URL(url, location.href).href;
+    const present = url => Array.from(document.querySelectorAll('script[src], link[rel="stylesheet"]')).some(el => (el.src || el.href) === resolve(url));
     function loadAsset(url) {
         if (assets.has(url)) return assets.get(url);
-        const resolved = new URL(url, location.href).href;
-        if (Array.from(document.querySelectorAll('script[src], link[rel="stylesheet"]')).some(el => (el.src || el.href) === resolved)) return Promise.resolve();
-        const promise = new Promise((resolve, reject) => {
+        if (present(url)) return Promise.resolve();
+        const promise = new Promise((done, fail) => {
             const element = document.createElement(url.endsWith('.css') ? 'link' : 'script');
             if (element.tagName === 'LINK') { element.rel = 'stylesheet'; element.href = url; }
             else { element.src = url; element.async = false; }
-            element.onload = resolve;
-            element.onerror = () => { assets.delete(url); element.remove(); reject(new Error('Asset unavailable')); };
+            element.onload = () => { loaded.add(url); done(); };
+            element.onerror = () => { assets.delete(url); element.remove(); fail(new Error('Asset unavailable')); };
             document.head.appendChild(element);
         });
         assets.set(url, promise);
         return promise;
     }
+    // Incremented by every main-region navigation; a deferred navigation only runs if it is still the latest.
     let navigationGeneration = 0;
     function assetGroup(url) {
         const path = new URL(url, location.href).pathname;
         return path.includes('/report/') ? 'reports' : path.includes('organisation-chart') ? 'organization' : (path.includes('dashboard') || path === '/ess/') ? 'dashboard' : null;
     }
     function assetsReady(group) {
-        return (window.NEUTRON_ASSETS[group] || []).every(url => {
-            const resolved = new URL(url, location.href).href;
-            return Array.from(document.querySelectorAll('script[src], link[rel="stylesheet"]')).some(el => (el.src || el.href) === resolved);
-        });
+        // A tag we inserted is ready only once it has loaded; tags from the page HTML already ran.
+        return (window.NEUTRON_ASSETS[group] || []).every(url => loaded.has(url) || (!assets.has(url) && present(url)));
+    }
+    async function loadGroup(group) {
+        if (group) for (const asset of window.NEUTRON_ASSETS[group]) await loadAsset(asset);
     }
     window.neutronEnsurePageAssets = async function (url) {
         const generation = ++navigationGeneration;
-        const group = assetGroup(url);
-        if (group) for (const asset of window.NEUTRON_ASSETS[group]) await loadAsset(asset);
+        await loadGroup(assetGroup(url));
         return generation === navigationGeneration;
     };
     // Any HTMX navigation into the main region (not only the sidebar) waits for the page's
@@ -118,15 +123,24 @@
     document.addEventListener('htmx:confirm', event => {
         const {question, issueRequest, path, target} = event.detail;
         if (question || !path || !target || !(target.id === 'ohMainContent' || target.closest?.('#ohMainContent'))) return;
+        // Swapping the whole region is a navigation and supersedes any deferred one;
+        // smaller in-page requests (lazy widgets, filters) leave a pending navigation alone.
+        const generation = target.id === 'ohMainContent' ? ++navigationGeneration : navigationGeneration;
         const group = assetGroup(path);
         if (!group || assetsReady(group)) return;
         event.preventDefault();
-        window.neutronEnsurePageAssets(path).catch(() => {}).finally(() => issueRequest(true));
+        loadGroup(group).then(() => {
+            if (generation === navigationGeneration) issueRequest(true);
+        }, () => {
+            // Nothing was requested yet; the failed asset is uncached, so trying again reloads it.
+            if (generation !== navigationGeneration) return;
+            if (status) status.textContent = message('This page could not load. Check your connection and try again.');
+            window.Swal?.fire?.({toast: true, position: 'top-end', icon: 'error', timer: 4000, showConfirmButton: false,
+                title: message('This page could not load. Check your connection and try again.')});
+        });
     });
     const active = new Map();
     const bar = document.querySelector('.neutron-loading');
-    const status = document.querySelector('.neutron-status');
-    const message = text => typeof gettext === 'function' ? gettext(text) : text;
     function finish(event) {
         const xhr = event.detail.xhr;
         const target = active.get(xhr);

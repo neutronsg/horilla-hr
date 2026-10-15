@@ -158,9 +158,9 @@
 </div>
 <script>
     $(document).ready(function () {
-        $(".neutron-modal-form select").off("select2:select.neutronForm").on("select2:select.neutronForm", function (e) {
+        // htmxSelect2.js already re-dispatches select2:select as a native change event.
+        $(".neutron-modal-form select").off("select2:select.neutronForm").on("select2:select.neutronForm", function () {
             $(".leave-message").hide();
-            $(this).closest("select")[0].dispatchEvent(new Event("change"));
         });
 
         $(document)

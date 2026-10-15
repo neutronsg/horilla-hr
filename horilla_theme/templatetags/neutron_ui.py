@@ -112,16 +112,47 @@ def neutron_icon(name, size=16):
     )
 
 
-_WIDTH_DECLARATION = re.compile(r"(?:min-|max-)?width\s*:\s*[^;\"']*;?", re.IGNORECASE)
+_STYLE_ATTRIBUTE = re.compile(r"""((?<![\w-])style\s*=\s*)(["'])(.*?)\2""", re.IGNORECASE | re.DOTALL)
+# A whole declaration whose property is exactly width, min-width or max-width.
+_WIDTH_DECLARATION = re.compile(r"(?:(?<=;)|^)\s*(?:min-|max-)?width\s*:[^;]*(?:;|$)", re.IGNORECASE)
 
 
 @register.filter
 def strip_column_widths(attrs):
     """
-    Drop fixed width declarations from a list view's header_attrs. Widths were
-    tuned for the old fixed, truncating table layout; columns now size to their
-    content. Other attributes are kept as written.
+    Drop fixed width declarations from the style attribute of a list view's
+    header_attrs. Widths were tuned for the old fixed, truncating table layout;
+    columns now size to their content. Other declarations and attributes are
+    kept as written.
     """
     if not attrs:
         return attrs
-    return _WIDTH_DECLARATION.sub("", str(attrs))
+
+    def clean(match):
+        declarations = _WIDTH_DECLARATION.sub("", match.group(3)).strip()
+        return f"{match.group(1)}{match.group(2)}{declarations}{match.group(2)}"
+
+    return _STYLE_ATTRIBUTE.sub(clean, str(attrs))
+
+
+_HEX_COLOUR = re.compile(r"^#[0-9A-Fa-f]{6}$")
+_PRIMARY_STEPS = (50, 100, 200, 300, 400, 500, 600, 700, 800, 900)
+
+
+@register.simple_tag
+def neutron_theme_vars(theme):
+    """
+    Emit the company theme's primary scale as CSS variables, after neutron.css.
+    neutron.css carries the Neutron palette as the default; a company theme
+    overrides it here. Values that are not plain hex colours are skipped.
+    """
+    if not theme:
+        return ""
+    declarations = []
+    for step in _PRIMARY_STEPS:
+        value = str(getattr(theme, f"primary_{step}", "") or "")
+        if _HEX_COLOUR.match(value):
+            declarations.append(f"--primary-{step}:{value};")
+    if not declarations:
+        return ""
+    return mark_safe(f"<style id=\"neutron-theme-vars\">:root{{{''.join(declarations)}}}</style>")

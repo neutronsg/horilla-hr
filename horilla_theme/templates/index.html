@@ -1,6 +1,7 @@
 {% load static %}
 {% load i18n %}
 {% load horillafilters %}
+{% load neutron_ui %}
 {% get_company as theme_obj %}
 {% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
@@ -67,6 +68,7 @@
 <!-- Brand tokens are shared by static utilities and legacy components. -->
 
         <link rel="stylesheet" href="{% static 'horilla_theme/assets/css/neutron.css' %}?v=neutron-ui-3">
+        {% neutron_theme_vars theme_obj %}
 
         {% block styles %}
             <!-- Page-specific styles (optional) -->
