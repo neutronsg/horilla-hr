@@ -33,8 +33,11 @@ def workspace_label(value):
     text = str(value)
     if text in labels:
         return _(labels[text])
-    if text == text.lower() and " " not in text and ("-" in text or "_" in text):
-        return text.replace("-", " ").replace("_", " ").capitalize()
+    if text == text.lower() and " " not in text:
+        # A URL slug ("system-preferences-view", "settings"): drop "view" and
+        # sentence-case what is left.
+        words = [w for w in text.replace("_", "-").split("-") if w and w != "view"]
+        return " ".join(words).capitalize() if words else text
     return text
 
 

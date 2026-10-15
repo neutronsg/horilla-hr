@@ -631,3 +631,27 @@ body.dark.neutron-app .neutron-related-links a,body.dark.neutron-app .neutron-se
 .neutron-app :is(.draft--dot,.not-validated--dot,.not_started--dot,.paused--dot,.gray--dot,.cancelled--dot,.unpaid--dot,.non-taxable--dot,.not-portal--dot) {background-color:var(--neutron-faint)!important;}
 /* In-page breadcrumbs from the old theme duplicate the header trail. */
 .neutron-app #ohMainContent nav.oh-breadcrumb {display:none!important;}
+/* Fallback page heading (index.html) for views that only have section titles. */
+.neutron-app #ohMainContent > .neutron-auto-title {margin:0 0 18px;}
+.neutron-app #ohMainContent:has(h1:not(.neutron-auto-title)) > .neutron-auto-title {display:none;}
+/* Old-theme title bars (oh-main__topbar) still used by a few pages: one row, neutral secondary actions. */
+.neutron-app #ohMainContent .oh-main__topbar {display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 16px;padding:0!important;}
+.neutron-app #ohMainContent .oh-main__titlebar-button-container {display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.neutron-app #ohMainContent .oh-main__titlebar-button-container > * {margin:0!important;}
+.neutron-app #ohMainContent .oh-btn--dropdown {display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid var(--neutron-border-strong)!important;border-radius:6px;background:#fff!important;color:var(--neutron-ink)!important;font-size:13.5px;font-weight:500;box-shadow:var(--neutron-xs);}
+.neutron-app #ohMainContent .oh-btn--dropdown:hover {background:var(--neutron-hover)!important;}
+.neutron-app #ohMainContent .oh-main__titlebar-button-container .oh-btn--secondary {height:32px;padding:0 12px;border-radius:6px;font-size:13.5px;}
+/* Toolbar buttons from older templates used a brand-tinted outline; secondary buttons are neutral. */
+.neutron-app #ohMainContent :is(button,span,a).border-primary-500:not([class*="bg-primary"]):not([class*="bg-brand"]) {border-color:var(--neutron-border-strong)!important;color:var(--neutron-ink);box-shadow:var(--neutron-xs);}
+.neutron-app #ohMainContent :is(button,span,a).border-primary-500:not([class*="bg-primary"]):not([class*="bg-brand"]):hover {border-color:#b9c0ca!important;background:var(--neutron-hover)!important;}
+body.dark .neutron-app #ohMainContent .oh-btn--dropdown,body.dark.neutron-app #ohMainContent .oh-btn--dropdown {background:var(--neutron-surface)!important;}
+/* Settings navigation groups and filter/group-by accordion headers: neutral rows, not tinted bars. */
+.neutron-app .accordion-btn-stng {background:transparent!important;color:var(--neutron-ink)!important;font-weight:550;border-radius:6px;padding:6px 10px!important;}
+.neutron-app .accordion-btn-stng:hover {background:rgba(15,23,42,.045)!important;}
+.neutron-app .oh-accordion-header {background:var(--neutron-head);color:var(--neutron-ink);font-weight:550;border-radius:6px;}
+.neutron-app .oh-accordion-header:hover {background:#eef0f4;}
+body.dark #ohMainContent .oh-nested-accordion .oh-accordion > .oh-accordion-header {background:var(--neutron-head)!important;color:var(--neutron-ink);}
+body.dark #ohMainContent .oh-nested-accordion .oh-accordion > .oh-accordion-header:hover,body.dark .neutron-app .oh-accordion-header:hover {background:var(--neutron-hover)!important;}
+body.dark #ohMainContent .oh-nested-accordion .oh-accordion.oh-accordion--show > .oh-accordion-header {border-bottom-color:var(--neutron-border)!important;}
+body.dark #ohMainContent .oh-nested-accordion .oh-accordion-header .text-\[\#26251F\] {color:var(--neutron-ink)!important;}
+body.dark #ohMainContent .oh-nested-accordion .oh-accordion-header .bg-\[\#F6F5F1\],body.dark #ohMainContent .oh-nested-accordion .oh-accordion-header .bg-white\/70 {background:var(--neutron-surface)!important;color:var(--neutron-muted)!important;}
