@@ -1,0 +1,23 @@
+{% extends "neutron/auth_base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Track your application" %}{% endblock %}
+{% block panel %}
+    <h1 id="neutronAuthTitle">{% trans "Track your application" %}</h1>
+    <p class="neutron-auth__lede">{% trans "Enter the email and phone number you applied with." %}</p>
+    {% if error %}
+        <div class="neutron-auth__messages" role="alert"><div class="oh-alert oh-alert--danger">{% trans "We couldn't find an application with those details." %}</div></div>
+    {% endif %}
+    <form action="{% url 'candidate-login' %}" method="post">
+        {% csrf_token %}
+        <div class="neutron-auth__field">
+            <label for="email">{% trans "Email" %}</label>
+            <input type="email" id="email" name="email" required autofocus autocomplete="email" placeholder="{% trans 'name@example.com' %}">
+        </div>
+        <div class="neutron-auth__field">
+            <label for="phone">{% trans "Phone" %}</label>
+            <input type="text" id="phone" name="phone" required autocomplete="tel" inputmode="tel" placeholder="{% trans '+65 8123 4567' %}">
+        </div>
+        <button type="submit" class="neutron-auth__button">{% trans "View status" %}</button>
+    </form>
+    <p class="neutron-auth__alt"><a href="{% url 'open-recruitments' %}">{% trans "See open roles" %}</a></p>
+{% endblock %}

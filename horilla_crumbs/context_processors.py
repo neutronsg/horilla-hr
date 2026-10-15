@@ -93,6 +93,21 @@ def _resolve_menu_section(path, menus):
     return None
 
 
+def _sidebar_destination(path, menus):
+    """
+    (section_label, submenu_label) when the path is exactly a sidebar
+    destination, else None. Such a page starts a fresh trail and its last
+    crumb uses the sidebar's own label rather than the URL slug.
+    """
+    target = path.rstrip("/")
+    for menu in menus or []:
+        for submenu in menu.get("submenu", []):
+            redirect = urlparse(submenu.get("redirect") or "").path.rstrip("/")
+            if redirect and redirect == target:
+                return str(menu.get("menu", "")), str(submenu.get("menu", ""))
+    return None
+
+
 BREADCRUMB_URL_NAMES = {
     "monthly-summary": _("Monthly Summary"),
     "ess": "Employee",
@@ -435,6 +450,16 @@ def breadcrumbs(request):
                 request.session["breadcrumbs"].clear()
                 request.session["breadcrumbs"].append(first_path)
 
+        destination = _sidebar_destination(request.path, menus) if parts else None
+        is_navigation = (
+            "HTTP_HX_REQUEST" not in request.META
+            or request.META.get("HTTP_HX_SIDEBAR_NAV") == "true"
+        )
+        if destination and is_navigation:
+            first_path = breadcrumbs[0]
+            request.session["breadcrumbs"].clear()
+            request.session["breadcrumbs"].append(first_path)
+
         for i, item in enumerate(parts):
             path = path + item + "/"
             parsed_url = urlparse(path)
@@ -481,6 +506,9 @@ def breadcrumbs(request):
                     new_dict["found"] = True
                 elif current_section:
                     new_dict["name"] = current_section[0]
+
+            if destination and i == len(parts) - 1 and destination[1]:
+                new_dict["name"] = destination[1]
 
             if item == "attendance":
                 from base.templatetags.basefilters import is_reportingmanager

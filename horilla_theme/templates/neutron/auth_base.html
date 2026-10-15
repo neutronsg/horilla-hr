@@ -1,0 +1,53 @@
+{% load static i18n neutron_ui horillafilters %}{% get_current_language as LANGUAGE_CODE %}{% get_def_theme as theme_obj %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="noindex">
+        <title>{% block title %}{% endblock %} · {{ white_label_company_name|default:"Neutron HR" }}</title>
+        {% if white_label_company.icon %}
+            <link rel="icon" href="{{ white_label_company.icon.url }}">
+        {% else %}
+            <link rel="icon" type="image/svg+xml" href="{% static 'favicons/favicon.svg' %}">
+            <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicons/favicon-32x32.png' %}">
+            <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicons/apple-touch-icon.png' %}">
+        {% endif %}
+        <link rel="stylesheet" href="{% static 'horilla_theme/assets/css/neutron-auth.css' %}">
+        {% neutron_theme_vars theme_obj %}
+        {% block head %}{% endblock %}
+    </head>
+    <body class="neutron-auth-body">
+        <main class="neutron-auth">
+            <section class="neutron-auth__panel" aria-labelledby="neutronAuthTitle">
+                <img
+                    class="neutron-auth__mark"
+                    src="{% if white_label_company.icon %}{{ white_label_company.icon.url }}{% else %}{% static 'favicons/favicon.svg' %}{% endif %}"
+                    width="40" height="40"
+                    alt="{{ white_label_company_name|default:'Neutron HR' }}"
+                >
+                {% if messages %}
+                    <div class="neutron-auth__messages" role="status">
+                        {% for message in messages %}
+                            <div class="oh-alert {{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% block panel %}{% endblock %}
+            </section>
+            <p class="neutron-auth__foot">{% block foot %}{{ white_label_company_name|default:"Neutron HR" }}{% endblock %}</p>
+        </main>
+        <script>
+            document.querySelectorAll('.neutron-auth__reveal').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var input = button.parentNode.querySelector('input');
+                    var show = input.type === 'password';
+                    input.type = show ? 'text' : 'password';
+                    button.setAttribute('aria-pressed', String(show));
+                    button.setAttribute('aria-label', show ? button.dataset.hide : button.dataset.show);
+                    input.focus();
+                });
+            });
+        </script>
+        {% block scripts %}{% endblock %}
+    </body>
+</html>

@@ -1,0 +1,1 @@
+{% load i18n %}{% trans "You don't have access" as error_title %}{% trans "Your account doesn't have permission to open this page. Ask an HR admin if you think it should." as error_text %}{% include "neutron/error_page.html" with error_code="403" %}

@@ -23,7 +23,7 @@ def primary_profile_tab(value):
 @register.filter
 def workspace_label(value):
     labels = {
-        "Horilla": "Neutron HR", "employee-view": "Directory",
+        "Horilla": "Neutron HR", "employee-view": "Employees",
         "employee-view-update": "Edit employee", "employee-profile": "Employee profile",
         "view-payslip": "Payslip", "payslip-view": "Payslips",
         "view-reimbursement": "Claims", "reimbursement-view": "Claims",

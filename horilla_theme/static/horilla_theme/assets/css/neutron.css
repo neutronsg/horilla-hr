@@ -222,6 +222,9 @@ html.dark .neutron-when-light,body.dark .neutron-when-light {display:none;}
 .neutron-app :is(.oh-btn--secondary:hover,.btn:hover) {background:var(--primary-700)!important;}
 .neutron-app .oh-btn--add-another {background:transparent!important;color:var(--neutron-ink)!important;border:1px solid #d8dfe9!important;}
 .neutron-app .oh-btn--danger {background:#fff1f0!important;color:#b42318!important;border-color:#fecdca!important;}
+/* Row-level delete icons are quiet like the other row actions; red appears on hover/focus. */
+.neutron-app :is(td,.oh-sticky-table__td) .oh-btn--danger.oh-btn--sq-sm {background:transparent!important;border-color:transparent!important;color:var(--neutron-muted)!important;box-shadow:none!important;}
+.neutron-app :is(td,.oh-sticky-table__td) .oh-btn--danger.oh-btn--sq-sm:is(:hover,:focus-visible) {background:#fff1f0!important;border-color:#fecdca!important;color:var(--neutron-bad)!important;}
 .neutron-app .oh-btn--success {background:#ecfdf3!important;color:#027a48!important;border-color:#abefc6!important;}
 .neutron-app :is(.oh-btn--secondary-outline,.oh-btn--secondary-link,.oh-btn--light) {color:var(--primary-600)!important;}
 .neutron-app :is(.oh-input,.oh-select,.select2-selection,.myform input:not([type=checkbox]):not([type=radio]),.myform select,.myform textarea) {border-radius:6px!important;border-color:#d8dfe9;min-height:38px;font-size:14px;}
@@ -359,9 +362,20 @@ body.dark.neutron-app .neutron-action-menu-content .neutron-danger {color:#fda29
 .neutron-header-tools {flex-shrink:0;}
 .neutron-empty {text-align:center;padding:64px 24px;}
 .neutron-empty>ion-icon {font-size:28px;color:var(--neutron-muted);margin-bottom:12px;}
-.neutron-empty h2 {font-size:18px;margin-bottom:8px;}
+.neutron-empty h2 {font-size:16px;line-height:22px;margin-bottom:6px;}
 .neutron-empty p {font-size:13px;color:var(--neutron-muted);margin:0 0 16px;}
 .neutron-empty button {border:1px solid var(--neutron-border);padding:8px 14px;}
+/* Legacy empty states (illustrations from the old theme) render as the same quiet state as
+ * generic/workspace_empty.html: a small outline icon, a title and one muted line. */
+.neutron-app :is(.oh-empty,.oh-404,div:has(> img[src*="no-records.svg"])):not(:has(.neutron-empty)) {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:56px 24px!important;text-align:center;}
+.neutron-app :is(.oh-empty,.oh-404,div:has(> img[src*="no-records.svg"])) > img {display:none!important;}
+.neutron-app :is(.oh-empty,.oh-404,div:has(> img[src*="no-records.svg"]))::before {content:"";width:28px;height:28px;margin:0 0 12px;background:var(--neutron-muted);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center/contain no-repeat;}
+.neutron-app :is(.oh-empty__title,.oh-404__title) {margin:0 0 6px!important;font-size:16px!important;line-height:22px;font-weight:600!important;color:var(--neutron-ink)!important;letter-spacing:-.01em;}
+.neutron-app :is(.oh-empty__subtitle,.oh-404__subtitle),.neutron-app div:has(> img[src*="no-records.svg"]) > p {margin:0!important;font-size:13px!important;font-weight:400!important;color:var(--neutron-muted)!important;}
+/* Dashboard panels: the same idea, smaller, with a chart glyph. */
+.neutron-app :is(div,section):has(> img[src*="no_records.svg"]) {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-height:120px;padding:24px 16px;color:var(--neutron-muted)!important;font-size:13px!important;font-weight:400;text-align:center;}
+.neutron-app :is(div,section):has(> img[src*="no_records.svg"]) > img {display:none!important;}
+.neutron-app :is(div,section):has(> img[src*="no_records.svg"])::before {content:"";width:22px;height:22px;margin:0 0 8px;background:var(--neutron-faint);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M8 17v-4M13 17V9M18 17v-6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v18h18'/%3E%3Cpath d='M8 17v-4M13 17V9M18 17v-6'/%3E%3C/svg%3E") center/contain no-repeat;}
 .neutron-app .neutron-data-surface td[class*="status-"] {border-left:0!important;border-radius:0;}
 .neutron-status-label {display:inline-flex;align-items:center;gap:6px;padding:0;border-radius:0;background:transparent;font-size:13px;font-weight:500;color:var(--neutron-text-2);white-space:nowrap;}
 .neutron-status-label::before {content:"";width:6px;height:6px;border-radius:50%;flex:none;background:var(--neutron-faint);}
@@ -595,3 +609,25 @@ body.dark.neutron-app .neutron-related-links a,body.dark.neutron-app .neutron-se
 /* Sidebar menus open with a small gap; an invisible bridge keeps :hover while the pointer crosses it */
 .neutron-app #sidebar .dropdown-content::before {content:"";position:absolute;left:0;right:0;top:-10px;height:10px;}
 .neutron-app #sidebar .neutron-profile-menu .dropdown-content::before {top:auto;bottom:-10px;}
+
+/* Module dashboards: one quiet card language. Decoration that only added colour
+ * (gradient top bars, corner circles, rainbow icon tiles, tinted stat borders) is removed;
+ * semantic colour stays in the data itself (badges, deltas, charts). */
+.neutron-app :is(.am-chart-card,.em-chart-card)::before,
+.neutron-app :is(.am-kpi-card,.em-kpi-card)::after {display:none!important;}
+.neutron-app [class*="-kpi-card__icon"] {background:var(--neutron-head)!important;color:var(--neutron-muted)!important;box-shadow:inset 0 0 0 1px var(--neutron-border);border-radius:8px!important;}
+.neutron-app [class*="-kpi-card__icon"] svg {color:inherit!important;stroke:currentColor;}
+.neutron-app .ms-stat-card {border-top:1px solid var(--neutron-border)!important;border-radius:10px!important;box-shadow:var(--neutron-xs);}
+.neutron-app .ms-stat-card__value {color:var(--neutron-ink)!important;font-weight:600;}
+.neutron-app .ed-profile-card {background:var(--neutron-surface)!important;color:var(--neutron-ink)!important;box-shadow:var(--neutron-e1);}
+.neutron-app .ed-profile-card__avatar {border-color:var(--neutron-border)!important;background:var(--primary-100)!important;color:var(--primary-700)!important;}
+.neutron-app .ed-profile-card__sub {color:var(--neutron-muted);opacity:1!important;}
+/* Status legend dots: the old theme used named CSS colours (red, yellowgreen, cyan...).
+ * Map every status to one of five palette tones so legends match the status labels. */
+.neutron-app :is(.rejected--dot,.red--dot,.at_risk--dot,.canceled--dot,.terminated--dot,.expired--dot,.not-fixed--dot,.nothired--dot,.not-joining--dot,.offline--dot,.notconnected--dot) {background-color:var(--neutron-bad)!important;}
+.neutron-app :is(.approved--dot,.approved-request--dot,.active--dot,.paid--dot,.validated--dot,.on_track--dot,.completed--dot,.fixed--dot,.hired--dot,.resolved--dot,.online--dot,.live--dot,.joining--dot) {background-color:#1f9d55!important;}
+.neutron-app :is(.requested--dot,.behind--dot,.review_ongoing--dot,.in-progress--dot,.in_progress--dot,.on-hold--dot,.on_hold--dot,.yellow--dot,.new--dot,.open--dot,.todo--dot,.sheduled--dot,.interview--dot) {background-color:#d98e04!important;}
+.neutron-app :is(.confirmed--dot,.closed--dot,.bulk-request--dot,.blue--dot,.test--dot,.initial--dot,.portal--dot,.taxable--dot,.pretax--dot) {background-color:#3b6fd8!important;}
+.neutron-app :is(.draft--dot,.not-validated--dot,.not_started--dot,.paused--dot,.gray--dot,.cancelled--dot,.unpaid--dot,.non-taxable--dot,.not-portal--dot) {background-color:var(--neutron-faint)!important;}
+/* In-page breadcrumbs from the old theme duplicate the header trail. */
+.neutron-app #ohMainContent nav.oh-breadcrumb {display:none!important;}
