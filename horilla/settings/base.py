@@ -300,6 +300,8 @@ TEMPLATES = [
     },
 ]
 
+FORM_RENDERER = "horilla.form_renderers.LedgerFormRenderer"
+
 WSGI_APPLICATION = "horilla.wsgi.application"
 
 # ========================================
