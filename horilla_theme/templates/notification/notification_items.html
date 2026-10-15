@@ -1,4 +1,4 @@
-{% load i18n static %}
+{% load i18n static neutron_ui %}
 {% if notifications %}
     <ul class="list-checked text-sm h-60 overflow-hidden overflow-y-auto">
         {% for notification in notifications %}
@@ -70,14 +70,9 @@
         });
     </script>
 {% else %}
-    <div class="opacity-30">
-        <img
-            src="{% static '/horilla_theme/assets/img/icons/notification.svg' %}"
-            alt=""
-            width="40"
-            class="mx-auto mb-3"
-        >
-        <h5 class="text-center font-semibold mb-1">{% trans "All Caught Up!" %}</h5>
-        <p class="text-center text-sm">{% trans "You have no new notifications at the moment" %}</p>
+    <div class="neutron-empty neutron-notification-empty">
+        {% neutron_icon "bell" 28 %}
+        <h5 class="text-center font-semibold mb-1">{% trans "All caught up" %}</h5>
+        <p class="text-center text-sm">{% trans "You have no new notifications." %}</p>
     </div>
 {% endif %}

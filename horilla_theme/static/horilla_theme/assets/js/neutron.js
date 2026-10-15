@@ -2,6 +2,125 @@
 (function () {
     if (window.neutronInterface) return;
     window.neutronInterface = true;
+    const outlineNames = new Set(['accessibility','business','checkmark-done-circle','filter-circle','information','move','add','add-circle','albums','alert','alert-circle','archive','arrow-back','arrow-down','arrow-down-circle','arrow-forward','arrow-forward-circle','arrow-redo','arrow-undo','arrow-up','at','attach','ban','bar-chart','briefcase','calendar','call','camera','caret-back','caret-down','caret-forward','caret-up','chatbox','checkmark','checkmark-circle','checkmark-done','chevron-back','chevron-down','chevron-forward','chevron-up','close','close-circle','cloud-download','cloud-upload','copy','create','document','document-attach','document-text','download','duplicate','ellipsis-horizontal','ellipsis-vertical','eye','eye-off','filter','folder','heart','help-circle','information-circle','link','list','location','lock-closed','log-in','log-out','mail','notifications','open','options','paper-plane','pencil','people','person','person-add','print','refresh','reload','save','search','send','settings','shield-checkmark','swap-horizontal','time','trash','warning']);
+    function outlineIcons(root = document) {
+        const icons = [...root.querySelectorAll('ion-icon[name]')];
+        if (root.matches?.('ion-icon[name]')) icons.push(root);
+        icons.forEach(icon => {
+            const name = icon.getAttribute('name');
+            // Filled stars/hearts are meaningful rating/selection data, rather than actions.
+            if (outlineNames.has(name) && !icon.closest('.oh-rate,.oh-rating,[data-rating],.rating')) icon.setAttribute('name', name + '-outline');
+        });
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        outlineIcons();
+        new MutationObserver(changes => changes.forEach(change => {
+            if (change.type === 'attributes') outlineIcons(change.target);
+            else change.addedNodes.forEach(node => { if (node.nodeType === 1) outlineIcons(node); });
+        })).observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['name']});
+    });
+    let popoverId = 0;
+    function popoverParts(wrapper) {
+        return {panel: wrapper.querySelector(':scope > .dropdown-content'), trigger: wrapper.querySelector(':scope > button, :scope > [data-neutron-filter], :scope > [role="button"]')};
+    }
+    function setPopover(wrapper, open, restoreFocus = false) {
+        const {trigger, panel} = popoverParts(wrapper);
+        if (!trigger || !panel) return;
+        wrapper.classList.toggle('neutron-popover-open', open);
+        wrapper.classList.remove('force-open');
+        trigger.setAttribute('aria-expanded', String(open));
+        panel.inert = !open;
+        if (restoreFocus) trigger.focus({preventScroll: true});
+    }
+    function closePopovers(except = null) {
+        document.querySelectorAll('.neutron-popover-open').forEach(wrapper => { if (wrapper !== except) setPopover(wrapper, false); });
+    }
+    function preparePopovers() {
+        document.querySelectorAll('.dropdown-wrapper:not(.neutron-popover)').forEach(wrapper => {
+            const {trigger, panel} = popoverParts(wrapper);
+            if (!trigger || !panel) return;
+            wrapper.classList.add('neutron-popover');
+            panel.id ||= 'neutron-popover-' + ++popoverId;
+            trigger.setAttribute('aria-controls', panel.id);
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.setAttribute('aria-haspopup', panel.getAttribute('role') === 'dialog' ? 'dialog' : 'true');
+            if (!trigger.matches('button')) { trigger.setAttribute('role', 'button'); trigger.tabIndex = 0; }
+            panel.inert = true;
+        });
+        document.querySelectorAll('.ngb-crumb-select-wrap').forEach(wrapper => {
+            const trigger = wrapper.querySelector('.ngb-crumb-select-trigger');
+            const panel = wrapper.querySelector('.ngb-crumb-dropdown');
+            if (!trigger || !panel || trigger.hasAttribute('aria-controls')) return;
+            panel.id ||= 'neutron-picker-' + ++popoverId;
+            panel.setAttribute('role', 'menu');
+            panel.querySelectorAll('button').forEach(item => item.setAttribute('role', 'menuitem'));
+            trigger.setAttribute('aria-controls', panel.id);
+            trigger.setAttribute('aria-haspopup', 'menu');
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.addEventListener('click', () => trigger.setAttribute('aria-expanded', String(wrapper.classList.contains('force-open'))));
+        });
+    }
+    document.addEventListener('DOMContentLoaded', preparePopovers);
+    document.addEventListener('htmx:afterSettle', preparePopovers);
+    document.addEventListener('click', event => {
+        preparePopovers();
+        document.querySelectorAll('.ngb-crumb-select-wrap.force-open').forEach(picker => {
+            if (!picker.contains(event.target) || event.target.closest('.ngb-crumb-option')) {
+                picker.classList.remove('force-open');
+                picker.querySelector('.ngb-crumb-select-trigger')?.setAttribute('aria-expanded', 'false');
+                picker.closest('#ngbToolbarPanel')?.classList.remove('ngb-dropdown-open');
+            }
+        });
+        const wrapper = event.target.closest('.neutron-popover');
+        if (wrapper) {
+            const {trigger} = popoverParts(wrapper);
+            if (trigger?.contains(event.target)) {
+                const open = !wrapper.classList.contains('neutron-popover-open');
+                closePopovers(wrapper); setPopover(wrapper, open);
+            } else if (event.target.closest('[data-neutron-popover-close]')) setPopover(wrapper, false, true);
+            else if (event.target.closest('a[href], [data-toggle="oh-modal-toggle"]')) setPopover(wrapper, false);
+        } else closePopovers();
+    }, true);
+    document.addEventListener('keydown', event => {
+        const picker = event.target.closest('.ngb-crumb-select-wrap');
+        if (picker) {
+            const trigger = picker.querySelector('.ngb-crumb-select-trigger');
+            if (event.key === 'Escape') {
+                picker.classList.remove('force-open');
+                picker.closest('#ngbToolbarPanel')?.classList.remove('ngb-dropdown-open');
+                trigger.setAttribute('aria-expanded', 'false'); trigger.focus();
+                event.preventDefault(); event.stopPropagation(); return;
+            }
+            if (['ArrowDown','ArrowUp','Home','End'].includes(event.key)) {
+                if (!picker.classList.contains('force-open')) trigger.click();
+                const controls = [...picker.querySelectorAll('.ngb-crumb-option:not(:disabled)')];
+                const index = controls.indexOf(document.activeElement);
+                const next = event.key === 'Home' ? 0 : event.key === 'End' ? controls.length - 1 : index < 0 ? (event.key === 'ArrowDown' ? 0 : controls.length - 1) : (index + (event.key === 'ArrowDown' ? 1 : -1) + controls.length) % controls.length;
+                controls[next]?.focus(); event.preventDefault(); return;
+            }
+        }
+        const wrapper = event.target.closest('.neutron-popover');
+        if (!wrapper) return;
+        const {trigger, panel} = popoverParts(wrapper);
+        const isTrigger = trigger.contains(event.target);
+        if (event.key === 'Escape' && wrapper.classList.contains('neutron-popover-open')) {
+            setPopover(wrapper, false, true); event.preventDefault(); event.stopPropagation();
+        } else if (isTrigger && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+            closePopovers(wrapper); setPopover(wrapper, true);
+            const controls = [...panel.querySelectorAll('button,a[href],input,select,textarea,[tabindex="0"]')].filter(e => !e.disabled && e.getClientRects().length);
+            (event.key === 'ArrowDown' ? controls[0] : controls.at(-1))?.focus(); event.preventDefault();
+        } else if (isTrigger && !trigger.matches('button') && (event.key === 'Enter' || event.key === ' ')) {
+            trigger.click(); event.preventDefault();
+        } else if (!isTrigger && panel.matches('[role="menu"]') && ['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+            const controls = [...panel.querySelectorAll('[role="menuitem"],a[href],button')].filter(e => !e.disabled && e.getClientRects().length);
+            const index = controls.indexOf(document.activeElement);
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? controls.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + controls.length) % controls.length;
+            controls[next]?.focus(); event.preventDefault();
+        }
+    }, true);
+    document.addEventListener('focusin', event => {
+        document.querySelectorAll('.neutron-popover-open').forEach(wrapper => { if (!wrapper.contains(event.target)) setPopover(wrapper, false); });
+    });
     // Native details menus retain the server's exact permitted action markup.
     // Fixed positioning keeps them outside a scrollable table's clipping box.
     function positionMenu(menu) {
@@ -39,12 +158,6 @@
             menu.querySelector('summary').focus({preventScroll: true});
             closeMenus();
         }
-        const filter = event.target.closest('[data-neutron-filter]');
-        if (filter) {
-            const wrapper = filter.closest('.dropdown-wrapper');
-            wrapper.classList.toggle('force-open');
-            filter.setAttribute('aria-expanded', String(wrapper.classList.contains('force-open')));
-        }
     }, true);
     document.addEventListener('keydown', event => {
         const menu = event.target.closest('.neutron-action-menu');
@@ -55,7 +168,7 @@
             const controls = [...menu.querySelectorAll('.neutron-action-menu-content button,.neutron-action-menu-content a')].filter(el => el.getClientRects().length && !el.disabled);
             if (controls.length) {
                 const index = controls.indexOf(document.activeElement);
-                controls[(index + (event.key === 'ArrowDown' ? 1 : -1) + controls.length) % controls.length].focus();
+                controls[index < 0 ? (event.key === 'ArrowDown' ? 0 : controls.length - 1) : (index + (event.key === 'ArrowDown' ? 1 : -1) + controls.length) % controls.length].focus();
             }
             event.preventDefault();
         }

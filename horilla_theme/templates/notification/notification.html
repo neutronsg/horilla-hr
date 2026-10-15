@@ -1,63 +1,24 @@
-{% load static i18n basefilters notifications_tags horillafilters %}
-{% notifications_unread as unread_count %}
-{% get_company as theme_obj %}
-
-<div class="dropdown-content w-80 absolute z-10 bg-white rounded-lg shadow-card right-0">
-    <div class="flex justify-between items-center p-3 border-b border-b-dark-50">
-        <h5 class="font-semibold text-sm">{% trans "Notifications" %}</h5>
+{% load static i18n basefilters notifications_tags horillafilters neutron_ui %}
+<div id="notificationPanel" class="dropdown-content neutron-notification-panel" role="dialog" aria-label="{% trans 'Notifications' %}">
+    <div class="neutron-popover-header">
+        <h2>{% trans "Notifications" %}</h2>
         <div class="flex gap-1">
-            <span
-                class="cursor-pointer text-xs group text-primary-600 w-7 h-7 bg-primary-100 hover:bg-primary-600 hover:text-white rounded-full transition duration-300 flex items-center justify-center"
-                hx-get="{% url 'notification-sound' %}"
-                hx-swap="none"
-                title="{% trans 'Notification Sound' %}"
-                onclick="event.stopPropagation();
-                    event.preventDefault();
-                    toggleNotificationIcon($(this))"
-            >
-                {% if request.user.employee_get.notification_sound.sound_enabled %}
-                    <span class="material-symbols-outlined text-lg font-light">
-                        volume_up
-                    </span>
-                {% else %}
-                    <span class="material-symbols-outlined text-lg font-light">
-                        volume_off
-                    </span>
-                {% endif %}
-            </span>
-            <span
-                class="cursor-pointer text-xs group text-primary-600 w-7 h-7 bg-primary-100 hover:bg-primary-600 hover:text-white rounded-full transition duration-300 flex items-center justify-center"
-                onclick="event.stopPropagation();event.preventDefault()"
-                hx-get="{% url 'read-notifications' %}"
-                hx-target="#notificationContainer"
-                title="{% trans 'Mark All as Read' %}"
-            >
-                <i class="fa-solid fa-check-double"></i>
-            </span>
-            <span
-                class="cursor-pointer text-xs group text-primary-600 w-7 h-7 bg-primary-100 hover:bg-primary-600 hover:text-white rounded-full transition duration-300 flex items-center justify-center"
-                onclick="event.stopPropagation();event.preventDefault()"
-                hx-get="{% url 'clear-notifications' %}"
-                hx-target="#notificationContainer"
-                title="{% trans 'Clear Notifications' %}"
-            >
-                <i class="fa-solid fa-xmark"></i>
-            </span>
+            <button type="button" class="neutron-icon-button" hx-get="{% url 'notification-sound' %}" hx-swap="none"
+                aria-label="{% trans 'Notification sound' %}" title="{% trans 'Notification sound' %}"
+                aria-pressed="{{request.user.employee_get.notification_sound.sound_enabled|yesno:'true,false'}}"
+                onclick="toggleNotificationIcon($(this))">
+                <ion-icon name="{{request.user.employee_get.notification_sound.sound_enabled|yesno:'volume-high-outline,volume-mute-outline'}}" aria-hidden="true"></ion-icon>
+            </button>
+            <button type="button" class="neutron-icon-button" hx-get="{% url 'read-notifications' %}" hx-target="#notificationContainer"
+                aria-label="{% trans 'Mark all as read' %}" title="{% trans 'Mark all as read' %}">{% neutron_icon "check_all" 17 %}</button>
+            <button type="button" class="neutron-icon-button" data-neutron-popover-close
+                aria-label="{% trans 'Close notifications' %}" title="{% trans 'Close notifications' %}">{% neutron_icon "close" 17 %}</button>
         </div>
     </div>
-
-    <div class="p-3" id="notificationContainer">
-        {% include "notification/notification_items.html" %}
-    </div>
-    <div class="p-3 border-t border-t-dark-50 flex justify-center">
-        <button
-            class="toggleSidemenu text-primary-600 text-xs flex justify-center font-semibold hover:text-primary-800 transition duration-300"
-            data-sidebar="sidebarModal3"
-            hx-get="{% url 'all-notifications' %}"
-            hx-target="#sidebarModalBody"
-        >
-            {% trans "View all Notification" %}
-        </button>
+    <div id="notificationContainer">{% include "notification/notification_items.html" %}</div>
+    <div class="neutron-popover-footer">
+        <button type="button" class="oh-btn oh-btn--light toggleSidemenu" data-sidebar="sidebarModal3"
+            hx-get="{% url 'all-notifications' %}" hx-target="#sidebarModalBody" data-neutron-popover-close>{% trans "View all" %}</button>
     </div>
 </div>
 <script src="{% static 'notifications/notify.js' %}" type="text/javascript"></script>
@@ -105,11 +66,9 @@
     });
 
     function toggleNotificationIcon($el) {
-        const $icon = $el.find(".material-symbols-outlined");
-        if ($icon.length) {
-            const current = $icon.text().trim();
-            $icon.text(current === "volume_up" ? "volume_off" : "volume_up");
-        }
+        notification_sound = $el.attr("aria-pressed") !== "true";
+        $el.attr("aria-pressed", String(notification_sound));
+        $el.find("ion-icon").attr("name", notification_sound ? "volume-high-outline" : "volume-mute-outline");
     }
 
     function markNotificationAndRedirect(element) {

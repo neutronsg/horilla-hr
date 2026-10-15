@@ -29,8 +29,31 @@ def workspace_label(value):
         "view-reimbursement": "Claims", "reimbursement-view": "Claims",
         "request-view": "Leave requests", "leave-request-view": "Leave requests",
         "dashboard-view": "Overview", "dashboard": "Overview",
+        "Feedbacks": "Feedback", "360 Feedback": "Feedback",
+        "Attendances": "Attendance", "My Leave requests": "My leave requests",
+        "My Leave Requests": "My leave requests", "Employee Bonus Point": "Bonus points",
+        "Employee Bonus Points": "Bonus points", "Bonus Points": "Bonus points",
+        "Leave Allocation Request": "Leave allocation requests", "Leave Allocation Requests": "Leave allocation requests",
+        "Requests & Allocation": "Asset requests and allocations",
+        "Encashments & Reimbursements": "Claims", "Timesheet": "Timesheets",
+        "employee-bonus-point": "Bonus points", "feedback-view": "Feedback",
+        "leave-allocation-request-view": "Leave allocation requests",
+        "asset-request-allocation-view": "Asset requests and allocations",
+        "user-request-view": "My leave requests", "view-time-sheet": "Timesheets",
     }
-    text = str(value)
+    labels.update({
+        "Employee bonus point": "Bonus points", "Asset": "Asset requests and allocations",
+        "Asset Category": "Assets", "Asset batch number": "Asset batches",
+        "Reimbursements": "Claims", "Filing status": "Filing statuses", "Income Tax": "Filing statuses",
+        "All leave balances": "Leave balances", "Scheduled interviews": "Interviews",
+        "Employee": "Employees", "Project": "Projects",
+        "recruitment-view": "Job openings", "filing-status-view": "Filing statuses",
+        "asset-category-view": "Assets", "asset-batch-view": "Asset batches",
+    })
+    text = str(value).strip()
+    for source, target in labels.items():
+        if text.casefold() == str(_(source)).casefold():
+            return _(target)
     if text in labels:
         return _(labels[text])
     if text == text.lower() and " " not in text:
@@ -38,6 +61,11 @@ def workspace_label(value):
         # sentence-case what is left.
         words = [w for w in text.replace("_", "-").split("-") if w and w != "view"]
         return " ".join(words).capitalize() if words else text
+    # Presentation only: labels are already translated, so preserve acronyms and
+    # proper nouns while bringing English title-case navigation into sentence case.
+    if text and text.isascii():
+        words = text.split()
+        text = " ".join(word if i == 0 or word.isupper() else word.lower() for i, word in enumerate(words))
     return text
 
 
@@ -86,6 +114,8 @@ def neutron_nav_groups(context, menus):
 
 # 24px outline icons (Lucide-style shapes), inlined so they inherit colour and need no font or CDN.
 ICONS = {
+    "close": '<path d="m6 6 12 12M6 18 18 6"/>',
+    "check_all": '<path d="m2 12 4 4L16 6M12 16l10-10"/>',
     "dashboard": '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
     "employee": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
     "recruitment": '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M2 13h20"/>',

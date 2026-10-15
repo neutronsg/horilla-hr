@@ -1,8 +1,9 @@
 {% load i18n notifications_tags neutron_ui %}
-{# Notification bell with unread badge; lives in the sidebar footer next to the account menu. #}
+{# Notification bell with unread badge; opens from the header with click and keyboard. #}
 <div class="relative dropdown-wrapper neutron-notify">
     <button
-        class="neutron-icon-button group relative"
+        id="notificationBell" type="button" class="neutron-icon-button group relative"
+        aria-expanded="false" aria-controls="notificationPanel" aria-haspopup="dialog"
         aria-label="{% trans 'Notifications' %}" title="{% trans 'Notifications' %}"
         hx-get="{% url 'notifications' %}"
         hx-target="#notificationContainer"

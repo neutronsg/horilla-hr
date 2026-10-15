@@ -84,7 +84,7 @@
                     <button
                         class="sideboxmain group flex items-center gap-3 px-3 py-2.5 rounded-lg w-full transition duration-300"
                         data-menu="{{ menues.menu }}"
-                        aria-label="{{ menues.menu }}"
+                        aria-label="{{ menues.menu|workspace_label }}"
                         aria-expanded="false"
                         aria-haspopup="true"
                         aria-controls="sidebarFlyout"
@@ -99,7 +99,7 @@
                         {% endif %}
                         <span
                             class="oh-sidebar-label text-sm font-medium truncate flex-1 text-left"
-                        >{{ menues.menu }}</span>
+                        >{{ menues.menu|workspace_label }}</span>
                         <svg
                             class="sidebar-chevron w-3.5 h-3.5 flex-shrink-0"
                             fill="none"
@@ -123,7 +123,7 @@
                                     hx-select="#ohMainContent > *"
                                     hx-swap="innerHTML show:window:top"
                                     hx-push-url="true"
-                                >{{ submenu.menu }}</a>
+                                >{{ submenu.menu|workspace_label }}</a>
                             </li>
                         {% endfor %}
                     </ul>
@@ -144,7 +144,6 @@
                 <div class="relative dropdown-wrapper neutron-profile-menu">
                     {% include "base/navbar_components/profile_section.html" %}
                 </div>
-                {% include "horilla_theme/components/notification_bell.html" %}
                 {% if show_section %}
                     <a class="neutron-icon-button" href="{% url 'settings' %}" title="{% trans 'Settings' %}" aria-label="{% trans 'Settings' %}">{% neutron_icon "settings" 17 %}</a>
                 {% endif %}
