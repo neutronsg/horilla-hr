@@ -5961,8 +5961,14 @@ def _system_preferences_context(request):
     # Default: all companies selected for assignment.
     tracking_assigned_company_ids = [c.id for c in tracking_assign_companies]
 
-    pagination_instance, _created = DynamicPagination.objects.get_or_create(
+    # Viewing settings must not create a preference: an unsaved row shows the
+    # value lists currently use; saving it creates the preference.
+    from base.methods import get_pagination
+
+    pagination_instance = DynamicPagination.objects.filter(
         user_id=request.user, company_id=tracking_company
+    ).first() or DynamicPagination(
+        user_id=request.user, company_id=tracking_company, pagination=get_pagination()
     )
     pagination_settings = [pagination_instance]
     show_pagination_company = len(pagination_settings) > 1
@@ -7601,9 +7607,21 @@ def pagination_settings_view(request):
     if request.method == "POST":
         setting_id = request.POST.get("setting_id")
         pagination = request.POST.get("pagination")
-        updated = DynamicPagination.objects.filter(
-            id=setting_id, user_id=request.user
-        ).update(pagination=pagination)
+        if setting_id:
+            updated = DynamicPagination.objects.filter(
+                id=setting_id, user_id=request.user
+            ).update(pagination=pagination)
+        else:
+            # First save from the settings page (no preference row yet).
+            company_id = request.POST.get("company_id") or None
+            if company_id is not None and not str(company_id).isdigit():
+                company_id = None
+            DynamicPagination.objects.update_or_create(
+                user_id=request.user,
+                company_id_id=company_id,
+                defaults={"pagination": pagination},
+            )
+            updated = 1
         if updated:
             messages.success(request, _("Default pagination updated."))
     if request.META.get("HTTP_HX_REQUEST"):
