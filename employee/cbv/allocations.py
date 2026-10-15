@@ -628,7 +628,7 @@ if app_installed("asset"):
         """
         Method will retun the api to the avatar or path to the question template
         """
-        url = f"https://ui-avatars.com/api/?name={self}&background=random"
+        url = f"/avatar/initials.svg?name={self}&background=random"
         return url
 
     Asset.asset_allocation_metod = asset_allocation_metod

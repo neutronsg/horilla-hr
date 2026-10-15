@@ -463,7 +463,7 @@ class Tabs extends Tables {
                 </button>
                 <div class="oh-profile oh-profile--md">
                   <div class="oh-profile__avatar mr-1">
-                    <img src="https://ui-avatars.com/api/?name=${field.value}&amp;background=random" class="oh-profile__image" alt="User">
+                    <img src="/avatar/initials.svg?name=${field.value}&amp;background=random" class="oh-profile__image" alt="User">
                   </div>
                   <input class="oh-table__editable-input" placeholder="Edit" value="${field.value}" readonly>
                 </div>

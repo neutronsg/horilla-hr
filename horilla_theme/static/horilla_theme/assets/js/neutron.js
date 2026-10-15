@@ -97,13 +97,32 @@
         return promise;
     }
     let navigationGeneration = 0;
+    function assetGroup(url) {
+        const path = new URL(url, location.href).pathname;
+        return path.includes('/report/') ? 'reports' : path.includes('organisation-chart') ? 'organization' : (path.includes('dashboard') || path === '/ess/') ? 'dashboard' : null;
+    }
+    function assetsReady(group) {
+        return (window.NEUTRON_ASSETS[group] || []).every(url => {
+            const resolved = new URL(url, location.href).href;
+            return Array.from(document.querySelectorAll('script[src], link[rel="stylesheet"]')).some(el => (el.src || el.href) === resolved);
+        });
+    }
     window.neutronEnsurePageAssets = async function (url) {
         const generation = ++navigationGeneration;
-        const path = new URL(url, location.href).pathname;
-        const group = path.includes('/report/') ? 'reports' : path.includes('organisation-chart') ? 'organization' : (path.includes('dashboard') || path === '/ess/') ? 'dashboard' : null;
+        const group = assetGroup(url);
         if (group) for (const asset of window.NEUTRON_ASSETS[group]) await loadAsset(asset);
         return generation === navigationGeneration;
     };
+    // Any HTMX navigation into the main region (not only the sidebar) waits for the page's
+    // feature assets, e.g. module dashboards that need the local ApexCharts build.
+    document.addEventListener('htmx:confirm', event => {
+        const {question, issueRequest, path, target} = event.detail;
+        if (question || !path || !target || !(target.id === 'ohMainContent' || target.closest?.('#ohMainContent'))) return;
+        const group = assetGroup(path);
+        if (!group || assetsReady(group)) return;
+        event.preventDefault();
+        window.neutronEnsurePageAssets(path).catch(() => {}).finally(() => issueRequest(true));
+    });
     const active = new Map();
     const bar = document.querySelector('.neutron-loading');
     const status = document.querySelector('.neutron-status');

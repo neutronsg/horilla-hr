@@ -345,8 +345,8 @@
                                 <label for="id_icon" class="emp-photo-zone w-20 h-20 border-2 border-dashed border-secondary-300 rounded-xl flex items-center justify-center bg-secondary-50 overflow-hidden cursor-pointer transition-colors" id="iconDropZone">
                                     <img
                                         id="iconPreview"
-                                        src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}https://ui-avatars.com/api/?name=LT&background=e5e7eb&color=6b7280{% endif %}"
-                                        data-default-src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}https://ui-avatars.com/api/?name=LT&background=e5e7eb&color=6b7280{% endif %}"
+                                        src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}/avatar/initials.svg?name=LT&background=e5e7eb&color=6b7280{% endif %}"
+                                        data-default-src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}/avatar/initials.svg?name=LT&background=e5e7eb&color=6b7280{% endif %}"
                                         alt="{% trans 'Leave type icon' %}"
                                         class="preview w-full h-full object-cover"
                                     >

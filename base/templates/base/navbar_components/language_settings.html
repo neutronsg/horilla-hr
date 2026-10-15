@@ -14,7 +14,7 @@
                             <a href="{% url 'set_language' %}" class="oh-dropdown__link"
                                 onclick="event.preventDefault(); document.getElementById('language-form-{{ language.0 }}').submit();">
                                 <img src="{% static IMAGE_PATH %}"
-                                    onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ language.1|urlencode }}&background=random';"
+                                    onerror="this.onerror=null; this.src='/avatar/initials.svg?name={{ language.1|urlencode }}&background=random';"
                                     class="oh-dropdown__lang-icon" />{{ language.1 }}
                                 {% if language.0 == LANGUAGE_CODE %}
                                 <ion-icon name="checkmark-circle-outline"

@@ -5,6 +5,7 @@ This module is used to register context processor`
 """
 
 from django.apps import apps
+from horilla.request_cache import per_request
 from django.conf import settings
 from django.contrib import messages
 from django.urls import path
@@ -30,7 +31,7 @@ class AllCompany:
     """
 
     class Urls:
-        url = "https://ui-avatars.com/api/?name=All+Company&background=random"
+        url = "/avatar/initials.svg?name=All+Company&background=random"
 
     company = "All Company"
     icon = Urls()
@@ -42,13 +43,14 @@ class AllMyCompanies(AllCompany):
     """Non-superuser combined view over assignment companies only."""
 
     class Urls:
-        url = "https://ui-avatars.com/api/?name=All+My+Companies&background=random"
+        url = "/avatar/initials.svg?name=All+My+Companies&background=random"
 
     company = "All my companies"
     icon = Urls()
     text = "All my companies"
 
 
+@per_request
 def get_companies(request):
     """
     Companies for the header switcher.
@@ -81,7 +83,7 @@ def get_companies(request):
             [
                 "all",
                 "All my companies",
-                "https://ui-avatars.com/api/?name=All+My+Companies&background=random",
+                "/avatar/initials.svg?name=All+My+Companies&background=random",
                 False,
             ],
         ] + companies
@@ -90,7 +92,7 @@ def get_companies(request):
             [
                 "all",
                 "All Company",
-                "https://ui-avatars.com/api/?name=All+Company&background=random",
+                "/avatar/initials.svg?name=All+Company&background=random",
                 False,
             ],
         ] + companies
@@ -236,6 +238,7 @@ def doc_base_url(request):
     }
 
 
+@per_request
 def resignation_request_enabled(request):
     """
     Check weather resignation_request enabled of not in offboarding
@@ -258,6 +261,7 @@ def resignation_request_enabled(request):
     return {"enabled_resignation_request": enabled_resignation_request}
 
 
+@per_request
 def timerunner_enabled(request):
     """
     Whether Time Runner (at-work tracker) is enabled for the selected company.
@@ -282,6 +286,7 @@ def timerunner_enabled(request):
     return {"enabled_timerunner": enabled_timerunner}
 
 
+@per_request
 def intial_notice_period(request):
     """
     Check weather resignation_request enabled of not in offboarding
@@ -377,6 +382,7 @@ def check_candidate_self_tracking_rating(request):
     return {"check_candidate_self_tracking_rating": SimpleLazyObject(_resolve)}
 
 
+@per_request
 def get_initial_prefix(request):
     """
     This method is used to get the initial prefix
@@ -397,6 +403,7 @@ def biometric_app_exists(request):
     return {"biometric_app_exists": biometric_app_exists}
 
 
+@per_request
 def enable_late_come_early_out_tracking(request):
     if request is None:
         tracking = TrackLateComeEarlyOut.objects.first()
@@ -413,6 +420,7 @@ def enable_late_come_early_out_tracking(request):
     return {"tracking": enable, "late_come_early_out_tracking": enable}
 
 
+@per_request
 def enable_profile_edit(request):
     from accessibility.accessibility import ACCESSBILITY_FEATURE
 
@@ -446,6 +454,7 @@ def export_access_enabled(request):
     return {"export_access_enabled": enabled}
 
 
+@per_request
 def navbar_languages(request):
     """
     Exposes the list of languages available in the navbar language

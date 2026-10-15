@@ -22,7 +22,7 @@ class Bot:
         return "Horilla Bot"
 
     def get_avatar(self):
-        return "https://ui-avatars.com/api/?name=Horilla+Bot&background=random"
+        return "/avatar/initials.svg?name=Horilla+Bot&background=random"
 
 
 def _check_and_delete(entry1, entry2, dry_run=False):

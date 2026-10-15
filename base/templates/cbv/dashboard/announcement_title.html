@@ -9,7 +9,7 @@
         hx-get="{% url 'announcement-single-view' instance.id %}"
         hx-target="#objectDetailsModalTarget" onclick="closeNew(this)">
         <div class="oh-profile__avatar mr-1">
-            <img src="https://ui-avatars.com/api/?name={{instance.title}}&background=random"
+            <img src="/avatar/initials.svg?name={{instance.title}}&background=random"
                 class="oh-profile__image" />
         </div>
         <span class="oh-profile__name oh-text--dark fw-bold">

@@ -427,7 +427,7 @@ class Recruitment(HorillaModel):
         """
         Method will retun the api to the avatar or path to the profile image
         """
-        url = f"https://ui-avatars.com/api/?name={self.title}&background=random"
+        url = f"/avatar/initials.svg?name={self.title}&background=random"
         return url
 
     def is_vacancy_filled(self):
@@ -553,7 +553,7 @@ class Stage(HorillaModel):
         Method will retun the api to the avatar or path to the profile image
         """
         url = (
-            f"https://ui-avatars.com/api/?name={self.recruitment_id}&background=random"
+            f"/avatar/initials.svg?name={self.recruitment_id}&background=random"
         )
         return url
 
@@ -1693,7 +1693,7 @@ class SkillZone(HorillaModel):
         """
         Method will retun the api to the avatar or path to the profile image
         """
-        url = f"https://ui-avatars.com/api/?name={self.title}&background=random"
+        url = f"/avatar/initials.svg?name={self.title}&background=random"
         return url
 
     def candidate_count_display(self):

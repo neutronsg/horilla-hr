@@ -62,11 +62,11 @@ def _actor_name(updated_by):
 
 def _actor_avatar(updated_by):
     if updated_by is None:
-        return "https://ui-avatars.com/api/?name=Horilla+Bot&background=random"
+        return "/avatar/initials.svg?name=Horilla+Bot&background=random"
     getter = getattr(updated_by, "get_avatar", None)
     if callable(getter):
         return getter()
-    return "https://ui-avatars.com/api/?name=Horilla+Bot&background=random"
+    return "/avatar/initials.svg?name=Horilla+Bot&background=random"
 
 
 def _normalize_tracking_change(change):
@@ -170,7 +170,7 @@ class _AuditActor:
     def get_avatar(self):
         if self.employee and hasattr(self.employee, "get_avatar"):
             return self.employee.get_avatar()
-        return f"https://ui-avatars.com/api/?name={self.name.replace(' ', '+')}&background=random"
+        return f"/avatar/initials.svg?name={self.name.replace(' ', '+')}&background=random"
 
     def __str__(self):
         return self.get_full_name()

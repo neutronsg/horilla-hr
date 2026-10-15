@@ -70,7 +70,7 @@
             <span class="mr-3">
                 {% if not request.session.selected_company_instance %}
                     <img
-                        src="https://ui-avatars.com/api/?name=C&background=random"
+                        src="/avatar/initials.svg?name=C&background=random"
                         style="width: 34px; border-radius: 3px"
                     >
                 {% else %}
@@ -93,7 +93,7 @@
             <span class="mr-3">
                 {% if request.user.employee_get.employee_work_info.company_id.icon == None %}
                     <img
-                        src="https://ui-avatars.com/api/?name=C&background=random"
+                        src="/avatar/initials.svg?name=C&background=random"
                         style="width: 34px; border-radius: 3px"
                     >
                 {% else %}

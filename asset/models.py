@@ -542,7 +542,7 @@ class AssetAssignment(HorillaModel):
         """
         Method will retun the api to the avatar or path to the profile image
         """
-        url = f"https://ui-avatars.com/api/?name={self.asset_id}&background=random"
+        url = f"/avatar/initials.svg?name={self.asset_id}&background=random"
         return url
 
     def asset_detail_view(self):
@@ -636,7 +636,7 @@ class AssetAssignment(HorillaModel):
         """
         Method will retun the api to the avatar or path to the question template
         """
-        url = f"https://ui-avatars.com/api/?name={self.asset_id.asset_name}&background=random"
+        url = f"/avatar/initials.svg?name={self.asset_id.asset_name}&background=random"
         return url
 
     def detail_view_asset(self):

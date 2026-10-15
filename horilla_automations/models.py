@@ -103,7 +103,7 @@ class MailAutomation(HorillaModel):
         """
         Method will retun the api to the avatar or path to the profile image
         """
-        url = f"https://ui-avatars.com/api/?name={self.title}&background=random"
+        url = f"/avatar/initials.svg?name={self.title}&background=random"
 
         return url
 
