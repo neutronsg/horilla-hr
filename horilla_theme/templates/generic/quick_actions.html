@@ -10,7 +10,8 @@
     </script>
 {% endif %}
 
-<div class="flex flex-wrap justify-between items-center gap-2 mb-1.5 {{ margin_class|default:'ml-2 mr-2' }} {{ extra_class|default:'' }}">
+{% if not footer_only %}
+<div class="{% if bulk_only %}neutron-bulk-bar{% endif %} flex flex-wrap justify-between items-center gap-2 mb-1.5 {{ margin_class|default:'ml-2 mr-2' }} {{ extra_class|default:'' }}">
     {% if bulk_select_option %}
     <div class="flex flex-nowrap gap-1 items-center flex-shrink-0">
         <button
@@ -118,10 +119,15 @@
     </div>
     {% endif %}
 
+</div>
+{% endif %}
+{% if not bulk_only %}
+<div class="neutron-list-footer">
+    <span class="neutron-record-count">{{ queryset.paginator.count }} {% trans "records" %}</span>
     <div class="flex flex-nowrap items-center gap-2 ml-auto flex-shrink-0 self-center">
         {% if queryset.has_previous or queryset.has_next %}
             <div class="hlv-pagination inline-flex items-center h-8 gap-0.5 bg-white border border-[#e6e6e6] rounded-md px-1 flex-shrink-0">
-                <button
+                <button aria-label="{% trans 'First page' %}"
                     type="button"
                     class="w-7 h-7 flex items-center justify-center rounded text-xs leading-none transition duration-300 {% if queryset.has_previous %}text-[#666] hover:bg-[#f5f5f5]{% else %}text-[#ccc] cursor-not-allowed{% endif %}"
                     {% if queryset.has_previous %}
@@ -133,7 +139,7 @@
                 >
                     <i class="fa-solid fa-angles-left"></i>
                 </button>
-                <button
+                <button aria-label="{% trans 'Previous page' %}"
                     type="button"
                     class="w-7 h-7 flex items-center justify-center rounded text-xs leading-none transition duration-300 {% if queryset.has_previous %}text-[#666] hover:bg-[#f5f5f5]{% else %}text-[#ccc] cursor-not-allowed{% endif %}"
                     {% if queryset.has_previous %}
@@ -162,7 +168,7 @@
                     >
                     <span class="inline-flex items-center h-6 leading-none whitespace-nowrap">/ {{ queryset.paginator.num_pages }}</span>
                 </div>
-                <button
+                <button aria-label="{% trans 'Next page' %}"
                     type="button"
                     class="w-7 h-7 flex items-center justify-center rounded text-xs leading-none transition duration-300 {% if queryset.has_next %}text-[#666] hover:bg-[#f5f5f5]{% else %}text-[#ccc] cursor-not-allowed{% endif %}"
                     {% if queryset.has_next %}
@@ -174,7 +180,7 @@
                 >
                     <i class="fa-solid fa-angle-right"></i>
                 </button>
-                <button
+                <button aria-label="{% trans 'Last page' %}"
                     type="button"
                     class="w-7 h-7 flex items-center justify-center rounded text-xs leading-none transition duration-300 {% if queryset.has_next %}text-[#666] hover:bg-[#f5f5f5]{% else %}text-[#ccc] cursor-not-allowed{% endif %}"
                     {% if queryset.has_next %}
@@ -226,3 +232,5 @@
     {% endif %}
     </div>
 </div>
+
+{% endif %}

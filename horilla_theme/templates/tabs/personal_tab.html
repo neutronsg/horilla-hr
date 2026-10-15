@@ -6,9 +6,9 @@
 <div class="grid gap-4 lg:grid-cols-12">
     <!-- Personal Information -->
     <section class="lg:col-span-4">
-        <div class="overflow-hidden rounded-xl border border-[#ebebeb]">
-            <div class="flex items-center justify-between bg-[#f3f3f3] px-3 py-3">
-                <h3 class="text-sm font-semibold text-[#333]">{% trans "Personal Information" %}</h3>
+        <div class="neutron-detail-section">
+            <div class="neutron-detail-section-heading">
+                <h3 class="neutron-detail-section-title">{% trans "Personal Information" %}</h3>
             </div>
 
             <div class="divide-y divide-secondary-100 bg-white">
@@ -120,9 +120,9 @@
     <div class="space-y-4 lg:col-span-8">
         <!-- Work Information -->
         <section>
-            <div class="overflow-hidden rounded-xl border border-[#ebebeb]">
-                <div class="flex items-center justify-between bg-[#f3f3f3] px-3 py-3">
-                    <h3 class="text-sm font-semibold text-[#333]">{% trans "Work Information" %}</h3>
+            <div class="neutron-detail-section">
+                <div class="neutron-detail-section-heading">
+                    <h3 class="neutron-detail-section-title">{% trans "Work Information" %}</h3>
                 </div>
                 <div class="bg-white px-3 py-3">
                     <div class="grid gap-x-6 gap-y-1 sm:grid-cols-2">
@@ -448,9 +448,9 @@
 
         {% if can_view_singapore_details %}
         <section>
-            <div class="overflow-hidden rounded-xl border border-[#ebebeb]">
-                <div class="flex items-center justify-between bg-[#f3f3f3] px-3 py-3">
-                    <h3 class="text-sm font-semibold text-[#333]">{% trans "Singapore Employment" %}</h3>
+            <div class="neutron-detail-section">
+                <div class="neutron-detail-section-heading">
+                    <h3 class="neutron-detail-section-title">{% trans "Singapore Employment" %}</h3>
                     {% if can_edit_singapore_details %}
                     <a class="oh-btn oh-btn--secondary" href="{% url 'singapore-employee-details' employee.pk %}?edit=1">{% trans "Edit details" %}</a>
                     {% endif %}
@@ -477,9 +477,9 @@
         <!-- Bank Information -->
         {% if perms.employee.view_employeebankdetails or request.user == employee.employee_user_id %}
             <section>
-                <div class="overflow-hidden rounded-xl border border-[#ebebeb]">
-                    <div class="flex items-center justify-between bg-[#f3f3f3] px-3 py-3">
-                        <h3 class="text-sm font-semibold text-[#333]">{% trans "Bank Information" %}</h3>
+                <div class="neutron-detail-section">
+                    <div class="neutron-detail-section-heading">
+                        <h3 class="neutron-detail-section-title">{% trans "Bank Information" %}</h3>
                     </div>
                     <div class="bg-white px-3 py-3">
                         <div class="grid gap-x-6 gap-y-1 sm:grid-cols-2">

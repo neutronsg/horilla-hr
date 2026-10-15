@@ -1,7 +1,7 @@
 {% load i18n widget_tweaks %}
 
 <div class="oh-general__tab-target{% if active_tab and active_tab != 'bank' %} d-none{% elif not active_tab and 'bank' != 'personal' %} d-none{% endif %}" id="bank">
-    <div class="bg-white rounded-2xl shadow-card px-6 py-5">
+    <div class="neutron-editor-body">
         <form
             method="post"
             hx-post="{% url 'employee-view-update' obj_id %}"
@@ -21,11 +21,11 @@
             {{ bank_form.non_field_errors }}
 
             <!-- Bank Account Details -->
-            <div class="border border-[#ebebeb] rounded-md mb-5">
-                <h3 class="text-sm font-semibold bg-[#f3f3f3] px-3 py-3 text-[#333] flex items-center justify-between gap-2 flex-wrap rounded-t-md">
+            <div class="neutron-form-section">
+                <h3 class="neutron-form-section-title">
                     {% trans "Account Information" %}
                 </h3>
-                <div class="grid grid-cols-3 gap-x-4 gap-y-2 emp-grid-3 px-3 py-3">
+                <div class="grid grid-cols-3 gap-x-4 gap-y-2 emp-grid-3 neutron-form-section-fields">
                     <div>
                         <label class="block text-xs font-medium text-color-600 mb-1 required-star" for="id_bank_name">{% trans "Bank Name" %}</label>
                         {{ bank_form.bank_name|add_class:"emp-input w-full h-9 px-3 text-xs border border-secondary-200 rounded-md bg-white text-dark-500" }}
@@ -55,11 +55,11 @@
             </div>
 
             <!-- Bank Address -->
-            <div class="border border-[#ebebeb] rounded-md mb-5">
-                <h3 class="text-sm font-semibold bg-[#f3f3f3] px-3 py-3 text-[#333] flex items-center justify-between gap-2 flex-wrap rounded-t-md">
+            <div class="neutron-form-section">
+                <h3 class="neutron-form-section-title">
                     {% trans "Bank Address" %}
                 </h3>
-                <div class="px-3 py-3">
+                <div class="neutron-form-section-fields">
                 <div class="mb-2">
                     <label class="block text-xs font-medium text-color-600 mb-1 required-star" for="id_address">{% trans "Address" %}</label>
                     {{ bank_form.address|add_class:"emp-input w-full px-3 py-2 text-xs border border-secondary-200 rounded-md bg-white text-dark-500 resize-y" }}

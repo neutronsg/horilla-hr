@@ -917,9 +917,9 @@ class ReimbursementForm(ModelForm):
     Optimized Reimbursement / Encashment Form
     """
 
-    cols = {"description": 12}
+    cols = {"description": 12, "title": 12, "attachment": 12}
 
-    verbose_name = "Reimbursement / Encashment"
+    verbose_name = "Claim details"
 
     class Meta:
         model = Reimbursement
@@ -938,6 +938,15 @@ class ReimbursementForm(ModelForm):
         self.initial["employee_id"] = self.employee.id if self.employee else None
 
         self.configure_fields()
+        self.ui_description = _("Choose the claim type, enter the details and attach your supporting documents.")
+        self.order_fields([
+            "type", "employee_id", "title", "allowance_on", "amount", "attachment",
+            "description", "leave_type_id", "ad_to_encash", "cfd_to_encash", "bonus_to_encash",
+        ])
+        self.fields["allowance_on"].label = _("Effective date")
+        if "attachment" in self.fields:
+            self.fields["attachment"].label = _("Receipts and supporting documents")
+
 
     def get_employee(self):
         """Resolves employee either from form data or request."""

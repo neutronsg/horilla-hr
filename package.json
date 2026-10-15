@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "scripts": {"build:ui": "tailwindcss -c tools/interface/tailwind.config.cjs -i tools/interface/tailwind.input.css -o horilla_theme/static/horilla_theme/assets/css/utilities.css --minify"},
+  "devDependencies": {"tailwindcss": "3.4.17"}
+}

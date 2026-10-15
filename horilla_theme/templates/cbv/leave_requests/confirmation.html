@@ -12,44 +12,29 @@
                     hx-get="{% url 'request-cancel' instance.id %}"
                     hx-target="#rejectForm"
                     title="{% trans 'Approve cancellation request' %}"
-                    class="h-7 w-7 flex items-center justify-center bg-success text-white rounded-md hover:bg-success-dark transition duration-300"
+                    class="neutron-row-action neutron-review-action"
                 >
-                    <img
-                        src="{% static 'horilla_theme/assets/img/icons/check.svg' %}"
-                        alt="{% trans 'Approve' %}"
-                        width="13"
-                        class="filter brightness-0 invert"
-                    >
-                </button>
+                    <ion-icon name="checkmark-outline" aria-hidden="true"></ion-icon>
+                <span>{% trans "Approve cancellation request" %}</span></button>
             {% else %}
                 <button
                     type="button"
                     disabled
                     title="{% trans 'Approve cancellation request' %}"
-                    class="h-7 w-7 flex items-center justify-center bg-success text-white rounded-md hover:bg-success-dark transition duration-300 oh-btn--disabled"
+                    class="neutron-row-action neutron-review-action"
                 >
-                    <img
-                        src="{% static 'horilla_theme/assets/img/icons/check.svg' %}"
-                        alt="{% trans 'Approve' %}"
-                        width="13"
-                        class="filter brightness-0 invert"
-                    >
-                </button>
+                    <ion-icon name="checkmark-outline" aria-hidden="true"></ion-icon>
+                <span>{% trans "Approve cancellation request" %}</span></button>
             {% endif %}
             {# A cancellation request has no "reject" action of its own, so this button always renders disabled. #}
             <button
                 type="button"
                 disabled
                 title="{% trans 'Reject' %}"
-                class="h-7 w-7 flex items-center justify-center bg-danger text-white rounded-md hover:bg-danger-dark transition duration-300 oh-btn--disabled"
+                class="neutron-row-action neutron-reject-action"
             >
-                <img
-                    src="{% static 'horilla_theme/assets/img/icons/close-circle-icon-original.svg' %}"
-                    alt="{% trans 'Reject' %}"
-                    width="13"
-                    class="filter brightness-0 invert"
-                >
-            </button>
+                <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+            <span>{% trans "Reject" %}</span></button>
         {% else %}
             {% if instance.is_approved and instance.status == 'requested' %}
                 <a
@@ -64,30 +49,20 @@
                         hx-confirm='{% trans "Do you really want to approve this request?" %}'
                     {% endif %}
                     title="{% trans 'Approve' %}"
-                    class="h-7 w-7 flex items-center justify-center bg-success text-white rounded-md hover:bg-success-dark transition duration-300"
+                    class="neutron-row-action neutron-review-action"
                 >
-                    <img
-                        src="{% static 'horilla_theme/assets/img/icons/check.svg' %}"
-                        alt="{% trans 'Approve' %}"
-                        width="13"
-                        class="filter brightness-0 invert"
-                    >
-                </a>
+                    <ion-icon name="checkmark-outline" aria-hidden="true"></ion-icon>
+                <span>{% trans "Approve" %}</span></a>
             {% else %}
                 <a
                     type="button"
                     href="#"
-                    onclick="event.preventDefault()"
+                    onclick="event.preventDefault()" aria-disabled="true"
                     title="{% trans 'Approve' %}"
-                    class="h-7 w-7 flex items-center justify-center bg-success text-white rounded-md hover:bg-success-dark transition duration-300 oh-btn--disabled"
+                    class="neutron-row-action neutron-review-action"
                 >
-                    <img
-                        src="{% static 'horilla_theme/assets/img/icons/check.svg' %}"
-                        alt="{% trans 'Approve' %}"
-                        width="13"
-                        class="filter brightness-0 invert"
-                    >
-                </a>
+                    <ion-icon name="checkmark-outline" aria-hidden="true"></ion-icon>
+                <span>{% trans "Approve" %}</span></a>
             {% endif %}
 
             {% if instance.is_approved and instance.status == 'requested' %}
@@ -98,38 +73,24 @@
                     hx-get="{% url 'request-cancel' instance.id %}"
                     hx-target="#rejectForm"
                     title="{% trans 'Reject' %}"
-                    class="h-7 w-7 flex items-center justify-center bg-danger text-white rounded-md hover:bg-danger-dark transition duration-300"
+                    class="neutron-row-action neutron-reject-action"
                 >
-                    <img
-                        src="{% static 'horilla_theme/assets/img/icons/close-circle-icon-original.svg' %}"
-                        alt="{% trans 'Reject' %}"
-                        width="13"
-                        class="filter brightness-0 invert"
-                    >
-                </a>
+                    <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+                <span>{% trans "Reject" %}</span></a>
             {% else %}
                 <a
                     type="button"
                     href="#"
-                    onclick="event.preventDefault()"
+                    onclick="event.preventDefault()" aria-disabled="true"
                     title="{% trans 'Reject' %}"
-                    class="h-7 w-7 flex items-center justify-center bg-danger text-white rounded-md hover:bg-danger-dark transition duration-300 oh-btn--disabled"
+                    class="neutron-row-action neutron-reject-action"
                 >
-                    <img
-                        src="{% static 'horilla_theme/assets/img/icons/close-circle-icon-original.svg' %}"
-                        alt="{% trans 'Reject' %}"
-                        width="13"
-                        class="filter brightness-0 invert"
-                    >
-                </a>
+                    <ion-icon name="close-outline" aria-hidden="true"></ion-icon>
+                <span>{% trans "Reject" %}</span></a>
             {% endif %}
         {% endif %}
     {% else %}
         <span class="text-xs text-gray-500">{% trans "For information" %}</span>
     {% endif %}
-    {% if instance.can_admin_intervene %}
-        <button type="button" class="oh-btn oh-btn--light oh-btn--small"
-            hx-get="{% url 'leave-admin-intervention' instance.pk %}" hx-target="#genericModalBody"
-            data-toggle="oh-modal-toggle" data-target="#genericModal">{% trans "Admin intervention" %}</button>
-    {% endif %}
+
 </div>

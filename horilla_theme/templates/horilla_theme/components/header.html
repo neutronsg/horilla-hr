@@ -4,26 +4,6 @@
 {% show_section as show_section %}
 {% get_company as theme_obj %}
 
-<style>
-    /* Dark mode: the header action-icon chips use .bg-primary-100, which the
-       global dark theme paints #1a1a1a — darker than the #242424 header, so the
-       buttons read as recessed holes and their icons lose contrast. Give them a
-       subtly raised neutral surface instead, keep the glyph bright, and restore
-       the accent hover (the global !important resting rule otherwise kills it). */
-    body.dark .oh-main-header .bg-primary-100 {
-        background-color: rgba(255, 255, 255, 0.12) !important;
-    }
-    body.dark .oh-main-header .bg-primary-100 i {
-        color: #ffffff;
-    }
-    body.dark .oh-main-header .bg-primary-100:hover {
-        background-color: {{ theme_obj.primary_600|default:'#e54f38' }} !important;
-    }
-    body.dark .oh-main-header .bg-primary-100:hover i {
-        color: #ffffff;
-    }
-</style>
-
 <div id="mainHeader" class="oh-main-header flex justify-between items-center bg-white py-3 px-5 border-b border-b-dark-50 fixed z-40">
     <div id="breadcrumbs-container">
         {% if breadcrumbs %}
@@ -31,7 +11,7 @@
         {% endif %}
     </div>
 
-    <div class="flex items-center gap-8">
+    <div class="neutron-header-tools">
         <!-- Action Icons -->
         <div class="flex items-center gap-2">
             {% if "attendance"|app_installed %}
@@ -40,19 +20,19 @@
                 </div>
             {% endif %}
             <button
-                id="themeToggleButton"
-                class="md:block p-2 group text-primary-600 w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full transition duration-300 flex items-center justify-center"
+                id="themeToggleButton" type="button" aria-label="{% trans 'Toggle theme' %}"
+                class="neutron-icon-button group flex items-center justify-center"
             >
-                <a href="#" aria-label="{% trans 'Toggle theme' %}" onclick="return false">
+                <span aria-hidden="true">
                     {% if request.session.theme == "dark" %}
                         <i class="fa-solid fa-lightbulb transition duration-300 group-hover:text-white"></i>
                     {% else %}
                         <i class="fa-solid fa-moon transition duration-300 group-hover:text-white"></i>
                     {% endif %}
-                </a>
+                </span>
             </button>
             {% if show_section %}
-                <button class="md:block p-2 group text-primary-600 w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full transition duration-300 flex items-center justify-center">
+                <button class="neutron-icon-button group flex items-center justify-center">
                     <a href="{% url 'settings' %}">
                         <i class="fas fa-cog transition duration-300 group-hover:text-white"></i>
                     </a>
@@ -65,7 +45,7 @@
                     type="button"
                     title="{% trans 'Take a tour' %}"
                     onclick="if(window.horillaTour){window.horillaTour.toggle();}"
-                    class="hidden md:block p-2 group text-primary-600 w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full transition duration-300 relative"
+                    class="neutron-icon-button group relative"
                 >
                     <i class="fas fa-circle-question transition duration-300 group-hover:text-white"></i>
                     {% if tour_has_pending %}
@@ -76,7 +56,8 @@
             {% endif %}
             <div class="relative dropdown-wrapper">
                 <button
-                    class="hidden md:block p-2 group text-primary-600 w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full transition duration-300 relative"
+                    class="neutron-icon-button group relative"
+                    aria-label="{% trans 'Notifications' %}" title="{% trans 'Notifications' %}"
                     hx-get="{% url 'notifications' %}"
                     hx-target="#notificationContainer"
                     hx-trigger="load"
@@ -86,7 +67,7 @@
                     <span
                         id="notifyBadgeCircle"
                         class="absolute w-7 h-7 rounded-full text-xs text-[white] font-semibold flex items-center justify-center border-2 border-white p-1 [right:-10px] [top:-7px]{% if not unread_count %} hidden{% endif %}"
-                        style="background-color: {{ theme_obj.primary_600|default:'#d7391d' }}"
+                        style="background-color: var(--primary-600)"
                     >
                         {% live_notify_badge %}
                     </span>
@@ -129,8 +110,8 @@
 
             {% if show_language_switcher %}
                 <div class="relative dropdown-wrapper">
-                    <button class="hidden md:block p-2 group text-primary-600 w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full transition duration-300">
-                        <i class="fas fa-globe transition duration-300 group-hover:text-white"></i>
+                    <button class="neutron-icon-button group">
+                        <span class="sr-only">{% trans "Language" %}</span><i class="fas fa-globe transition duration-300 group-hover:text-white"></i>
                     </button>
                     {% include "base/navbar_components/language_settings.html" %}
                 </div>
@@ -138,8 +119,8 @@
 
             {% if show_company_switcher %}
                 <div class="relative dropdown-wrapper">
-                    <button class="hidden md:block p-2 group text-primary-600 w-12 h-12 bg-primary-100 hover:bg-primary-600 rounded-full transition duration-300">
-                        <i class="fa-solid fa-building transition duration-300 group-hover:text-white"></i>
+                    <button class="neutron-icon-button group">
+                        <span class="neutron-company-label">{% trans "Company" %}</span><i class="fa-solid fa-building transition duration-300 group-hover:text-white"></i>
                     </button>
                     {% include "base/navbar_components/company_selection.html" %}
                 </div>

@@ -1,0 +1,25 @@
+name: Interface assets
+on:
+  push:
+    branches: ["2.0", dev/v2.0]
+  pull_request:
+    branches: ["2.0", dev/v2.0]
+jobs:
+  static-utilities:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run build:ui
+      - name: Verify compiled styles are current
+        run: git diff --exit-code -- horilla_theme/static/horilla_theme/assets/css/utilities.css
+      - name: Check shared JavaScript syntax
+        run: |
+          node --check horilla_theme/static/horilla_theme/assets/js/neutron.js
+          node --check horilla_theme/static/horilla_theme/assets/js/htmxSelect2.js
+          node --check static/index/index.js
+          node --check static/index/country.js

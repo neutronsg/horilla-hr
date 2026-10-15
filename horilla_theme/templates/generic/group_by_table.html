@@ -11,7 +11,7 @@
 <div id="{{view_id|safe}}" class="hlv-container bg-white p-4 rounded-md shadow-card relative" data-list-path="{{request.path}}" data-selected-instances-key="{{selected_instances_key_id}}">
     <script>
         if (!$(".HTV").length) {
-        	$("#reloadMessagesButton").click();
+        {% if messages %}$("#reloadMessagesButton").click();{% endif %}
         }
     </script>
 

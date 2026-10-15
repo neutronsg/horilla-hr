@@ -1,8 +1,8 @@
 {% if proration and wage_type == "monthly" %}<div class="p-3 text-sm">{% load i18n %}{% for month in proration %}<p>{% trans "Salary proration" %}: {{ month.working_days_on_period }} / {{ month.working_days_on_month }} {% trans "working days" %} ({{ month.start_date }} – {{ month.end_date }})</p>{% endfor %}</div>{% endif %}
 {% load static i18n horillafilters %}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-    <div class="bg-primary-300 p-3 rounded-md">
-        <div class="flex justify-between font-semibold p-3 rounded-md bg-primary-600 text-sm text-white mb-2">
+    <div class="neutron-pay-section">
+        <div class="neutron-pay-section-title">
             <p>{% trans "Employee Net Pay" %}</p>
             <p>{{ net_pay|floatformat:2|currency_symbol_position }}</p>
         </div>
@@ -43,8 +43,8 @@
             </p>
         </div>
     </div>
-    <div class="bg-[#0000000a] p-3 rounded-md">
-        <div class="flex justify-between font-semibold p-3 rounded-md bg-[#0000001a] text-sm mb-2">
+    <div class="neutron-pay-section">
+        <div class="neutron-pay-section-title">
             <p>{% trans "Employee Details" %}</p>
         </div>
         <div class="grid sm:flex text-sm justify-between mb-2 px-2">
@@ -76,8 +76,8 @@
             </p>
         </div>
     </div>
-    <div class="bg-[#0000000a] p-3 rounded-md">
-        <div class="flex gap-3 justify-between font-semibold p-3 rounded-md bg-[#0000001a] text-sm mb-2">
+    <div class="neutron-pay-section">
+        <div class="neutron-pay-section-title">
             <p class="w-1/2">{% trans "Allowances" %}</p>
             <p class="flex-1 flex justify-between">
                 {% trans "Amount" %}
@@ -137,8 +137,8 @@
             </p>
         </div>
     </div>
-    <div class="bg-[#0000000a] p-3 rounded-md">
-        <div class="flex gap-3 justify-between font-semibold p-3 rounded-md bg-[#0000001a] text-sm mb-2">
+    <div class="neutron-pay-section">
+        <div class="neutron-pay-section-title">
             <p class="w-1/2">{% trans "Deductions" %}</p>
             <p class="flex-1 flex justify-between">
                 {% trans "Amount" %}
@@ -274,13 +274,13 @@
                 </button>
             </p>
             <p class="flex-1 font-semibold">
-                {{ total_deductions|floatformat:2|currency_symbol_position }}
+                {{ instance.deduction|floatformat:2|currency_symbol_position }}
             </p>
         </div>
     </div>
     {% if custom_leave_breakdown %}
-        <div class="bg-[#0000000a] p-3 rounded-md">
-            <div class="flex gap-3 justify-between font-semibold p-3 rounded-md bg-[#0000001a] text-sm mb-2">
+        <div class="neutron-pay-section">
+            <div class="neutron-pay-section-title">
                 <p class="w-1/2">{% trans "Custom Payment Leave Details" %}</p>
             </div>
             <div class="flex gap-3 text-sm justify-between mb-2 px-2 font-semibold">

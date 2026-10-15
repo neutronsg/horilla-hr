@@ -89,7 +89,7 @@
 		if (`{{keys_to_remove|safe}}`.includes(field)) {
 			return "";
 		}
-		const fiedlElem = $(`#applyFilter`).closest(`form`).find(`[name=${field}]`);
+		const fiedlElem = $(`#applyFilter`).closest(`form`).find(`[name="${CSS.escape(field)}"]`);
 		if (fiedlElem.is("select")) {
 			if (fiedlElem.is("select[multiple]")) {
 				const optionText = fiedlElem.find(`option[value="${value}"]`).text();
@@ -119,11 +119,11 @@
 		nav.html(template);
 
 		// Events (clean separation)
-		nav.on("click", ".oh-titlebar__tag-close", function () {
+		nav.off("click.neutronFilterTags").on("click.neutronFilterTags", ".oh-titlebar__tag-close", function () {
 			clearFilterFromTag($(this));
 		});
 
-		nav.on("click", ".clear-all", function () {
+		nav.on("click.neutronFilterTags", ".clear-all", function () {
 			clearAllFilter($(this));
 		});
 

@@ -2,7 +2,7 @@
 <div id="{{view_id|safe}}" data-total-count="{{queryset.paginator.count|default:0}}">
     <script>
         if (!$(".HTV").length) {
-            reloadMessage(null);
+            {% if messages %}reloadMessage(null);{% endif %}
         }
     </script>
     <div class="d-flex justify-content-between mb-2">

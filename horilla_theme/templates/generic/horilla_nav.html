@@ -87,12 +87,12 @@
         ngbUpdatePreview();
         ngbUpdateDisabledOptions();
     }
-    $(document).on("htmx:afterSwap", function (e) {
+    $(document).off("htmx:afterSwap.neutronGroupFilter").on("htmx:afterSwap.neutronGroupFilter", function (e) {
         if ($(e.target).find("#ngbBreadcrumbLevels").length) {
             ngbSyncFilterDropdownFromBreadcrumb();
         }
     });
-    $(document).on("click", function (e) {
+    $(document).off("click.neutronGroupFilter").on("click.neutronGroupFilter", function (e) {
         // .ngb-reconfigure-trigger lives outside #filterDropdownWrapper (in
         // the nested group-by toolbar) but is a legitimate way to OPEN it --
         // without this check, the click that adds force-open also bubbles
@@ -107,16 +107,17 @@
         }
     });
 </script>
-<div class="flex flex-wrap justify-between items-center mb-3">
-    <h3 class="text-lg font-semibold">{{ nav_title }}</h3>
-    <div class="flex flex-wrap gap-1">
+<div class="neutron-page-heading">
+    <div class="neutron-page-heading-copy"><span class="neutron-eyebrow">{% trans "Workspace" %}</span><h1>{{ nav_title }}</h1></div>
+    <div class="neutron-page-controls">
         {% if search_url %}
             <form
                 autocomplete="off"
                 id="filterForm"
                 onsubmit="event.preventDefault()"
                 hx-get="{{search_url}}"
-                hx-trigger="{% if apply_first_filter %}submit{% else %}load, submit{% endif %}"
+                hx-trigger="{% if apply_first_filter %}submit{% else %}load, submit{% endif %}, input delay:300ms from:find input[name=search]"
+                hx-sync="this:replace"
                 hx-replace-url="false"
                 hx-target="{{search_swap_target}}"
                 hx-timeout="15000"
@@ -124,7 +125,7 @@
                 hx-on::response-error="htmxLoadFailIndicator(this, event);"
                 hx-on::send-error="htmxLoadFailIndicator(this, event);"
                 hx-on::timeout="htmxLoadFailIndicator(this, event);"
-                class="flex flex-wrap gap-1 navFilterForm"
+                class="neutron-search-tools navFilterForm"
             >
                 <input type="text" name="nav_url" value="{{request.path}}" hidden>
                 <input type="radio" name="filter_applied" checked hidden>
@@ -137,7 +138,7 @@
                         aria-label="{% trans 'Search Input' %}"
                         placeholder="{% trans 'Search' %}"
                         autocomplete="false"
-                        autofocus="true"
+
                         {{search_input_attrs|safe}}
                     >
                     <i
@@ -170,13 +171,13 @@
                                 hx-get="{% url 'active-hnv-view-type' %}?view={{type.type}}&path={{request.path}}"
                                 class="tab-btn bg-white px-4 py-2 rounded-md text-xs flex items-center gap-2 border transition duration-300 border-primary-500 nav-view-btn"
                                 title="{{type.type|title}}"
-                                onclick="$(this).closest('form').attr('hx-get','{{type.url}}');
+                                onclick="$(this).closest('form').attr('hx-get','{{type.url|escapejs}}');
                                     $(this).closest('form').find('#applyFilter').click()"
                             >
                                 <a {{type.attrs|safe}}> <ion-icon name="{{type.icon}}"></ion-icon></a>
                                 {% if active_view.type == type.type %}
                                     <script>
-                                        $(".navFilterForm").attr('hx-get', '{{type.url}}');
+                                        $(".navFilterForm").attr('hx-get', '{{type.url|escapejs}}');
                                         $(".nav-view-btn[data-type={{type.type}}]").addClass("oh-view-btn--active")
                                     </script>
                                 {% endif %}
@@ -186,8 +187,8 @@
                 </div>
 
                 {% if filter_body_template %}
-                    <div class="relative dropdown-wrapper" id="filterDropdownWrapper">
-                        <span
+                    <div class="relative dropdown-wrapper neutron-filter-control" id="filterDropdownWrapper">
+                        <button type="button" aria-expanded="false" data-neutron-filter
                             class="px-5 py-2 h-full bg-[white] rounded-md text-xs flex items-center gap-2 border border-primary-500 hover:border-primary-600 transition duration-300 cursor-pointer"
                         >
                             <img
@@ -197,7 +198,7 @@
                                 class="mt-[-1px]"
                             >
                             {% trans "Filter" %}
-                        </span>
+                        </button>
 
                         <div class="oh-filter-dropdown dropdown-content absolute z-30 bg-white rounded-lg [box-shadow:0px_0px_20px_0px_rgb(0_0_0_/_8%)] min-w-[400px] p-3 right-0">
                             <div class="accordion-wrapper space-y-2">
@@ -426,7 +427,7 @@
         {% endif %}
         {% if create_attrs %}
             <a
-                class="px-4 py-2 bg-brand-600 text-white rounded-md text-xs flex items-center gap-2 hover:bg-brand-800 transition duration-300 cursor-pointer"
+                class="neutron-primary-action px-4 py-2 bg-brand-600 text-white rounded-md text-xs flex items-center gap-2 hover:bg-brand-800 transition duration-300 cursor-pointer"
                 {{create_attrs|safe}}
             >
                 <img
@@ -501,25 +502,12 @@
         });
 
         setTimeout(() => {
-            $(".oh-view-btn--active").click();
+            // Active view is already selected before HTMX processes the form.
             {% if apply_first_filter %}
-            if (!$(".oh-view-btn--active").length) {
-                $("#applyFilter").click()
-            }
+            $("#applyFilter").click();
             {% endif %}
         }, 100);
-        $(document).ready(function () {
 
-        let debounceTimer;
-
-        $('#filterForm input[name="search"]').on('keyup', function () {
-            clearTimeout(debounceTimer);
-
-            debounceTimer = setTimeout(() => {
-            this.form.requestSubmit(); // Triggers HTMX handling via form's hx-get, etc.
-            }, 500);
-        });
-        });
 
         $(".nav-view-btn").click(function (e) {
             e.preventDefault();

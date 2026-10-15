@@ -7,7 +7,7 @@
   {% if show_filter_tags %} {% include "generic/filter_tags.html" %} {% endif %}
   <div class="oh-tabs HTV">
     <script>
-        $("#reloadMessagesButton").click()
+        {% if messages %}$("#reloadMessagesButton").click(){% endif %}
     </script>
     <div class="HTV"></div>
     <ul class="oh-tabs__tablist">

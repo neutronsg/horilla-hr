@@ -86,7 +86,11 @@ class PayslipList(HorillaListView):
         Return the queryset of Payslip objects based on user permissions.
         """
         queryset = super().get_queryset()
-        return visible_payslips(self.request.user, queryset)
+        return visible_payslips(self.request.user, queryset).select_related(
+            "employee_id",
+            "employee_id__employee_work_info",
+            "employee_id__employee_work_info__company_id",
+        )
 
     model = Payslip
     filter_class = PayslipFilter
@@ -100,6 +104,8 @@ class PayslipList(HorillaListView):
         (_("Net Pay"), "net_pay_display"),
         (_("Status"), "custom_status_col"),
     ]
+    # Batch remains available in the column picker; default scans prioritise pay totals.
+    default_columns = [column for column in columns if column[1] != "group_name"]
 
     sortby_mapping = [
         (_("Employee"), "employee_id__get_full_name", "employee_id__get_avatar"),
@@ -277,7 +283,7 @@ class PayslipNav(HorillaNavView):
                 }
             )
 
-    nav_title = _("Payslip")
+    nav_title = _("Payslips")
     filter_body_template = "cbv/payslip/payslip_filter.html"
     filter_instance = PayslipFilter()
     filter_form_context_name = "form"

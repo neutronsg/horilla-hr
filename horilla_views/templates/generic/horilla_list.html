@@ -13,7 +13,7 @@
   {% include "generic/export_fields_modal.html" %}
   <script>
     if (!$(".HTV").length) {
-      $("#reloadMessagesButton").click()
+      {% if messages %}$("#reloadMessagesButton").click(){% endif %}
     }
   </script>
   <button class="reload-record" id="{{view_id|safe}}Reload" hidden hx-get="{{request.path}}?{{saved_filters.urlencode}}" hx-target="#{{view_id|safe}}" hx-swap="outerHTML">

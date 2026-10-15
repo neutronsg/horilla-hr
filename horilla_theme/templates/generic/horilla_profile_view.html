@@ -1,86 +1,6 @@
-{% load static i18n generic_template_filters i18n %}
+{% load static i18n generic_template_filters neutron_ui %}
 
-<style>
-    .emp-profile-page {
-        background:
-            radial-gradient(1200px 500px at 10% -10%, color-mix(in srgb, var(--primary-600, #E54F38) 6%, transparent), transparent 55%),
-            radial-gradient(900px 420px at 100% 0%, color-mix(in srgb, var(--primary-500, #F7C8C1) 18%, transparent), transparent 50%);
-    }
-    .emp-profile-card {
-        position: relative;
-    }
-    .emp-profile-card::before {
-        content: "";
-        position: absolute;
-        inset: 0 auto auto 0;
-        width: 100%;
-        height: 4px;
-        /* Card uses rounded-2xl (1rem); round this bar to match since the
-           card no longer clips overflow (the settings dropdown needs to be
-           able to extend past the card's bottom edge). */
-        border-radius: 1rem 1rem 0 0;
-        background: linear-gradient(90deg, var(--primary-600, #E54F38), var(--primary-500, #F7C8C1) 55%, transparent);
-    }
-    .emp-avatar-ring {
-        box-shadow: 0 0 0 3px #fff, 0 0 0 5px color-mix(in srgb, var(--primary-600, #E54F38) 20%, transparent);
-    }
-    .emp-profile-page .usertablist {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        row-gap: 8px;
-        padding-bottom: 2px;
-    }
-    .emp-profile-page .usertablist li {
-        flex-shrink: 0;
-    }
-    .emp-profile-page .usertablist li button {
-        border: 1px solid #e2e8f0;
-        padding: 6px 14px;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        transition: all 0.18s ease;
-        color: #374151;
-        white-space: nowrap;
-    }
-    .emp-profile-page .usertablist li button:hover {
-        transform: translateY(-1px);
-        border-color: var(--primary-500, #F7C8C1);
-        background: var(--primary-100, #FFF5F1);
-        color: var(--primary-600, #E54F38);
-    }
-    .emp-profile-page .usertablist li button.active {
-        background: var(--primary-600, #E54F38) !important;
-        border-color: var(--primary-600, #E54F38);
-        color: #fff;
-        box-shadow: 0 1px 2px color-mix(in srgb, var(--primary-600, #E54F38) 25%, transparent);
-        transform: none;
-    }
-    body.dark .emp-profile-page .usertablist li button {
-        color: #bbbbbb !important;
-        border-color: #444444 !important;
-    }
-    body.dark .emp-profile-page .usertablist li button:hover {
-        background: var(--primary-400, #FBE5E1) !important;
-        border-color: var(--primary-600, #E54F38) !important;
-        color: var(--primary-600, #E54F38) !important;
-    }
-    body.dark .emp-profile-page .usertablist li button.active {
-        background: var(--primary-600, #E54F38) !important;
-        border-color: var(--primary-600, #E54F38) !important;
-        color: #fff !important;
-    }
-    body.dark .emp-profile-meta-chip {
-        background-color: #333333 !important;
-        color: #e5e5e5 !important;
-        --tw-ring-color: #4a4a4a;
-        box-shadow: 0 0 0 1px #4a4a4a;
-    }
-    body.dark .emp-profile-meta-chip i {
-        color: var(--primary-600, #e54f38) !important;
-    }
-</style>
+
 
 <div class="emp-profile-page space-y-4" id="{{view_id|safe}}">
     <button
@@ -93,11 +13,11 @@
     </button>
 
     <!-- Profile header -->
-    <section class="emp-profile-card rounded-2xl bg-white p-4 shadow-card sm:p-6">
+    <section class="emp-profile-card neutron-profile-header">
         <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div class="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
                 <div class="relative shrink-0 self-start sm:self-center">
-                    <div class="emp-avatar-ring h-20 w-20 overflow-hidden rounded-2xl sm:h-24 sm:w-24">
+                    <div class="emp-avatar-ring h-20 w-20 overflow-hidden rounded-lg">
                         <img
                             src="{{ object.get_avatar }}"
                             alt="{{ object }}"
@@ -120,13 +40,13 @@
                     {% if object.get_job_position or object.get_department %}
                         <div class="mt-2 flex flex-wrap gap-2">
                             {% if object.get_job_position %}
-                                <span class="emp-profile-meta-chip inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-2.5 py-1 text-xs font-medium text-color-600 ring-1 ring-secondary-100">
+                                <span class="emp-profile-meta-chip">
                                     <i class="fa-solid fa-briefcase text-primary-600 text-xxs"></i>
                                     {{ object.get_job_position }}
                                 </span>
                             {% endif %}
                             {% if object.get_department %}
-                                <span class="emp-profile-meta-chip inline-flex items-center gap-1.5 rounded-lg bg-secondary-50 px-2.5 py-1 text-xs font-medium text-color-600 ring-1 ring-secondary-100">
+                                <span class="emp-profile-meta-chip">
                                     <i class="fa-solid fa-building text-primary-600 text-xxs"></i>
                                     {{ object.get_department }}
                                 </span>
@@ -357,7 +277,7 @@
         <div class="flex items-center gap-2">
             <ul class="usertablist flex-1">
                 {% for tab in visible_tabs %}
-                    {% if not tab.accessibility or tab.accessibility|accessibility:instance %}
+                    {% if tab.title|primary_profile_tab or "employee" not in request.path %}{% if not tab.accessibility or tab.accessibility|accessibility:instance %}
                         <li>
                             <button
                                 onclick="$('#{{view_id}} li button.active').removeClass('active'); $(this).addClass('active')"
@@ -376,8 +296,29 @@
                             >
                             </span>
                         </li>
-                    {% endif %}
-                {% endfor %}
+                    {% endif %}{% endif %}
+                {% endfor %}{% if "employee" in request.path %}<li><details class="neutron-action-menu neutron-profile-overflow"><summary><span class="neutron-profile-overflow-label">{% trans "More" %}</span><ion-icon name="chevron-down-outline" aria-hidden="true"></ion-icon></summary><div class="neutron-action-menu-content"><ul>                {% for tab in visible_tabs %}
+                    {% if not tab.title|primary_profile_tab and "employee" in request.path %}{% if not tab.accessibility or tab.accessibility|accessibility:instance %}
+                        <li>
+                            <button
+                                onclick="$('#{{view_id}} li button.active').removeClass('active'); $(this).addClass('active')"
+                                data-url="{{tab.url|format:instance}}"
+                                hx-get="{{tab.url|format:instance}}"
+                                hx-target="#{{view_id}}profileTab"
+                                data-tab="{{tab.title}}"
+                                class="bg-white {% if forloop.counter == 1 and not active_target %} active {% endif %}"
+                            >
+                                {# label only — data-tab and tab.url stay untranslated for routing #}
+                                {% trans tab.title %}
+                            </button>
+                            <span
+                                hx-get="{{tab.url|format:instance}}"
+                                hx-target="#{{view_id}}profileTab"
+                            >
+                            </span>
+                        </li>
+                    {% endif %}{% endif %}
+                {% endfor %}</ul></div></details></li>{% endif %}
             </ul>
             {% if request.resolver_match.url_name != "candidate-view" and request.resolver_match.url_name != "candidate-view-individual" %}
                 <div class="oh-dropdown shrink-0" x-data="{open: false}" style="z-index: 13">
@@ -410,9 +351,9 @@
     </nav>
 
     <!-- Tab content -->
-    <section class="rounded-2xl bg-white p-3 shadow-card sm:p-4 mb-5">
+    <section class="neutron-profile-content">
         <div
-            class="h-[calc(100vh_-_420px)] min-h-[320px] overflow-hidden overflow-y-auto"
+            class="neutron-profile-panel"
             id="{{view_id}}profileTab"
         >
         </div>

@@ -130,6 +130,15 @@ class ReimbursementsAndEncashmentsListView(HorillaListView):
         self.action_method = "actions_col"
         self.option_method = None
 
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .select_related(
+                "employee_id", "employee_id__employee_work_info", "approved_by"
+            )
+        )
+
     row_status_indications = [
         (
             "rejected--dot",
@@ -414,7 +423,7 @@ class ReimbursementsFormView(HorillaFormView):
 
     model = Reimbursement
     form_class = ReimbursementForm
-    new_display_title = _("Create Reimbursement / Encashment")
+    new_display_title = _("Submit a claim")
     template_name = "cbv/reimbursements/forms.html"
 
     def get_context_data(self, **kwargs):
@@ -422,8 +431,7 @@ class ReimbursementsFormView(HorillaFormView):
         Get context data for rendering the form view.
         """
         context = super().get_context_data(**kwargs)
-        if self.form.instance.pk:
-            self.form_class.verbose_name = _("Update Reimbursement / Encashment")
+        self.form.verbose_name = _("Edit claim") if self.form.instance.pk else _("Submit a claim")
         return context
 
     def form_valid(self, form: ReimbursementForm) -> HttpResponse:
