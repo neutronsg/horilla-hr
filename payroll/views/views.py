@@ -52,6 +52,7 @@ from horilla.group_by import group_by_queryset
 from horilla.http.response import HorillaRedirect
 from notifications.signals import notify
 from payroll.access import can_view_payslip, visible_payslips
+from payroll.navigation import payslip_navigation
 from payroll.context_processors import get_active_employees
 from payroll.filters import ContractFilter, ContractReGroup, PayslipFilter
 from payroll.forms.component_forms import (
@@ -644,6 +645,7 @@ def view_created_payslip(request, payslip_id, **kwargs):
         data["json_data"]["employee"] = payslip.employee_id.id
         data["json_data"]["payslip"] = payslip.id
         data["instance"] = payslip
+        data.update(payslip_navigation(request, payslip))
         data["payment_date"] = payslip.payment_date
         data["all_deductions"] = []
         for deduction_list in [

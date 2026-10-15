@@ -1,0 +1,27 @@
+{% load i18n %}
+<nav class="neutron-payslip-navigation" aria-label="{% trans 'Payslip navigation' %}">
+    {% if previous_payslip_url %}
+        <a class="oh-btn oh-btn--light" href="{{ previous_payslip_url }}" data-payslip-previous aria-keyshortcuts="ArrowLeft"><span aria-hidden="true">←</span> {% trans "Previous" %}</a>
+    {% else %}
+        <button class="oh-btn oh-btn--light" type="button" disabled><span aria-hidden="true">←</span> {% trans "Previous" %}</button>
+    {% endif %}
+    <span aria-live="polite">{% blocktrans with position=payslip_position total=payslip_count %}{{ position }} of {{ total }}{% endblocktrans %}</span>
+    {% if next_payslip_url %}
+        <a class="oh-btn oh-btn--light" href="{{ next_payslip_url }}" data-payslip-next aria-keyshortcuts="ArrowRight">{% trans "Next" %} <span aria-hidden="true">→</span></a>
+    {% else %}
+        <button class="oh-btn oh-btn--light" type="button" disabled>{% trans "Next" %} <span aria-hidden="true">→</span></button>
+    {% endif %}
+</nav>
+<script>
+    // Bind to this document fragment's lifetime, so HTMX navigation cannot accumulate handlers.
+    if (!window.neutronPayslipKeys) {
+        window.neutronPayslipKeys = true;
+        document.addEventListener('keydown', function (event) {
+            if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
+                event.target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], [role="dialog"], .oh-modal--show')) return;
+            const selector = event.key === 'ArrowLeft' ? '[data-payslip-previous]' : event.key === 'ArrowRight' ? '[data-payslip-next]' : null;
+            const link = selector && document.querySelector('.neutron-payslip-navigation ' + selector);
+            if (link && !document.querySelector('.oh-modal--show, .swal2-container')) { event.preventDefault(); link.click(); }
+        });
+    }
+</script>
