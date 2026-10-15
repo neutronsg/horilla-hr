@@ -1,8 +1,9 @@
-{% load static i18n horillafilters %}
+{% load static i18n horillafilters basefilters neutron_ui %}
+{% show_section as show_section %}
 {% get_company as theme_obj %}
-<div id="sidebar" class="fixed inset-y-0 left-0 bg-white border-r border-r-dark-50 z-50">
+<div id="sidebar" class="fixed inset-y-0 left-0 z-50">
     <div class="neutron-sidebar-inner">
-        <!-- Header: hamburger pin toggle + company logo -->
+        <!-- Header: pin toggle (narrow screens only) + company logo -->
         <div class="neutron-sidebar-brand">
             <button
                 id="sidebarPinBtn"
@@ -44,9 +45,28 @@
                 </svg>
             </button>
             <div class="neutron-brand oh-sidebar-label">
-                <a href="{% url 'home-page' %}" aria-label="{% trans 'Neutron HR home' %}"><img class="neutron-wordmark" src="{% static 'images/brand/neutron-email-logo.png' %}" width="112" height="16" alt="Neutron"></a>
-                <span class="text-xs text-secondary-600 truncate">{{ request.user.employee_get.employee_work_info.company_id }}</span>
+                <a href="{% url 'home-page' %}" aria-label="{% trans 'Neutron HR home' %}"><img class="neutron-wordmark" src="{% static 'images/brand/neutron-email-logo.png' %}" width="96" height="14" alt="Neutron"></a>
             </div>
+        </div>
+
+        <!-- Workspace: active company (switcher when several are available) and quick create -->
+        <div class="neutron-workspace oh-sidebar-label">
+            {% if show_company_switcher %}
+                <div class="relative dropdown-wrapper neutron-company-switcher">
+                    <button type="button" class="neutron-workspace-row" aria-label="{% trans 'Switch company' %}">
+                        {% neutron_icon "building" 15 %}
+                        <span class="truncate">{% for company in all_companies %}{% if company.3 %}{{ company.1 }}{% endif %}{% endfor %}{% if not company_selected %}{{ request.user.employee_get.employee_work_info.company_id }}{% endif %}</span>
+                        {% neutron_icon "chevrons" 14 %}
+                    </button>
+                    {% include "base/navbar_components/company_selection.html" %}
+                </div>
+            {% else %}
+                <div class="neutron-workspace-row neutron-workspace-row--static">
+                    {% neutron_icon "building" 15 %}
+                    <span class="truncate">{{ request.user.employee_get.employee_work_info.company_id }}</span>
+                </div>
+            {% endif %}
+            {% include "floating_button.html" %}
         </div>
 
         <nav
@@ -55,7 +75,11 @@
             aria-label="{% trans 'Main navigation' %}"
         >
             {% include "horilla_theme/components/sidebar/top_menu.html" %}
-            {% for menues in sidebar %}
+            {% neutron_nav_groups sidebar as nav_groups %}
+            {% for group_label, group_menus in nav_groups %}
+            <div class="neutron-nav-group">
+                <div class="neutron-nav-group-label oh-sidebar-label" aria-hidden="true">{{ group_label }}</div>
+            {% for menues in group_menus %}
                 <div class="sidebar-item">
                     <button
                         class="sideboxmain group flex items-center gap-3 px-3 py-2.5 rounded-lg w-full transition duration-300"
@@ -65,11 +89,14 @@
                         aria-haspopup="true"
                         aria-controls="sidebarFlyout"
                     >
+                        {% neutron_icon menues.app 18 as menu_icon %}
+                        {% if menu_icon %}{{ menu_icon }}{% else %}
                         <img
                             src="{% static menues.img_src %}"
                             alt=""
-                            class="w-4.5 h-4.5 flex-shrink-0 transition duration-300 group-hover:filter group-hover:brightness-0 group-hover:invert"
+                            class="w-4.5 h-4.5 flex-shrink-0"
                         >
+                        {% endif %}
                         <span
                             class="oh-sidebar-label text-sm font-medium truncate flex-1 text-left"
                         >{{ menues.menu }}</span>
@@ -102,9 +129,26 @@
                     </ul>
                 </div>
             {% endfor %}
-            {% comment %} {{ request.active_company }} {% endcomment %}
-            {% comment %} {% include "horilla_theme/components/sidebar/bottom_menu.html" %} {% endcomment %}
+            </div>
+            {% endfor %}
         </nav>
+
+        <!-- Personal controls: attendance, settings and account -->
+        <div class="neutron-sidebar-foot oh-sidebar-label">
+            {% if "attendance"|app_installed %}
+                <div id="attendance-activity-container" class="neutron-clock">
+                    {% include "attendance/components/in_out_component.html" %}
+                </div>
+            {% endif %}
+            <div class="neutron-account">
+                <div class="relative dropdown-wrapper neutron-profile-menu">
+                    {% include "base/navbar_components/profile_section.html" %}
+                </div>
+                {% if show_section %}
+                    <a class="neutron-icon-button" href="{% url 'settings' %}" title="{% trans 'Settings' %}" aria-label="{% trans 'Settings' %}">{% neutron_icon "settings" 17 %}</a>
+                {% endif %}
+            </div>
+        </div>
     </div>
     <!-- Flyout panel: populated and positioned by JS on hover -->
     <div id="sidebarFlyout">

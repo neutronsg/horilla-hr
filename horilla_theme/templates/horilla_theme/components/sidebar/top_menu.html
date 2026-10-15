@@ -1,4 +1,4 @@
-{% load i18n static %}
+{% load i18n static neutron_ui %}
 {% comment %}
   Dashboard (top-level icon, no submenu panel). We attach the same
   htmx boost params used by submenu links so clicking Dashboard swaps
@@ -14,11 +14,7 @@
     hx-swap="innerHTML show:window:top"
     hx-push-url="true"
 >
-    <img
-        src="{% static 'images/ui/dashboard.svg' %}"
-        alt=""
-        class="w-4.5 h-4.5 flex-shrink-0 transition duration-300 filter brightness-1 invert"
-    >
+    {% neutron_icon "dashboard" 18 %}
     <span
         class="oh-sidebar-label text-sm font-medium truncate flex-1 text-left"
         aria-hidden="true"

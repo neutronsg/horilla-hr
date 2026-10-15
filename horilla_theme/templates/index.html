@@ -65,7 +65,7 @@
         {% if '/report/' in request.path %}<link rel="stylesheet" href="{% static 'build/css/pivottable.min.css' %}">{% endif %}
 <!-- Brand tokens are shared by static utilities and legacy components. -->
 
-        <link rel="stylesheet" href="{% static 'horilla_theme/assets/css/neutron.css' %}?v=neutron-ui-2">
+        <link rel="stylesheet" href="{% static 'horilla_theme/assets/css/neutron.css' %}?v=neutron-ui-3">
 
         {% block styles %}
             <!-- Page-specific styles (optional) -->
@@ -96,10 +96,6 @@
 
         <!-- Include Sidebar (sidebar.html owns id="sidebar" itself) -->
         {% include "horilla_theme/components/sidebar.html" %}
-
-        <div id="floating-buttons">
-            {% include "floating_button.html" %}
-        </div>
 
         <!-- Main Content -->
         <div class="oh-main-content h-screen overflow-auto">
