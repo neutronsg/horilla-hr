@@ -8,9 +8,10 @@
 
 {% if form.verbose_name %}
     <div class="oh-modal__dialog-header">
-        <h2 class="text-md font-semibold" id="createTitle">
+        <div class="neutron-modal-copy"><h2 class="text-md font-semibold" id="createTitle">
             {{ form.verbose_name }}
         </h2>
+        {% if form.ui_description %}<p class="neutron-form-intro">{{ form.ui_description }}</p>{% endif %}</div>
         <button
             type="button"
             class="oh-modal__close--custom"
@@ -52,7 +53,7 @@
     {% endif %}
 
     <div
-        class="oh-general__tab-target oh-profile-section bg-[white] rounded-md border border-dark-50 p-[20px] w-full"
+        class="oh-general__tab-target neutron-modal-form w-full"
         id="{{form.container_id}}"
     >
         <div class="oh-profile-section__card">
@@ -60,9 +61,20 @@
                 <div class="col-12 js-non-field-errors" style="padding-right: 0">
                     {{ form.non_field_errors }}
                 </div>
+                {% if form.errors %}
+                    <div class="col-12">
+                        <div class="neutron-error-summary" role="alert">
+                            <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+                            <div>
+                                <strong>{% trans "Some fields need attention." %}</strong>
+                                <span class="neutron-error-links">{% for field in form.visible_fields %}{% if field.errors %}<a href="#id_{{ field.name }}">{% if field.label %}{% trans field.label %}{% else %}{{ field.name }}{% endif %}</a>{% endif %}{% endfor %}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
                 {% for field in form.visible_fields %}
                     <div
-                        class="col-12 col-md-{{field|col}}"
+                        class="col-12 col-md-{{field|col}}{% if field.errors %} neutron-field-error{% endif %}"
                         id="id_{{ field.name }}_parent_div"
                     >
                         {% if field.label %}
@@ -108,7 +120,7 @@
                 {{ field }}
             {% endfor %}
 
-            <div class="d-flex flex gap-1 justify-end pt-3 mt-3">
+            <div class="neutron-form-actions d-flex flex gap-1 justify-end pt-3 mt-3">
                 {% if not form.instance.pk %}
                     <button
                         type="submit"
@@ -130,7 +142,7 @@
                         "
                         {{form.submit_button_attrs|safe}}
                     >
-                        {% trans 'Save And Add Another' %}
+                        {% trans 'Save and add another' %}
                     </button>
                 {% endif %}
                 <button
@@ -146,7 +158,7 @@
 </div>
 <script>
     $(document).ready(function () {
-        $("select").on("select2:select", function (e) {
+        $(".neutron-modal-form select").off("select2:select.neutronForm").on("select2:select.neutronForm", function (e) {
             $(".leave-message").hide();
             $(this).closest("select")[0].dispatchEvent(new Event("change"));
         });

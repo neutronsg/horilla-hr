@@ -34,7 +34,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
-$(".all-rshift").change(function (e) {
+$(document).on("change", ".all-rshift", function (e) {
     var is_checked = $(this).is(":checked");
     var closest = $(this)
         .closest(".oh-sticky-table__thead")
@@ -80,7 +80,7 @@ function tickRShiftCheckboxes() {
     }
 }
 
-$("#exportRShifts").click(function (e) {
+$(document).on("click", "#exportRShifts", function (e) {
     var currentDate = new Date().toISOString().slice(0, 10);
     ids = [];
     ids = JSON.parse($("#selectedRShifts").attr("data-ids"));
@@ -124,7 +124,7 @@ $("#exportRShifts").click(function (e) {
     });
 });
 
-$("#archiveRotatingShiftAssign").click(function (e) {
+$(document).on("click", "#archiveRotatingShiftAssign", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedRShifts").attr("data-ids"));
@@ -169,7 +169,7 @@ $("#archiveRotatingShiftAssign").click(function (e) {
     }
 });
 
-$("#unArchiveRotatingShiftAssign").click(function (e) {
+$(document).on("click", "#unArchiveRotatingShiftAssign", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedRShifts").attr("data-ids"));
@@ -214,7 +214,7 @@ $("#unArchiveRotatingShiftAssign").click(function (e) {
     }
 });
 
-$("#deleteRotatingShiftAssign").click(function (e) {
+$(document).on("click", "#deleteRotatingShiftAssign", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedRShifts").attr("data-ids"));
@@ -259,7 +259,7 @@ $("#deleteRotatingShiftAssign").click(function (e) {
     }
 });
 
-$(".all-rwork-type").change(function (e) {
+$(document).on("change", ".all-rwork-type", function (e) {
     var is_checked = $(this).is(":checked");
     var closest = $(this)
         .closest(".oh-sticky-table__thead")
@@ -305,7 +305,7 @@ function tickRWorktypeCheckboxes() {
     }
 }
 
-$("#exportRWorktypes").click(function (e) {
+$(document).on("click", "#exportRWorktypes", function (e) {
     var currentDate = new Date().toISOString().slice(0, 10);
     ids = [];
     ids = JSON.parse($("#selectedRWorktypes").attr("data-ids"));
@@ -349,7 +349,7 @@ $("#exportRWorktypes").click(function (e) {
     });
 });
 
-$("#archiveRotatingWorkTypeAssign").click(function (e) {
+$(document).on("click", "#archiveRotatingWorkTypeAssign", function (e) {
     var ids = JSON.parse($("#selectedRWorktypes").attr("data-ids"));
     if (ids.length === 0) {
         Swal.fire({
@@ -377,7 +377,7 @@ $("#archiveRotatingWorkTypeAssign").click(function (e) {
     }
 });
 
-$("#unArchiveRotatingWorkTypeAssign").click(function (e) {
+$(document).on("click", "#unArchiveRotatingWorkTypeAssign", function (e) {
     e.preventDefault();
     var ids = JSON.parse($("#selectedRWorktypes").attr("data-ids"));
     if (ids.length === 0) {
@@ -407,7 +407,7 @@ $("#unArchiveRotatingWorkTypeAssign").click(function (e) {
 });
 
 
-$("#deleteRotatingWorkTypeAssign").click(function (e) {
+$(document).on("click", "#deleteRotatingWorkTypeAssign", function (e) {
     e.preventDefault();
 
     ids = [];
@@ -453,7 +453,7 @@ $("#deleteRotatingWorkTypeAssign").click(function (e) {
     }
 });
 
-$(".all-shift-requests").change(function (e) {
+$(document).on("change", ".all-shift-requests", function (e) {
     var is_checked = $(this).is(":checked");
     var closest = $(this)
         .closest(".oh-sticky-table__thead")
@@ -542,7 +542,7 @@ function exportShiftRequests() {
     });
 }
 
-$("#approveShiftRequest").click(function (e) {
+$(document).on("click", "#approveShiftRequest", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedShifts").attr("data-ids"));
@@ -588,7 +588,7 @@ $("#approveShiftRequest").click(function (e) {
     }
 });
 
-$("#cancelShiftRequest").click(function (e) {
+$(document).on("click", "#cancelShiftRequest", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedShifts").attr("data-ids"));
@@ -633,7 +633,7 @@ $("#cancelShiftRequest").click(function (e) {
     }
 });
 
-$("#deleteShiftRequest").click(function (e) {
+$(document).on("click", "#deleteShiftRequest", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedShifts").attr("data-ids"));
@@ -678,7 +678,7 @@ $("#deleteShiftRequest").click(function (e) {
     }
 });
 
-$(".all-work-type-requests").change(function (e) {
+$(document).on("change", ".all-work-type-requests", function (e) {
     var is_checked = $(this).is(":checked");
     var closest = $(this)
         .closest(".oh-sticky-table__thead")
@@ -767,7 +767,7 @@ function exportWorkTypeRequets() {
     });
 }
 
-$("#approveWorkTypeRequest").click(function (e) {
+$(document).on("click", "#approveWorkTypeRequest", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedWorktypes").attr("data-ids"));
@@ -813,7 +813,7 @@ $("#approveWorkTypeRequest").click(function (e) {
     }
 });
 
-$("#cancelWorkTypeRequest").click(function (e) {
+$(document).on("click", "#cancelWorkTypeRequest", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedWorktypes").attr("data-ids"));
@@ -858,7 +858,7 @@ $("#cancelWorkTypeRequest").click(function (e) {
     }
 });
 
-$("#deleteWorkTypeRequest").click(function (e) {
+$(document).on("click", "#deleteWorkTypeRequest", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedWorktypes").attr("data-ids"));

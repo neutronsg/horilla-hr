@@ -1,0 +1,593 @@
+/* Neutron product UI — "Ledger" (v3). Quiet, dense workbench with spatial layering:
+ *   z-1 wells (inputs) · z0 canvas + sidebar · z1 workspace panel · z2 floating chrome · z3 overlays.
+ * Depth comes from planes, elevation and translucent material — not from colour. */
+@font-face {font-family:"Geist";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../../fonts/geist/geist-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face {font-family:"Geist";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../../fonts/geist/geist-latin-ext-wght-normal.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face {font-family:"Geist Mono";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../../fonts/geist/geist-mono-latin-wght-normal.woff2") format("woff2");}
+:root {
+ --primary-50:#f7f8fc;--primary-100:#eef1fb;--primary-200:#e3e9ff;--primary-300:#cad5fc;--primary-400:#9cacfa;--primary-500:#617be3;--primary-600:#051c97;--primary-700:#041778;--primary-800:#03125f;--primary-900:#020c40;
+ --secondary-50:#f8fafc;--secondary-100:#f1f5f9;--secondary-200:#e2e8f0;--secondary-300:#cbd5e1;--secondary-400:#94a3b8;--secondary-500:#64748b;--secondary-600:#475569;--secondary-700:#334155;--secondary-800:#1e293b;--secondary-900:#0f172a;
+ --dark-50:#e3e6ea;--dark-100:#5a606b;--dark-200:#444a55;--dark-300:#22262e;--dark-400:#5a606b;--dark-500:#0b0d12;--dark-600:#0b0d12;
+ --info-50:#eff6ff;--info-100:#dbeafe;--info-200:#bfdbfe;--info-300:#93c5fd;--info-400:#60a5fa;--info-500:#3b82f6;--info-600:#1d4ed8;--info-700:#1e40af;--info-800:#1e3a8a;--info-900:#172554;
+ /* Type and neutrals: four text tiers, darkest is reserved for anchors */
+ --neutron-font:"Geist",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ --neutron-mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+ --neutron-ink:#0b0d12;--neutron-text:#22262e;--neutron-text-2:#3a3f49;--neutron-muted:#5a606b;--neutron-faint:#868c97;--text-muted:#5a606b;
+ --neutron-border:#e3e6ea;--neutron-border-strong:#cdd2da;--neutron-surface:#fff;--neutron-hover:#f6f8fb;--neutron-head:#f8f9fb;
+ --neutron-canvas:#eceef2;--neutron-accent:#60cfd2;--neutron-radius:8px;--status-success:#17794a;--btn-add-another:#eef1fb;
+ --neutron-ok:#17794a;--neutron-warn:#a15c00;--neutron-bad:#b42318;
+ /* Elevation: shadows grow softer and wider with height */
+ --neutron-ring:rgba(15,23,42,.07);
+ --neutron-xs:0 1px 2px rgba(15,23,42,.07);
+ --neutron-well:inset 0 1px 2px rgba(15,23,42,.07);
+ --neutron-e1:0 0 0 1px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04),0 12px 32px -16px rgba(15,23,42,.18);
+ --neutron-e2:0 0 0 1px rgba(15,23,42,.07),0 2px 4px rgba(15,23,42,.04),0 16px 40px -14px rgba(15,23,42,.22);
+ --neutron-e3:0 0 0 1px rgba(15,23,42,.08),0 6px 12px -2px rgba(15,23,42,.08),0 28px 64px -16px rgba(15,23,42,.34);
+ --neutron-edge:inset 0 1px 0 rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.5);
+ --neutron-material:rgba(255,255,255,.72);--neutron-material-strong:rgba(255,255,255,.88);--neutron-blur:saturate(180%) blur(20px);
+ --neutron-sidebar-width:232px;--neutron-gap:8px;color-scheme:light;
+}
+body.dark {--neutron-ink:#f3f5f8;--neutron-text:#dfe4ec;--neutron-text-2:#c4cbd6;--neutron-muted:#9aa4b2;--neutron-faint:#77808e;--neutron-surface:#1c2028;--neutron-border:#2e3440;--neutron-border-strong:#3c4352;--neutron-hover:#252a34;--neutron-head:#20252e;--neutron-canvas:#121419;--primary-50:#1b2029;--primary-100:#232b45;--neutron-ring:rgba(255,255,255,.06);--neutron-material:rgba(28,32,40,.72);--neutron-material-strong:rgba(28,32,40,.9);--neutron-edge:inset 0 1px 0 rgba(255,255,255,.06);--neutron-e1:0 0 0 1px rgba(255,255,255,.05),0 12px 32px -16px rgba(0,0,0,.6);--neutron-e2:0 0 0 1px rgba(255,255,255,.06),0 16px 40px -14px rgba(0,0,0,.6);--neutron-e3:0 0 0 1px rgba(255,255,255,.08),0 28px 64px -16px rgba(0,0,0,.7);color-scheme:dark;}
+body.neutron-app {background:var(--neutron-canvas);font-family:var(--neutron-font);color:var(--neutron-ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1;}
+.neutron-app :is(h1,h2,h3,h4,.oh-modal__dialog-title) {font-family:inherit;color:var(--neutron-ink);font-weight:650;letter-spacing:-.015em;}
+.neutron-app h1 {font-size:24px;line-height:30px;font-weight:700;letter-spacing:-.02em;}
+.neutron-app h2 {font-size:18px;}
+.neutron-app h3 {font-size:16px;}
+.neutron-app .font-bold,.neutron-app .font-semibold {font-weight:600;}
+.neutron-app .text-dark-100 {color:var(--neutron-muted);}
+.neutron-app :is(button,a,input,select,textarea,[tabindex],summary):focus-visible {outline:2px solid var(--primary-600);outline-offset:2px;}
+.neutron-app input::placeholder,.neutron-app textarea::placeholder {color:var(--neutron-faint);opacity:1;}
+.neutron-icon {flex:none;display:block;}
+.neutron-when-dark {display:none;}
+html.dark .neutron-when-dark,body.dark .neutron-when-dark {display:inline;}
+html.dark .neutron-when-light,body.dark .neutron-when-light {display:none;}
+
+/* z0 — canvas and sidebar. The sidebar is part of the background, not a separate panel. */
+.neutron-app #sidebar {width:var(--neutron-sidebar-width)!important;overflow:visible!important;background:transparent;border:0;}
+.neutron-sidebar-inner {height:100%;display:flex;flex-direction:column;padding:14px 10px 10px;}
+.neutron-sidebar-brand {display:flex;align-items:center;gap:8px;height:30px;margin:2px 6px 12px;}
+.neutron-brand {display:flex;align-items:center;min-width:0;}
+.neutron-wordmark {width:96px;height:auto;max-width:none;border-radius:0;}
+#sidebarPinBtn {display:none;color:var(--neutron-muted);background:transparent!important;}
+#sidebarPinBtn svg {width:16px;height:16px;}
+#sidebarPinBtn .sidebar-lock-closed {display:none;}
+#sidebar.sidebar-pinned #sidebarPinBtn .sidebar-lock-closed {display:block;}
+#sidebar.sidebar-pinned #sidebarPinBtn .sidebar-lock-open {display:none;}
+.neutron-workspace {display:grid;gap:6px;margin:0 0 4px;}
+.neutron-workspace-row {display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 9px;border:0;border-radius:6px;background:transparent;color:var(--neutron-ink);font-size:13.5px;font-weight:500;text-align:left;cursor:pointer;}
+.neutron-workspace-row>span {flex:1;min-width:0;}
+.neutron-workspace-row .neutron-icon {color:var(--neutron-muted);}
+.neutron-workspace-row:hover {background:rgba(15,23,42,.045);}
+.neutron-workspace-row--static {cursor:default;}
+.neutron-workspace-row--static:hover {background:transparent;}
+.neutron-new-button {background:var(--neutron-surface);box-shadow:0 0 0 1px var(--neutron-ring),var(--neutron-xs);font-weight:600;}
+.neutron-new-button:hover {background:var(--neutron-surface);box-shadow:0 0 0 1px rgba(15,23,42,.12),0 2px 6px -2px rgba(15,23,42,.18);}
+.neutron-new-button .neutron-icon {color:var(--primary-600);}
+/* z3 menus opened from the sidebar */
+.neutron-workspace .dropdown-wrapper,.neutron-profile-menu {display:block;position:relative;}
+.neutron-app #sidebar .dropdown-content {position:absolute;left:0;right:auto;top:calc(100% + 6px);width:248px;min-width:0;padding:5px;border-radius:10px;background:var(--neutron-material-strong)!important;-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);box-shadow:var(--neutron-edge),var(--neutron-e3)!important;z-index:10080;}
+.neutron-quick-create-menu {display:none;}
+.neutron-quick-create:is(:hover,:focus-within) .neutron-quick-create-menu {display:block;}
+.neutron-quick-create-menu button,.neutron-app #sidebar .dropdown-content :is(li>button,li>a) {display:flex;align-items:center;gap:10px;width:100%;min-height:32px;padding:6px 9px;border:0;border-radius:6px;background:transparent;color:var(--neutron-ink);font-size:13.5px;text-align:left;cursor:pointer;}
+.neutron-quick-create-menu button .neutron-icon {color:var(--neutron-muted);}
+.neutron-quick-create-menu button:hover,.neutron-app #sidebar .dropdown-content :is(li>button,li>a):hover {background:rgba(15,23,42,.06)!important;color:var(--neutron-ink)!important;}
+.neutron-navigation {display:flex;flex-direction:column;gap:1px;flex:1;margin-top:6px!important;min-height:0;overflow:auto;height:auto;margin:0 -10px;padding:0 10px 8px;}
+.neutron-nav-group {display:flex;flex-direction:column;gap:1px;margin-top:14px;}
+.neutron-app #sidebar .oh-sidebar-label.neutron-nav-group-label {font-size:11.5px;font-weight:600;letter-spacing:.01em;color:var(--neutron-muted);padding:0 10px 4px;}
+.neutron-app #sidebar .sideboxmain {display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;height:32px;min-height:32px;padding:0 10px;border-radius:6px;background:transparent;color:var(--neutron-text);box-shadow:none;transition:background .12s,box-shadow .12s;}
+.neutron-app #sidebar .sideboxmain .neutron-icon {color:#4a505b;}
+.neutron-app #sidebar .sideboxmain img {width:18px;height:18px;flex-shrink:0;filter:grayscale(1) brightness(.45)!important;opacity:.85;}
+.neutron-app #sidebar .oh-sidebar-label {white-space:nowrap;font-size:14px;font-weight:450;}
+.neutron-app #sidebar .sideboxmain:is(:hover,.sidebox-active) {background:rgba(15,23,42,.045);color:var(--neutron-ink);}
+/* The current module lifts slightly off the canvas */
+.neutron-app #sidebar .sideboxmain.sidebox-current {background:var(--neutron-surface)!important;color:var(--neutron-ink);box-shadow:0 0 0 1px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.06),0 3px 8px -3px rgba(15,23,42,.12);}
+.neutron-app #sidebar .sideboxmain.sidebox-current .oh-sidebar-label {color:var(--neutron-ink);font-weight:600;}
+.neutron-app #sidebar .sideboxmain.sidebox-current .neutron-icon {color:var(--primary-600);}
+.neutron-app #sidebar .sideboxmain.sidebox-current img {filter:none!important;opacity:1;}
+.neutron-app #sidebar .sidebar-chevron {display:none;}
+.neutron-app #sidebar .sidebar-subnav:not(.hidden) {display:none;}
+.neutron-sidebar-foot {display:grid;gap:6px;padding:8px 0 0;margin-top:4px;border-top:1px solid rgba(15,23,42,.07);}
+.neutron-account {display:flex;align-items:center;gap:4px;}
+.neutron-profile-menu {flex:1;min-width:0;}
+.neutron-profile-menu>button {width:100%;padding:4px 6px;border-radius:6px;text-align:left;}
+.neutron-profile-menu>button:hover {background:rgba(15,23,42,.045);}
+.neutron-profile-menu>button>div {align-items:center;gap:9px;}
+.neutron-profile-menu img.rounded-full {width:28px;height:28px;}
+.neutron-profile-menu span.rounded-full {width:9px;height:9px;border-width:2px;border-color:var(--neutron-canvas);}
+.neutron-profile-menu .bg-\[red\] {background:#a3a8b1!important;}
+.neutron-profile-menu .md\:block {display:block!important;min-width:0;}
+.neutron-profile-menu h5 {font-size:13px;font-weight:600;color:var(--neutron-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;}
+.neutron-profile-menu p,.neutron-profile-menu .downarrow,.neutron-profile-menu .pt-2\.5 {display:none!important;}
+.neutron-app #sidebar .neutron-profile-menu .dropdown-content {top:auto;bottom:calc(100% + 6px);}
+.neutron-profile-menu .dropdown-content hr {margin:4px -5px;border-color:var(--neutron-border);}
+.neutron-clock .check {display:flex;align-items:center;width:100%;height:30px;padding:0 10px;border-radius:6px;font-size:12.5px;font-weight:500;background:var(--neutron-surface)!important;color:var(--neutron-ink)!important;box-shadow:0 0 0 1px var(--neutron-ring),var(--neutron-xs);}
+.neutron-clock .check .date,.neutron-clock .check .con {justify-content:flex-start;padding:0 10px;gap:8px;}
+.neutron-clock .check .date i,.neutron-clock .check .con i {font-size:12px;color:var(--neutron-muted);padding:0!important;}
+.neutron-clock .check.checkin .date::before {content:"";width:6px;height:6px;border-radius:50%;background:var(--neutron-faint);}
+.neutron-clock .check.checkout .date::before {content:"";width:6px;height:6px;border-radius:50%;background:var(--neutron-ok);}
+.neutron-clock .check .date i {display:none;}
+.neutron-clock .check .con {background:var(--neutron-surface);color:var(--primary-600);font-weight:600;}
+/* Not clocked in: show the action label rather than an idle 00:00:00 timer */
+.neutron-clock .check.checkin .date {opacity:0;}
+.neutron-clock .check.checkin .con {opacity:1;color:var(--neutron-ink);display:flex!important;}
+.neutron-clock .check.checkin .con::before {content:"";width:6px;height:6px;border-radius:50%;background:var(--neutron-faint);}
+.neutron-clock .check.checkin:hover .con {color:var(--primary-600);}
+#sidebarFlyout {visibility:hidden;position:fixed;z-index:10060;min-width:210px;max-width:280px;padding:5px;border:0;border-radius:10px;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);box-shadow:var(--neutron-edge),var(--neutron-e3);opacity:0;pointer-events:none;transform:translateX(-4px);transition:opacity .12s,transform .12s;}
+#sidebarFlyout.is-visible {visibility:visible;opacity:1;pointer-events:auto;transform:none;}
+#sidebarFlyout .sidebar-subnav-link {display:block;padding:7px 10px;border-radius:6px;color:var(--neutron-ink);font-size:13.5px;}
+#sidebarFlyout .sidebar-subnav-link:hover {background:rgba(15,23,42,.06);}
+#sidebarFlyout .oh-sidebar-active-link {background:var(--primary-100);color:var(--primary-600);font-weight:600;}
+
+/* z1 — the workspace panel, lifted off the canvas. It is also the page scroller. */
+.neutron-app .oh-main-content {position:relative;margin:var(--neutron-gap) var(--neutron-gap) var(--neutron-gap) calc(var(--neutron-sidebar-width) + 0px)!important;height:calc(100dvh - 2 * var(--neutron-gap))!important;border-radius:12px;background:var(--neutron-surface);box-shadow:var(--neutron-e1);overflow:auto;}
+/* z2 — the context bar floats over content as it scrolls beneath */
+.neutron-app #header {position:sticky;top:0;z-index:45;}
+.neutron-app .oh-main-header {position:relative!important;left:auto!important;right:auto!important;top:auto!important;width:auto!important;min-height:48px;height:48px;padding:0 24px;border:0;border-bottom:1px solid rgba(15,23,42,.06);box-shadow:none;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);}
+.neutron-app #ohMainContent {padding:24px 28px 32px!important;}
+.neutron-breadcrumb {margin:0!important;font-size:13px;color:var(--neutron-muted);}
+.neutron-app .breadcrumb li:last-child {color:var(--neutron-ink)!important;font-weight:600;}
+.neutron-header-tools {display:flex;align-items:center;gap:4px;}
+.neutron-icon-button {display:inline-flex;align-items:center;justify-content:center;gap:8px;width:30px;height:30px;padding:0;border:0;border-radius:6px;background:transparent!important;color:var(--neutron-muted)!important;}
+.neutron-icon-button:hover {background:rgba(15,23,42,.05)!important;color:var(--neutron-ink)!important;}
+.neutron-icon-button:hover i {color:inherit!important;}
+.neutron-app #notifyBadgeCircle {width:16px!important;height:16px!important;min-width:16px;padding:0 4px!important;right:-3px!important;top:-3px!important;font-size:10px;border-width:2px;}
+
+/* Page heading and shared list workbench. */
+.neutron-eyebrow {display:none!important;}
+.neutron-page-heading {display:flex;align-items:center;justify-content:space-between;gap:24px;margin:0 0 14px;min-height:36px;}
+.neutron-page-heading h1 {margin:0;}
+.neutron-page-controls,.neutron-search-tools {display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.neutron-page-controls :is(button,a.nav-view-btn,li.nav-view-btn,.dropdown-wrapper>button) {font-size:13.5px!important;font-weight:500;border:1px solid #d3d8e0!important;border-radius:6px;height:32px;padding:0 11px!important;background:var(--neutron-surface)!important;color:var(--neutron-ink)!important;box-shadow:var(--neutron-xs);display:inline-flex;align-items:center;gap:6px;}
+.neutron-page-controls :is(button,.dropdown-wrapper>button):hover {background:var(--neutron-hover)!important;}
+.neutron-page-controls :is(button,.dropdown-wrapper>button) img {filter:grayscale(1) brightness(.4);opacity:.8;}
+.neutron-page-controls input[name=search] {width:240px;height:32px;padding-left:30px;font-size:13.5px;background:var(--neutron-surface);border-color:#d3d8e0;box-shadow:var(--neutron-well);}
+.neutron-page-controls input[name=search]:focus {border-color:var(--primary-600);box-shadow:var(--neutron-well),0 0 0 3px rgba(5,28,151,.14);}
+.neutron-page-controls .nav-view-btn {padding:0 9px!important;width:32px;justify-content:center;}
+.neutron-page-controls .oh-view-btn--active {background:var(--primary-100)!important;color:var(--primary-600)!important;border-color:#c9d2f5!important;box-shadow:none;}
+.neutron-page-controls .neutron-primary-action {background:var(--primary-600)!important;color:#fff!important;border-color:#04167a!important;font-weight:600;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3),0 4px 10px -4px rgba(5,28,151,.45)!important;}
+.neutron-page-controls .neutron-primary-action:hover {background:#0820a8!important;}
+.neutron-page-controls .neutron-primary-action :is(img,ion-icon,i) {filter:brightness(0) invert(1);opacity:1;}
+/* Filter dropdown and other header menus are z3 overlays */
+.neutron-app .neutron-page-controls .dropdown-content {border-radius:10px!important;background:var(--neutron-material-strong)!important;-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);box-shadow:var(--neutron-edge),var(--neutron-e3)!important;border:0;}
+.neutron-app #filterTagContainerSectionNav {display:flex;align-items:center;justify-content:flex-start!important;gap:6px;margin:0 0 12px;padding:0;min-height:0;}
+.neutron-app #filterTagContainerSectionNav:empty {display:none;}
+.neutron-app :is(.oh-titlebar__tag,.oh-titlebar__save) {border-radius:6px;font-size:12.5px;line-height:1.4;padding:3px 8px;min-height:26px;}
+.neutron-app .oh-titlebar__tag--custom {background:transparent!important;color:var(--neutron-muted)!important;padding-left:0;border:0!important;font-weight:500;}
+.neutron-app .oh-titlebar__tag.filter-field {background:var(--primary-100)!important;border:1px solid #cdd5f3!important;color:var(--primary-600)!important;font-weight:500;}
+.neutron-app .oh-titlebar__tag-close {background:transparent!important;color:inherit!important;opacity:.7;width:18px;height:18px;margin-left:4px;}
+.neutron-app .oh-titlebar__save {background:transparent!important;color:var(--neutron-muted)!important;box-shadow:none;border:0;}
+.neutron-app .clear-all {color:var(--neutron-muted)!important;border:0!important;background:transparent!important;}
+/* The table sits flush on the workspace: no card, only hairlines */
+.neutron-data-surface {background:transparent;border:0;border-radius:0;box-shadow:none;margin:0 -28px;}
+.neutron-app .neutron-data-surface .heightContainer {border:0;border-radius:0;min-height:0!important;}
+.neutron-app .fixed-table {border-collapse:collapse;border-spacing:0;font-variant-numeric:tabular-nums;width:100%;}
+.neutron-app .fixed-table :is(td,th) {border:0!important;border-bottom:1px solid var(--neutron-border)!important;border-radius:0!important;padding:10px 8px;}
+.neutron-app .fixed-table :is(td,th):first-child {padding-left:28px;}
+.neutron-app .fixed-table :is(td,th):last-child {padding-right:16px;}
+/* z2: header is material; rows scroll beneath it */
+.neutron-app .fixed-table thead {background:transparent!important;}
+.neutron-app .fixed-table th {background:var(--neutron-material-strong)!important;-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);color:#555b66;font-size:12.5px;font-weight:500!important;line-height:1.4;height:36px;padding-top:0;padding-bottom:0;white-space:nowrap;border-bottom-color:var(--neutron-border-strong)!important;}
+.neutron-app .fixed-table th>div {padding:0;}
+.neutron-app .fixed-table th :is(.text-primary-600,img) {color:#9aa0a9;opacity:.7;}
+.neutron-app .fixed-table td {font-size:13.5px;color:var(--neutron-text-2);height:42px;background:var(--neutron-surface)!important;vertical-align:middle;}
+.neutron-app .fixed-table tbody tr:nth-child(n) {background:var(--neutron-surface);}
+.neutron-app .fixed-table tbody tr:hover td {background:#f7f8fb!important;}
+.neutron-app .fixed-table tbody tr.highlight-selected td {background:#f1f3f8!important;}
+.neutron-app .fixed-table tbody tr.highlight-selected td:first-child {box-shadow:inset 3px 0 0 var(--primary-600);}
+/* Columns size to their content: values stay on one line (ellipsis only beyond ~280px, full text in the tooltip);
+   people and long free text (titles, descriptions, reasons) may wrap to two lines. */
+.neutron-app .fixed-table td.max-w-0 {max-width:none;}
+.neutron-app .fixed-table td>.truncate {white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;}
+.neutron-app .fixed-table td:is([data-field*=description],[data-field*=title],[data-field*=reason],[data-field=comment],[data-field*=note],[data-field*=address],[data-field*=job_position],[data-field*=subject],[data-field=employee_id],[data-field$=__employee_id],[data-field*=contract_name],[data-field$=_name]):not([data-field*=email])>.truncate {white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:break-word;min-width:96px;max-width:320px;}
+.neutron-app .fixed-table td .oh-profile .truncate {white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:220px;min-width:110px;color:var(--neutron-ink);font-weight:500;font-size:14px;letter-spacing:-.005em;}
+.neutron-app .fixed-table td:is([data-field*=amount],[data-field$=pay_display],[data-field=deduction_display]) {text-align:right;}
+.neutron-app .fixed-table .oh-profile__image {width:24px;height:24px;}
+.neutron-app .fixed-table .oh-profile__avatar {width:24px!important;height:24px!important;}
+.neutron-app .fixed-table input[type=checkbox] {accent-color:var(--primary-600);width:15px;height:15px;}
+.neutron-app .fixed-table .action-col-cell:has(details[open]) {z-index:40;}
+.neutron-app .fixed-table .is-column-config-trigger {background:transparent;border:0;width:26px;height:26px;}
+.neutron-app .fixed-table th.stickyright {background:var(--neutron-material-strong)!important;}
+.neutron-app .fixed-table td.stickyright {background:var(--neutron-surface)!important;}
+.neutron-app .fixed-table tbody tr:hover td.stickyright {background:#f7f8fb!important;}
+.neutron-app .heightContainer:has(.fixed-table) .stickyright {box-shadow:-10px 0 14px -14px rgba(15,23,42,.35);}
+.neutron-list-footer {display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 -28px;padding:8px 28px;color:var(--neutron-muted);font-size:13px;border-top:1px solid var(--neutron-border);}
+.neutron-record-count {white-space:nowrap;color:var(--neutron-text-2);}
+.neutron-list-footer button {border:0!important;background:transparent!important;padding:4px 6px!important;color:var(--neutron-muted);font-size:13px;}
+.neutron-list-footer .hlv-pagination {border:0!important;background:transparent!important;}
+.neutron-list-footer button span.rounded-full {width:6px;height:6px;}
+/* z2: the selection bar detaches and floats over the list, so the table never shifts */
+.neutron-bulk-bar {display:none!important;position:fixed;z-index:60;left:calc(var(--neutron-sidebar-width) + (100vw - var(--neutron-sidebar-width)) / 2);bottom:28px;transform:translateX(-50%);width:max-content;max-width:calc(100vw - var(--neutron-sidebar-width) - 64px);margin:0!important;padding:6px 6px 6px 14px;gap:6px!important;border-radius:14px;background:var(--neutron-material)!important;-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);box-shadow:var(--neutron-edge),var(--neutron-e3);}
+.hlv-container.has-selection .neutron-bulk-bar {display:flex!important;}
+.neutron-bulk-bar :is(button,a,.oh-btn) {height:30px!important;min-height:30px!important;border-radius:7px!important;font-size:13px!important;font-weight:500;padding:0 10px!important;box-shadow:var(--neutron-xs);}
+@media(max-width:991px) {.neutron-bulk-bar {left:calc(64px + (100vw - 64px) / 2);max-width:calc(100vw - 96px);}}
+/* Row actions: one direct action, everything else in a labelled overflow menu. */
+.neutron-row-actions {display:flex;justify-content:flex-end;align-items:center;gap:2px;white-space:nowrap;}
+.neutron-row-action {display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;padding:4px 8px;min-height:28px;border:0;border-radius:6px;background:transparent;color:var(--neutron-text-2);}
+.neutron-row-action:hover {background:rgba(15,23,42,.06);color:var(--neutron-ink);}
+.neutron-action-menu>summary {list-style:none;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:var(--neutron-muted);}
+.neutron-action-menu>summary::-webkit-details-marker {display:none;}
+.neutron-action-menu>summary:hover {background:rgba(15,23,42,.06);color:var(--neutron-ink);}
+.neutron-action-menu[open]>summary {background:rgba(15,23,42,.08);color:var(--neutron-ink);}
+/* z3 overflow menu */
+.neutron-action-menu-content {position:fixed;z-index:10070;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);border:0;border-radius:10px;box-shadow:var(--neutron-edge),var(--neutron-e3);padding:5px;width:216px;text-align:left;max-height:calc(100dvh - 32px);overflow:auto;}
+.neutron-action-menu-content :is(button,a) {display:flex;align-items:center;justify-content:flex-start;gap:9px;width:100%;height:auto;min-height:32px;background:transparent!important;color:var(--neutron-ink)!important;border:0!important;padding:6px 9px;border-radius:6px;font-size:13.5px;font-weight:400;cursor:pointer;text-align:left;}
+.neutron-action-menu-content :is(button,a):hover {background:rgba(15,23,42,.06)!important;}
+.neutron-action-menu-content .neutron-danger {color:var(--neutron-bad)!important;}
+.neutron-action-menu-content ion-icon {font-size:16px;color:var(--neutron-muted);}
+.neutron-action-menu-content .neutron-danger ion-icon {color:inherit;}
+.neutron-action-menu-content hr {margin:4px -5px;border:0;border-top:1px solid var(--neutron-border);}
+/* Standard controls, dialogs and feedback. */
+.neutron-app :is(.oh-btn,button.btn) {border-radius:6px;min-height:36px;font-size:13px;font-weight:500;transition:background .15s;}
+.neutron-app :is(.oh-btn--secondary,.btn) {background:var(--primary-600)!important;color:#fff!important;border-color:var(--primary-600)!important;}
+.neutron-app :is(.oh-btn--secondary:hover,.btn:hover) {background:var(--primary-700)!important;}
+.neutron-app .oh-btn--add-another {background:transparent!important;color:var(--neutron-ink)!important;border:1px solid #d8dfe9!important;}
+.neutron-app .oh-btn--danger {background:#fff1f0!important;color:#b42318!important;border-color:#fecdca!important;}
+.neutron-app .oh-btn--success {background:#ecfdf3!important;color:#027a48!important;border-color:#abefc6!important;}
+.neutron-app :is(.oh-btn--secondary-outline,.oh-btn--secondary-link,.oh-btn--light) {color:var(--primary-600)!important;}
+.neutron-app :is(.oh-input,.oh-select,.select2-selection,.myform input:not([type=checkbox]):not([type=radio]),.myform select,.myform textarea) {border-radius:6px!important;border-color:#d8dfe9;min-height:38px;font-size:14px;}
+.neutron-app :is(.oh-input,.oh-select,.myform input,.myform select,.myform textarea):focus {border-color:var(--primary-500)!important;box-shadow:0 0 0 3px #051c9710;}
+.neutron-app :is(.oh-label,label) {font-weight:500;}
+.neutron-app :is(.oh-modal__dialog,.oh-card,.oh-sticky-table) {border-radius:8px;border:1px solid var(--neutron-border);}
+.neutron-app .oh-modal__dialog {background:var(--neutron-surface);box-shadow:0 24px 64px #10182833;max-height:calc(100dvh - 48px);overflow:auto;}
+.neutron-app :is(.oh-modal__dialog-header,.oh-modal__dialog-footer) {padding:20px 24px;}
+.neutron-app .oh-modal__dialog-body {padding:20px 24px;}
+.neutron-app .oh-alert {border-radius:6px;box-shadow:0 4px 16px #1018280a;}
+.neutron-app .btn.btn-danger {background:#b42318!important;color:white!important;}
+.neutron-app .btn.btn-success {background:#027a48!important;color:white!important;}
+.neutron-app [aria-busy=true] {cursor:progress;}
+.neutron-loading {position:fixed;inset:0 0 auto;height:2px;z-index:1100;background:var(--primary-600);transform:scaleX(0);transform-origin:left;pointer-events:none;transition:transform .18s;}
+.neutron-loading.active {transform:scaleX(1);}
+.neutron-status {position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 18px;background:var(--neutron-surface);color:var(--neutron-ink);border:1px solid var(--neutron-border);border-radius:8px;box-shadow:0 4px 20px #1018281a;z-index:1101;max-width:90vw;}
+.neutron-status:empty {display:none;}
+.neutron-skip {position:fixed;top:8px;left:240px;z-index:1200;padding:10px 16px;border-radius:6px;background:var(--primary-600);color:#fff;transform:translateY(-200%);}
+.neutron-skip:focus {transform:translateY(0);}
+/* Employee workspace: plain sections, content tabs and a calm form canvas. */
+.neutron-editor-heading {padding:0 0 20px;}
+.neutron-editor-heading h1 {margin:0 0 6px;}
+.neutron-editor-heading p {color:var(--neutron-muted);font-size:13px;margin:0;}
+.neutron-back-link {display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--neutron-muted);margin-bottom:20px;}
+.neutron-section-tabs {display:flex;gap:28px;border-bottom:1px solid var(--neutron-border);margin-bottom:24px;overflow-x:auto;}
+.neutron-section-tabs .emp-step-btn {display:block;padding:0 0 12px;border:0;border-bottom:2px solid transparent;background:transparent!important;color:var(--neutron-muted)!important;font-size:13px;font-weight:500;white-space:nowrap;text-decoration:none;border-radius:0!important;}
+.neutron-section-tabs .emp-step-btn--active {border-bottom-color:var(--primary-600);color:var(--primary-600)!important;}
+.neutron-editor-body {background:var(--neutron-surface);padding:28px 32px;border:1px solid var(--neutron-border);border-radius:8px;}
+.neutron-form-section {padding:0 0 28px;margin:0 0 28px;border:0;border-bottom:1px solid var(--neutron-border);}
+.neutron-form-section:last-of-type {border:0;margin-bottom:0;}
+.neutron-form-section-title {font-size:15px!important;margin:0 0 18px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.neutron-form-section-fields {padding:0;}
+.neutron-app #employee-update-form-root :is(.emp-grid-2,.emp-grid-3,.emp-grid-4) {gap:18px 24px;}
+.neutron-app #employee-update-form-root label {font-size:13px;margin-bottom:6px;color:var(--neutron-ink);}
+.neutron-app #employee-update-form-root :is(.emp-input,.select2-selection) {height:40px;font-size:14px;border-radius:6px;border-color:#d8dfe9;background:var(--neutron-surface);}
+.neutron-app #employee-update-form-root textarea.emp-input {height:auto;min-height:72px;}
+.neutron-app #employee-update-form-root .emp-photo-wrap {width:120px;}
+.neutron-app #employee-update-form-root .errorlist {color:#b42318;font-size:12px;margin:6px 0;}
+.neutron-app .hcl-label-pending {color:var(--neutron-muted);}
+/* Compatible dark surfaces and narrow-screen fallback. */
+body.dark.neutron-app #sidebar .sideboxmain .neutron-icon {color:#aab4c3;}
+body.dark.neutron-app #sidebar .sideboxmain img {filter:brightness(0) invert(1) opacity(.7)!important;}
+body.dark.neutron-app #sidebar .sideboxmain.sidebox-current {background:var(--neutron-surface)!important;}
+body.dark.neutron-app #sidebar .sideboxmain.sidebox-current .neutron-icon {color:#9fb2ff;}
+body.dark.neutron-app :is(.neutron-workspace-row:hover,#sidebar .sideboxmain:hover) {background:rgba(255,255,255,.05);}
+body.dark.neutron-app .neutron-wordmark {filter:brightness(0) invert(1);}
+body.dark.neutron-app .fixed-table :is(td,th),body.dark.neutron-app .neutron-editor-body {color:var(--neutron-ink);background:var(--neutron-surface)!important;}
+body.dark.neutron-app .neutron-icon-button {background:transparent!important;}
+body.dark.neutron-app .neutron-action-menu-content .neutron-danger {color:#fda29b!important;}
+@media(min-width:1600px) {.neutron-app #ohMainContent {padding-left:36px!important;padding-right:36px!important;}.neutron-editor-body {max-width:1400px;}}
+/* Below 992px the sidebar becomes a 64px icon rail that expands over content on hover. */
+@media(max-width:991px) {
+ .neutron-app #sidebar {width:64px!important;transition:width .16s;}
+ .neutron-app #sidebar:is(:hover,:focus-within) {width:var(--neutron-sidebar-width)!important;background:var(--neutron-canvas);box-shadow:var(--neutron-e2);}
+ .neutron-app #sidebar:not(:hover):not(:focus-within) :is(.oh-sidebar-label,.neutron-nav-group-label,.neutron-workspace,.neutron-sidebar-foot) {display:none;}
+ .neutron-app #sidebar:not(:hover):not(:focus-within) .sideboxmain {width:40px;padding:0;justify-content:center;margin:0 auto;}
+ .neutron-app #sidebar:not(:hover):not(:focus-within) .neutron-nav-group {margin-top:8px;}
+ .neutron-app .oh-main-content {margin-left:64px!important;}
+ .neutron-page-heading {align-items:flex-start;flex-direction:column;gap:14px;}
+}
+@media(max-width:767px) {
+ .neutron-app .oh-main-content {margin:0 0 0 64px!important;border-radius:0;height:100dvh!important;}
+ .neutron-app #ohMainContent {padding:16px 12px 20px!important;}
+ .neutron-app .oh-main-header {padding:0 12px;}
+ .neutron-app .oh-main-header .dropdown-wrapper:has(#tourLauncherBtn) {display:none;}
+ .neutron-app .fixed-table :is(.lastTh,.lastTd,.stickyright) {position:static!important;right:auto!important;}
+ .neutron-list-footer {flex-wrap:wrap;}
+ .neutron-editor-body {padding:20px 16px;}
+ .neutron-app .emp-layout {flex-direction:column;}.neutron-app .emp-grid-2 {grid-template-columns:1fr!important;}.neutron-app :is(.emp-grid-3,.emp-grid-4) {grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+ .neutron-app .oh-modal__dialog {max-width:calc(100vw - 24px)!important;width:calc(100vw - 24px);margin:12px auto;max-height:calc(100dvh - 24px);}
+ .neutron-app :is(.oh-modal__dialog-body,.oh-modal__dialog-header,.oh-modal__dialog-footer) {padding:16px;}
+ .neutron-skip {left:72px;}
+}
+@media(prefers-reduced-motion:reduce) {.neutron-app * {animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}}
+/* Workspace tabs and identity views share the same hierarchy as the editor. */
+.neutron-tab-workbench {background:transparent;padding:0;box-shadow:none;}
+.neutron-app .oh-tabs__tab-scroll {display:flex;gap:24px;flex-wrap:nowrap;overflow-x:auto;border-bottom:1px solid var(--neutron-border);padding-bottom:0;}
+.neutron-app .oh-tabs__tab {display:flex;align-items:center;gap:8px;border:0!important;border-bottom:2px solid transparent!important;border-radius:0;background:transparent!important;color:var(--neutron-muted)!important;padding:8px 0 12px;font-size:13px;white-space:nowrap;}
+.neutron-app .oh-tabs__tab--active {border-bottom-color:var(--primary-600)!important;color:var(--primary-600)!important;}
+.neutron-app .tab-badge {order:2;min-width:22px;height:20px;border-radius:4px;background:#edf0f5!important;color:var(--neutron-muted)!important;font-size:11px;}
+.neutron-app .oh-tabs__content {display:none;}.neutron-app .oh-tabs__content--active {display:block;}
+.neutron-profile-header {padding:0 0 24px;border-bottom:1px solid var(--neutron-border);background:transparent;}
+.neutron-profile-header h2 {font-size:24px;}
+.neutron-profile-header :is(a,button).rounded-xl {border-radius:6px;box-shadow:none;font-size:13px;}
+.neutron-profile-header .emp-profile-meta-chip {display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--neutron-muted);background:transparent;padding:0;border:0;box-shadow:none;}
+.emp-profile-page .usertablist {display:flex;gap:24px;flex-wrap:wrap;}
+.emp-profile-page .usertablist button {border:0;border-bottom:2px solid transparent;padding:10px 0 12px;border-radius:0;font-size:13px;font-weight:500;color:var(--neutron-muted);white-space:nowrap;background:transparent;}
+.emp-profile-page .usertablist button.active {border-bottom-color:var(--primary-600);color:var(--primary-600);background:transparent;box-shadow:none;}
+.neutron-app .emp-profile-page>nav {padding:0;background:transparent;border-radius:0;border-bottom:1px solid var(--neutron-border);box-shadow:none;}
+.neutron-profile-content {padding:24px;background:var(--neutron-surface);border:1px solid var(--neutron-border);border-radius:8px;}
+.neutron-profile-panel {min-height:320px;}
+.neutron-review-action {color:var(--primary-600);font-weight:500;}
+.neutron-reject-action {color:var(--neutron-muted);}
+.neutron-row-actions :is([disabled],.oh-btn--disabled) {opacity:.45;pointer-events:none;}
+.neutron-action-menu-content button[disabled] {display:none;}
+.neutron-action-menu-content .flex {display:block;}
+.neutron-modal-form {padding:0!important;border:0!important;background:transparent;}
+.neutron-modal-form .oh-profile-section__card {padding:0;}
+.neutron-modal-form .row {row-gap:8px;}
+.neutron-modal-form .oh-label {font-size:13px;margin-bottom:6px;}
+.neutron-form-intro {color:var(--neutron-muted);font-size:13px;padding:0;margin:6px 0 0;max-width:560px;}
+
+.neutron-claim-form .oh-modal__dialog-header {padding-bottom:12px;align-items:flex-start;}
+.neutron-claim-form .oh-modal__dialog-header h2 {font-size:20px;}
+.neutron-claim-form #id_attachment_parent_div {padding-top:4px;}
+.neutron-claim-form input[type=file] {display:block;width:100%;height:auto!important;min-height:68px;padding:16px;border:1px dashed #cbd5e1;border-radius:6px;background:var(--neutron-hover);font-size:12px;}
+.neutron-claim-form input[type=file]::file-selector-button {background:var(--neutron-surface);border:1px solid #d8dfe9;border-radius:5px;color:var(--neutron-ink);padding:7px 10px;margin-right:12px;font-size:12px;cursor:pointer;}
+.neutron-payslip-document {background:var(--neutron-surface);border:1px solid var(--neutron-border);border-radius:8px;padding:32px;max-width:1120px;margin:auto;font-variant-numeric:tabular-nums;}
+.neutron-pay-summary {display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:32px;padding:24px 0;margin-bottom:24px;border-bottom:1px solid var(--neutron-border);}
+.neutron-pay-summary>div {display:flex;flex-direction:column;justify-content:center;gap:6px;}
+.neutron-pay-summary span {font-size:12px;color:var(--neutron-muted);}
+.neutron-pay-summary strong {font-size:22px;font-weight:600;color:var(--neutron-ink);}
+.neutron-pay-summary .neutron-pay-summary-primary strong {font-size:32px;color:var(--primary-600);}
+.neutron-pay-summary small {font-size:11px;color:var(--neutron-muted);}
+.neutron-pay-section {padding:0 0 20px;border-bottom:1px solid var(--neutron-border);background:transparent;}
+.neutron-pay-section-title {display:flex;align-items:center;justify-content:space-between;gap:16px;font-weight:600;font-size:14px;padding:8px 8px 12px;margin-bottom:12px;border-bottom:1px solid var(--neutron-border);}
+.neutron-pay-section .font-semibold {font-weight:500;}
+.neutron-payslip-breakdown {overflow-x:auto;}
+.neutron-app [data-neutron-payslip] #payslipBody {height:auto;max-height:none;}
+.neutron-app .payslip__netpay__summary {background:var(--primary-100)!important;color:var(--primary-600);border-radius:5px;padding:5px 8px;}
+@media(max-width:767px) {.neutron-payslip-document {padding:16px;}.neutron-pay-summary {grid-template-columns:1fr;gap:16px;}.neutron-section-tabs,.emp-profile-page .usertablist {gap:18px;}.neutron-profile-content {padding:16px;}}
+.neutron-detail-section {padding:0 0 24px;margin:0 0 24px;border:0;border-bottom:1px solid var(--neutron-border);border-radius:0;overflow:visible;}
+.neutron-detail-section-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 12px 12px;}
+.neutron-detail-section-title {font-size:15px!important;font-weight:600;}
+.neutron-profile-overflow>summary {width:auto!important;min-height:42px;gap:8px;padding:8px 0;font-size:13px;}
+.neutron-profile-overflow-label {white-space:nowrap;}
+.neutron-profile-overflow .neutron-action-menu-content ul {display:block;}
+.neutron-app .emp-profile-page .usertablist li button.active,.neutron-app .emp-profile-page .usertablist li button:hover {background:transparent!important;border:0!important;border-bottom:2px solid var(--primary-600)!important;color:var(--primary-600)!important;}
+.neutron-app .neutron-row-actions [aria-disabled=true] {opacity:.45;pointer-events:none;}
+.neutron-document-brand {width:112px;margin-right:4px;}
+.neutron-app .neutron-document-brand img {width:112px;max-width:none;}
+.neutron-app #breadcrumbs-container {flex:1;min-width:0;overflow:hidden;}
+.neutron-app .neutron-breadcrumb {flex-wrap:nowrap;overflow:hidden;white-space:nowrap;}
+.neutron-app .neutron-breadcrumb li:last-child {overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.neutron-header-tools {flex-shrink:0;}
+.neutron-empty {text-align:center;padding:64px 24px;}
+.neutron-empty>ion-icon {font-size:28px;color:var(--neutron-muted);margin-bottom:12px;}
+.neutron-empty h2 {font-size:18px;margin-bottom:8px;}
+.neutron-empty p {font-size:13px;color:var(--neutron-muted);margin:0 0 16px;}
+.neutron-empty button {border:1px solid var(--neutron-border);padding:8px 14px;}
+.neutron-app .neutron-data-surface td[class*="status-"] {border-left:0!important;border-radius:0;}
+.neutron-status-label {display:inline-flex;align-items:center;gap:6px;padding:0;border-radius:0;background:transparent;font-size:13px;font-weight:500;color:var(--neutron-text-2);white-space:nowrap;}
+.neutron-status-label::before {content:"";width:6px;height:6px;border-radius:50%;flex:none;background:var(--neutron-faint);}
+.neutron-status-label[data-status=requested],.neutron-status-label[data-status=review_ongoing] {color:var(--neutron-warn);}
+.neutron-status-label:is([data-status=requested],[data-status=review_ongoing])::before {background:#d98e04;}
+.neutron-status-label[data-status=draft] {color:var(--neutron-muted);}
+.neutron-status-label:is([data-status=approved],[data-status=paid]) {color:var(--neutron-ok);}
+.neutron-status-label:is([data-status=approved],[data-status=paid])::before {background:var(--neutron-ok);}
+.neutron-status-label:is([data-status=rejected],[data-status=canceled],[data-status=cancelled]) {color:var(--neutron-bad);}
+.neutron-status-label:is([data-status=rejected],[data-status=canceled],[data-status=cancelled])::before {background:var(--neutron-bad);}
+.neutron-status-label[data-status=confirmed] {color:var(--neutron-ink);}
+.neutron-status-label[data-status=confirmed]::before {background:var(--primary-600);}
+body.dark .neutron-status-label[data-status=confirmed] {color:var(--neutron-ink);}
+.neutron-personal-tasks {display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px 24px;background:var(--neutron-surface);border:1px solid var(--neutron-border);border-radius:8px;margin-bottom:24px;}
+.neutron-personal-tasks h2 {font-size:16px;margin:0 0 4px;}
+.neutron-personal-tasks p {font-size:13px;color:var(--neutron-muted);margin:0;}
+.neutron-personal-links {display:flex;gap:12px;flex-wrap:wrap;}
+.neutron-personal-links a {display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:13px;border:1px solid var(--neutron-border);border-radius:6px;color:var(--neutron-ink);}
+.neutron-personal-links a:hover {background:var(--primary-100);color:var(--primary-600);}
+@media(max-width:991px) {.neutron-personal-tasks {flex-direction:column;align-items:flex-start;gap:16px;}}
+.neutron-claim-balance:has(#availableTable[style*="display: none"]) {display:none;}
+.neutron-profile-overflow>summary.neutron-selected-overflow {border-bottom:2px solid var(--primary-600);border-radius:0;color:var(--primary-600);}
+.neutron-app .fixed-table td[data-field="amount"] {text-align:right;min-width:80px;}
+.neutron-app .fixed-table td[data-field$="pay_display"],.neutron-app .fixed-table td[data-field="deduction_display"] {text-align:right;}
+.neutron-app .fixed-table td[data-field="custom_status_col"]:has(select) {min-width:132px;}
+.neutron-status-label:has(select) {display:block;background:transparent;padding:0;}
+.neutron-status-label:has(select)::before {display:none;}
+.neutron-status-label select {width:100%;min-width:118px;padding:4px 24px 4px 8px;border:1px solid transparent!important;border-radius:6px;font-size:13px;font-weight:500;height:30px!important;color:var(--neutron-ink)!important;background-color:transparent!important;cursor:pointer;}
+.neutron-status-label select:is(:hover,:focus) {border-color:#d3d8e0!important;background-color:var(--neutron-surface)!important;box-shadow:var(--neutron-xs);}
+/* Keep selected view glyphs and small dashboard annotations readable. */
+.neutron-app .neutron-page-controls .oh-view-btn--active :is(a,ion-icon) {color:var(--primary-600)!important;}
+.neutron-app :is(.md-kpi-card__sub,.md-kpi-card__sub [style*="opacity"],.md-header__date,.md-chart-card__subtitle,.md-info-panel__empty,.ess-kpi-card__sub,.ess-header__date,.ess-chart-card__subtitle,.ess-info-panel__empty,.ed-kpi-card__sub,.ed-header__date) {color:var(--neutron-muted);opacity:1!important;}
+/* Secondary links that belong to a page (e.g. claim reports, reminders) sit quietly under its heading */
+.neutron-related-links {display:flex;flex-wrap:wrap;gap:2px;margin:-8px 0 10px -8px;}
+.neutron-related-links a {display:inline-flex;align-items:center;height:28px;padding:0 8px;border-radius:6px;font-size:13px;font-weight:500;color:var(--neutron-text-2);}
+.neutron-related-links a:hover {background:rgba(15,23,42,.05);color:var(--neutron-ink);}
+.neutron-related-links a+a::before {content:"";width:3px;height:3px;border-radius:50%;background:var(--neutron-faint);margin:0 10px 0 -2px;}
+/* Text inputs: a single soft focus ring, not outline + ring */
+.neutron-app :is(input[type=text],input[type=search],input[type=email],input[type=number],input[type=date],input:not([type]),textarea,select):focus-visible {outline:none;}
+/* Below 1440px, review actions become icon buttons (labels stay as tooltip and accessible name) */
+@media(max-width:1439px) {
+ .neutron-row-actions .neutron-row-action:is(.neutron-review-action,.neutron-reject-action)>span {position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+ .neutron-row-actions .neutron-row-action:is(.neutron-review-action,.neutron-reject-action) {width:30px;padding:0;}
+ .neutron-app .fixed-table td .oh-profile .truncate {max-width:170px;min-width:96px;}
+ .neutron-app .fixed-table :is(td,th) {padding-left:7px;padding-right:7px;}
+ .neutron-app .fixed-table :is(td,th):first-child {padding-left:20px;}
+ .neutron-app .fixed-table :is(td,th):last-child {padding-right:16px;}
+ .neutron-data-surface,.neutron-list-footer {margin-left:-28px;margin-right:-28px;}
+ .neutron-app .fixed-table td:is([data-field*=department],[data-field*=manager],[data-field*=company],[data-field*=job]) .truncate {white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-width:90px;max-width:170px;}
+ .neutron-app .fixed-table td:is([data-field*=email]) .truncate {max-width:170px;}
+ .neutron-app .fixed-table :is(td,th):last-child {padding-right:10px;}
+ .neutron-app .fixed-table td:is([data-field*=description],[data-field*=title],[data-field*=reason],[data-field=comment],[data-field*=note],[data-field*=address],[data-field*=job_position],[data-field*=subject]) .truncate {min-width:96px;max-width:220px;}
+}
+/* Checkboxes: brand blue when checked (was the danger red) */
+.neutron-app input[type="checkbox"].custom-checkbox {background-color:var(--neutron-surface);border:1.5px solid #bcc3cd;border-radius:4px;box-shadow:var(--neutron-well);}
+.neutron-app input[type="checkbox"].custom-checkbox:hover {border-color:var(--primary-600);}
+.neutron-app input[type="checkbox"].custom-checkbox:checked {background-color:var(--primary-600);border-color:var(--primary-600);box-shadow:none;}
+.neutron-app input[type="checkbox"].custom-checkbox:checked::after {left:4px;top:1px;width:4px;height:8px;}
+.neutron-app .fixed-table tbody tr.highlight-selected td.stickyright {background:#f1f3f8!important;}
+/* Floating selection bar content */
+.neutron-bulk-bar {bottom:72px;}
+.neutron-bulk-bar .quick-bulk-action:not(.d-none) {display:inline-flex;align-items:center;gap:4px;background:var(--neutron-surface)!important;border:1px solid #d3d8e0!important;color:var(--neutron-ink)!important;}
+.neutron-bulk-bar .quick-bulk-action:hover {background:var(--neutron-hover)!important;color:var(--neutron-ink)!important;}
+.neutron-bulk-bar .quick-bulk-action[data-target^="#bulkUpdateModal"] {background:var(--primary-600)!important;border-color:#04167a!important;color:#fff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3)!important;}
+.neutron-bulk-bar .oh-checkpoint-badge {color:var(--neutron-warn)!important;}
+.ui-tooltip {border:0!important;border-radius:6px!important;background:#101218!important;color:#fff!important;font:500 12px/1.4 var(--neutron-font)!important;padding:5px 8px!important;box-shadow:0 6px 16px -6px rgba(15,23,42,.35)!important;}
+
+/* ── Profile (employee and other HorillaProfileView pages) ───────────────────── */
+.neutron-app .neutron-profile-header {padding:4px 0 18px;border:0;box-shadow:none;background:transparent;}
+.neutron-app .neutron-profile-header .emp-avatar-ring {width:56px;height:56px;border-radius:50%;box-shadow:0 0 0 3px var(--neutron-surface),0 0 0 4px rgba(15,23,42,.06),0 6px 14px -6px rgba(15,23,42,.3);}
+.neutron-app .neutron-profile-header .emp-avatar-ring+span {width:16px;height:16px;right:-2px;bottom:-2px;box-shadow:none;}
+.neutron-app .neutron-profile-header .emp-avatar-ring+span>span {width:8px;height:8px;background:var(--neutron-ok)!important;}
+.neutron-app .neutron-profile-header h2 {font-size:24px!important;line-height:30px;font-weight:700!important;letter-spacing:-.02em;color:var(--neutron-ink)!important;}
+.neutron-app .neutron-profile-header .emp-profile-meta-chip {font-size:14px;color:var(--neutron-text);gap:6px;}
+.neutron-app .neutron-profile-header .emp-profile-meta-chip+.emp-profile-meta-chip::before {content:"·";color:var(--neutron-faint);margin-right:4px;}
+.neutron-app .neutron-profile-header .emp-profile-meta-chip i {display:none;}
+.neutron-app .neutron-profile-header .mt-2.flex.flex-wrap.gap-2 {margin-top:2px;gap:4px;}
+.neutron-app .neutron-profile-header dl.mt-3 {margin-top:8px;display:flex;flex-wrap:wrap;gap:4px 20px;}
+.neutron-app .neutron-profile-header dl .rounded-lg.bg-primary-100 {width:auto;height:auto;background:transparent!important;color:var(--neutron-muted)!important;}
+.neutron-app .neutron-profile-header dl a {font-size:13.5px;color:var(--neutron-text-2)!important;}
+.neutron-app .neutron-profile-header dl a:hover {color:var(--primary-600)!important;}
+.neutron-app .neutron-profile-header :is(a,button).rounded-xl,.neutron-app .neutron-profile-header .rounded-xl.border {border-radius:6px!important;box-shadow:var(--neutron-xs)!important;border-color:#d3d8e0!important;font-size:13.5px;}
+.neutron-app .neutron-profile-header .rounded-xl.border.overflow-hidden button {height:32px;}
+.neutron-primary-button {display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:6px;background:var(--primary-600);color:#fff!important;font-size:13.5px;font-weight:600;border:1px solid #04167a;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3),0 4px 10px -4px rgba(5,28,151,.45);cursor:pointer;white-space:nowrap;}
+.neutron-primary-button:hover {background:#0820a8;}
+.neutron-primary-button ion-icon {font-size:15px;}
+.neutron-icon-button--bordered {width:32px;height:32px;border:1px solid #d3d8e0!important;background:var(--neutron-surface)!important;box-shadow:var(--neutron-xs);color:var(--neutron-text-2)!important;}
+.neutron-icon-button--bordered.is-open {background:var(--neutron-hover)!important;}
+/* z3 overlay menu (Alpine-driven) */
+.neutron-overlay-menu {padding:5px;border-radius:10px;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);box-shadow:var(--neutron-edge),var(--neutron-e3);}
+.neutron-menu-item {display:flex;align-items:center;gap:9px;width:100%;min-height:32px;padding:6px 9px;border-radius:6px;font-size:13.5px;color:var(--neutron-ink);cursor:pointer;}
+.neutron-menu-item:hover {background:rgba(15,23,42,.06);}
+.neutron-menu-item.neutron-danger {color:var(--neutron-bad);}
+.neutron-menu-item.neutron-success {color:var(--neutron-ok);}
+.neutron-menu-item-icon {width:14px;height:14px;opacity:.6;filter:grayscale(1);}
+.neutron-menu-divider {margin:4px -5px;border-top:1px solid var(--neutron-border);}
+/* Tabs float as z2 chrome while the profile scrolls */
+.neutron-app .emp-profile-page>nav {position:sticky;top:48px;z-index:20;margin:0 -28px;padding:0 28px;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);border-bottom:1px solid var(--neutron-border);}
+.emp-profile-page .usertablist {gap:22px;}
+.emp-profile-page .usertablist button {padding:10px 0 11px;font-size:14px;font-weight:500;color:var(--neutron-muted);}
+.neutron-app .emp-profile-page .usertablist li button.active,.neutron-app .emp-profile-page .usertablist li button:hover {border-bottom:2px solid var(--primary-600)!important;color:var(--neutron-ink)!important;}
+.neutron-app .emp-profile-page .usertablist li button:hover:not(.active) {border-bottom-color:transparent!important;}
+.neutron-profile-overflow>summary {min-height:0;padding:10px 0 11px;font-size:14px;font-weight:500;color:var(--neutron-muted);}
+.neutron-app .emp-profile-page>nav .oh-dropdown>button {border:0!important;box-shadow:none!important;background:transparent!important;color:var(--neutron-muted);}
+/* About: no card; sections stack, labels sit beside values */
+.neutron-profile-content {padding:20px 0 0;background:transparent;border:0;border-radius:0;}
+.neutron-profile-panel>.grid.lg\:grid-cols-12,.neutron-profile-panel .grid.lg\:grid-cols-12 {display:flex!important;flex-direction:column;gap:0!important;}
+.neutron-profile-panel .grid.lg\:grid-cols-12>.lg\:col-span-8 {order:-1;}
+.neutron-profile-panel .grid.lg\:grid-cols-12>* {width:100%;}
+.neutron-app .neutron-detail-section {padding:0 0 22px;margin:0 0 22px;border-bottom:1px solid var(--neutron-border);}
+.neutron-app .neutron-detail-section-heading {padding:0 0 10px;}
+.neutron-app .neutron-detail-section-title {font-size:16px!important;font-weight:700!important;letter-spacing:-.01em;}
+.neutron-app .neutron-detail-section .bg-white {background:transparent!important;padding-left:0!important;padding-right:0!important;}
+.neutron-app .neutron-detail-section .divide-y>* {border:0!important;padding-left:0!important;padding-right:0!important;}
+.neutron-app .neutron-detail-section .text-xxs.uppercase {font-size:12.5px!important;text-transform:none;letter-spacing:0;font-weight:600;color:var(--neutron-text-2)!important;margin:6px 0 2px;}
+.neutron-app .neutron-detail-section dl {display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px;}
+.neutron-app .neutron-detail-section .grid.sm\:grid-cols-2 {column-gap:32px;}
+.neutron-app .neutron-detail-section dl>div,.neutron-app .neutron-detail-section .grid>div.flex {display:grid!important;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:baseline;justify-content:start;padding:6px 0!important;}
+.neutron-app .neutron-detail-section dt {font-size:13px!important;font-weight:400!important;color:var(--neutron-muted)!important;}
+.neutron-app .neutron-detail-section dd {text-align:left!important;justify-self:start;font-size:14px!important;font-weight:500;color:var(--neutron-ink);font-style:normal!important;overflow-wrap:break-word;min-width:0;}
+.neutron-app .neutron-detail-section dd.italic {color:var(--neutron-faint)!important;font-weight:400;}
+.neutron-app .neutron-detail-section dd a.rounded-full {border:0!important;padding:0!important;background:transparent!important;}
+.neutron-app .neutron-detail-section dd a.rounded-full span {font-size:14px!important;color:var(--primary-600)!important;font-weight:500;}
+.neutron-section-action {display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 9px;border-radius:6px;font-size:13px;font-weight:500;color:var(--neutron-text-2);}
+.neutron-section-action:hover {background:rgba(15,23,42,.05);color:var(--neutron-ink);}
+@media(max-width:1279px) {.neutron-app .neutron-detail-section dl {grid-template-columns:1fr;}.neutron-app .neutron-detail-section .grid.sm\:grid-cols-2 {grid-template-columns:1fr;}}
+/* Sections that already lay out two columns keep one label/value column inside each half */
+.neutron-app .neutron-detail-section .grid dl,.neutron-app .neutron-detail-section .grid>dl {grid-template-columns:minmax(0,1fr)!important;}
+.neutron-app .neutron-detail-section .grid {column-gap:40px!important;}
+.neutron-profile-overflow>summary {display:flex!important;align-items:center;gap:4px;line-height:1.5;}
+.emp-profile-page .usertablist>li {display:flex;align-items:stretch;}
+.neutron-profile-overflow>summary {height:auto!important;width:auto!important;border-radius:0!important;background:transparent!important;}
+
+/* ── Confirmation dialogs (SweetAlert): compact z3 sheet, left-aligned, actions on the right ── */
+.neutron-app .swal2-container.swal2-backdrop-show {background:rgba(15,23,42,.32)!important;}
+.neutron-app .swal2-popup:not(.swal2-toast) {width:440px;max-width:calc(100vw - 32px);padding:22px 24px 18px;border:0;border-radius:12px;background:var(--neutron-surface);box-shadow:var(--neutron-e3);text-align:left;}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-icon:is(.swal2-question,.swal2-info) {display:none!important;}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-icon {width:40px;height:40px;margin:0 0 12px;border-width:2px;font-size:10px;}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-icon .swal2-icon-content {font-size:24px;}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-title {padding:0;margin:0;text-align:left;font-size:17px;font-weight:650;color:var(--neutron-ink);}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-html-container {margin:8px 0 0;padding:0;text-align:left;font-size:14px;line-height:1.55;color:var(--neutron-text-2);}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-actions {width:100%;margin:20px 0 0;padding:0;gap:8px;flex-direction:row-reverse;justify-content:flex-start;}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-styled {margin:0;height:34px;padding:0 14px;font-size:13.5px;font-weight:600;border-radius:6px;box-shadow:none;}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-styled.swal2-confirm {background-color:var(--primary-600);border:1px solid #04167a;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3);}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-styled.swal2-cancel {background-color:var(--neutron-surface);color:var(--neutron-ink);border:1px solid #d3d8e0;box-shadow:var(--neutron-xs);}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-styled:focus-visible {box-shadow:0 0 0 3px rgba(5,28,151,.2);}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-input,.neutron-app .swal2-popup:not(.swal2-toast) .swal2-textarea {margin:12px 0 0;width:100%;font-size:14px;border-radius:6px;border:1px solid #d3d8e0;box-shadow:var(--neutron-well);}
+.neutron-app .swal2-toast {border-radius:10px!important;box-shadow:var(--neutron-e3)!important;font-family:var(--neutron-font);}
+
+/* ── Modal forms: z3 sheet, recessed inputs, sticky material action bar ───────── */
+.neutron-app .oh-modal.oh-modal--show {background:rgba(15,23,42,.32);}
+.neutron-app .oh-modal__dialog {border:0!important;border-radius:12px;box-shadow:var(--neutron-e3);}
+.neutron-app .oh-modal__dialog-header {padding:20px 24px 8px;align-items:flex-start;}
+.neutron-app .oh-modal__dialog-header :is(h2,.oh-modal__dialog-title) {font-size:18px!important;font-weight:650!important;letter-spacing:-.01em;color:var(--neutron-ink);}
+.neutron-app .oh-modal__dialog-body {padding:12px 24px 0;}
+.neutron-form-intro {font-size:13.5px;color:var(--neutron-muted);margin-top:4px;}
+.neutron-modal-form .row {row-gap:4px;}
+.neutron-modal-form .oh-label,.neutron-modal-form .oh-label label {font-size:13.5px!important;font-weight:600!important;color:var(--neutron-ink);margin-bottom:6px;}
+.neutron-modal-form .required-star::after {color:var(--neutron-bad);}
+.neutron-app .neutron-modal-form :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=submit]),select,textarea,.select2-selection--single) {min-height:36px!important;height:36px;border-radius:6px!important;border:1px solid #d3d8e0!important;background-color:var(--neutron-surface);box-shadow:var(--neutron-well);font-size:14px;color:var(--neutron-ink);}
+.neutron-app .neutron-modal-form .select2-selection--multiple {border-radius:6px!important;border:1px solid #d3d8e0!important;box-shadow:var(--neutron-well);}
+.neutron-app .neutron-modal-form .select2-selection--single .select2-selection__rendered {line-height:34px!important;}
+.neutron-app .neutron-modal-form .select2-selection--single .select2-selection__arrow {height:34px!important;}
+.neutron-app .neutron-modal-form textarea {height:auto!important;min-height:96px!important;padding:8px 10px;line-height:1.55;resize:vertical;}
+.neutron-app .neutron-modal-form :is(input,select,textarea):focus {border-color:var(--primary-600)!important;box-shadow:var(--neutron-well),0 0 0 3px rgba(5,28,151,.14)!important;outline:0;}
+.neutron-app .neutron-modal-form .neutron-field-error :is(input:not([type=checkbox]):not([type=radio]),select,textarea,.select2-selection,input[type=file]) {border-color:var(--neutron-bad)!important;box-shadow:var(--neutron-well),0 0 0 3px rgba(180,35,24,.1)!important;}
+.neutron-app .neutron-modal-form .errorlist {margin:6px 0 2px;padding:0;list-style:none;color:var(--neutron-bad);font-size:12.5px;font-weight:500;}
+.neutron-error-summary {display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:10px 12px 10px 14px;border-radius:8px;background:#fef3f2;color:#7a1a12;font-size:13.5px;box-shadow:0 0 0 1px #f3c4bf;}
+.neutron-error-summary ion-icon {font-size:18px;color:var(--neutron-bad);flex:none;margin-top:1px;}
+.neutron-error-summary strong {font-weight:600;margin-right:6px;}
+.neutron-error-links a {color:var(--neutron-bad);text-decoration:underline;text-underline-offset:2px;margin-right:10px;}
+.neutron-form-actions {position:sticky;bottom:0;z-index:3;margin:16px -24px 0!important;padding:12px 24px!important;gap:8px!important;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);border-top:1px solid var(--neutron-border);border-radius:0 0 12px 12px;}
+.neutron-form-actions .oh-btn {margin:0!important;min-height:34px!important;height:34px;padding:0 14px!important;font-size:13.5px!important;font-weight:600;border-radius:6px;}
+.neutron-app .neutron-form-actions .oh-btn--add-another {background:var(--neutron-surface)!important;border:1px solid #d3d8e0!important;color:var(--neutron-ink)!important;box-shadow:var(--neutron-xs);}
+.neutron-app .neutron-form-actions .oh-btn--secondary {box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3),0 4px 10px -4px rgba(5,28,151,.45);border:1px solid #04167a!important;}
+/* Receipts: a recessed drop well */
+.neutron-claim-form input[type=file] {min-height:64px;padding:14px;border:1.5px dashed #c9d0db;border-radius:8px;background:var(--neutron-head);box-shadow:var(--neutron-well);font-size:13px;color:var(--neutron-muted);}
+.neutron-claim-form input[type=file]::file-selector-button {background:var(--neutron-surface);border:1px solid #d3d8e0;border-radius:6px;color:var(--neutron-ink);padding:6px 10px;margin-right:12px;font:600 13px var(--neutron-font);box-shadow:var(--neutron-xs);cursor:pointer;}
+
+/* ── Payslip document ─────────────────────────────────────────────────────────── */
+.neutron-payslip-document {border:0;border-radius:12px;box-shadow:var(--neutron-e2);padding:32px 36px;}
+.neutron-payslip-document img[src*="info.svg"] {filter:grayscale(1) brightness(.55);opacity:.55;width:14px;height:14px;}
+.neutron-pay-summary strong {font-size:22px;font-weight:650;letter-spacing:-.01em;}
+.neutron-pay-summary .neutron-pay-summary-primary strong {font-size:32px;font-weight:700;color:var(--neutron-ink);letter-spacing:-.02em;}
+.neutron-pay-summary span {font-size:12.5px;font-weight:600;color:var(--neutron-muted);}
+.neutron-pay-section-title {font-size:14px;font-weight:650;}
+.neutron-employer-contributions {margin:16px 0 0;padding:12px 14px;border-radius:8px;background:var(--neutron-head);box-shadow:var(--neutron-well);font-size:13.5px;}
+.neutron-employer-contributions>div {padding:6px 0!important;border:0!important;background:transparent!important;}
+.neutron-employer-contributions>div:first-child {padding-top:0!important;margin-bottom:2px;}
+.neutron-employer-contributions>div:last-child {border-top:1px solid var(--neutron-border)!important;margin-top:4px;padding-top:8px!important;}
+
+/* ── Employee editor: flush sections, recessed inputs, floating action bar ─────── */
+.neutron-editor-body {border:0;border-radius:0;padding:4px 0 0;background:transparent;}
+.neutron-app #employee-update-form-root label {font-size:13.5px;font-weight:600;color:var(--neutron-ink);}
+.neutron-app #employee-update-form-root :is(.emp-input,.select2-selection--single,input[type=text],input[type=email],input[type=number],input[type=date],select) {height:36px;min-height:36px;border:1px solid #d3d8e0;border-radius:6px;box-shadow:var(--neutron-well);font-size:14px;}
+.neutron-app #employee-update-form-root textarea.emp-input {height:auto;min-height:84px;}
+.neutron-app #employee-update-form-root :is(.emp-input,input,select,textarea):focus {border-color:var(--primary-600);box-shadow:var(--neutron-well),0 0 0 3px rgba(5,28,151,.14);outline:0;}
+.neutron-form-section-title {font-size:16px!important;font-weight:700;}
+.neutron-editor-actions {position:sticky;bottom:16px;z-index:5;width:max-content;margin:24px 0 0 auto!important;padding:7px 7px 7px 7px!important;gap:8px!important;border:0!important;border-radius:14px;background:var(--neutron-material);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);box-shadow:var(--neutron-edge),var(--neutron-e3);}
+.neutron-editor-actions :is(a,button) {height:34px;display:inline-flex;align-items:center;padding:0 14px!important;border-radius:7px!important;font-size:13.5px!important;font-weight:600!important;}
+.neutron-editor-actions a {background:var(--neutron-surface);border:1px solid #d3d8e0!important;color:var(--neutron-ink)!important;box-shadow:var(--neutron-xs);}
+.neutron-editor-actions button[type=submit] {background:var(--primary-600)!important;border:1px solid #04167a;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3)!important;}
+.neutron-app .neutron-section-tabs .emp-step-btn {font-size:14px;color:var(--neutron-muted)!important;}
+.neutron-app .neutron-section-tabs .emp-step-btn--active {color:var(--neutron-ink)!important;border-bottom-color:var(--primary-600);}
+
+/* ── Dashboards: cards are raised sub-surfaces on the workspace (no hairline boxes) ─ */
+.neutron-app :is(.md-info-panel,.md-chart-card,.md-kpi-grid,.ess-info-panel,.ess-chart-card,.ess-kpi-grid,.neutron-personal-tasks) {border:0!important;border-radius:12px!important;background:var(--neutron-surface)!important;box-shadow:var(--neutron-e1)!important;}
+.neutron-app :is(.md-kpi-card,.ess-kpi-card) {border-color:var(--neutron-border)!important;box-shadow:none!important;background:transparent!important;}
+.neutron-app :is(.md-kpi-card__label,.ess-kpi-card__label) {text-transform:none!important;letter-spacing:0!important;font-size:13px!important;font-weight:600!important;color:var(--neutron-text-2)!important;opacity:1!important;}
+.neutron-app :is(.md-kpi-card__value,.ess-kpi-card__value) {font-weight:700;letter-spacing:-.02em;color:var(--neutron-ink);}
+.neutron-app :is(.md-info-panel__title,.md-chart-card__title,.ess-chart-card__title,.ess-info-panel__title) {font-weight:650!important;color:var(--neutron-ink)!important;}
+/* Work queue: items needing action lead; empty queues step back */
+.neutron-app .md-pending-card {background:transparent!important;border-radius:8px;transition:background .12s;}
+.neutron-app .md-pending-card:hover {background:var(--neutron-hover)!important;}
+.neutron-app .md-pending-card__count {color:var(--neutron-ink)!important;font-weight:700;letter-spacing:-.02em;}
+.neutron-app .md-pending-card:not(.md-pending-card--empty) .md-pending-card__label {color:var(--neutron-text-2);font-weight:500;}
+.neutron-app .md-pending-card:not(.md-pending-card--empty)::before {content:"";display:block;width:6px;height:6px;border-radius:50%;background:#d98e04;margin-bottom:8px;}
+.neutron-app .md-pending-card--empty .md-pending-card__count,.neutron-app .md-pending-card--empty .md-pending-card__label {color:var(--neutron-faint)!important;font-weight:500;}
+.neutron-app .md-pending-card--empty::before {content:"";display:block;width:6px;height:6px;margin-bottom:8px;}
+
+/* Hidden helper submit buttons must stay hidden even though .oh-btn sets a display value */
+#applyFilter[hidden],.navFilterForm button[type=submit][hidden] {display:none!important;}
+/* Inline section headers inside settings/tab pages (legacy grey band) */
+.neutron-app .oh-tabs__content .bg-\[\#f3f3f3\],.neutron-app #ohMainContent .bg-\[\#f3f3f3\].px-3.py-3 {background:transparent!important;border-bottom:1px solid var(--neutron-border);padding-left:0!important;padding-right:0!important;font-size:15px!important;font-weight:650!important;color:var(--neutron-ink)!important;}
+.neutron-app .navFilterForm input[name=search] {height:32px;border-radius:6px;border-color:#d3d8e0;box-shadow:var(--neutron-well);font-size:13.5px;}
+body.dark.neutron-app .oh-titlebar__tag.filter-field {background:#232b45!important;border-color:#34416e!important;color:#c9d4ff!important;}
+body.dark.neutron-app .neutron-related-links a,body.dark.neutron-app .neutron-section-action {color:var(--neutron-text-2);}
+.neutron-app .neutron-modal-form :is(.errorlist,.errorlist li) {background:transparent!important;border:0!important;padding:0!important;margin-left:0!important;color:var(--neutron-bad)!important;font-size:12.5px;font-weight:500;}
+.neutron-status-label .oh-sticky-table__td {display:inline;padding:0!important;margin:0!important;width:auto!important;min-width:0!important;border:0!important;background:transparent!important;}

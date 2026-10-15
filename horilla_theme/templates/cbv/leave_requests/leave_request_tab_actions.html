@@ -1,0 +1,6 @@
+{% load i18n %}
+<div class="neutron-row-actions" onclick="event.stopPropagation()">{% include "cbv/leave_requests/confirmation.html" %}<details class="neutron-action-menu"><summary aria-label="{% trans 'More actions' %}" title="{% trans 'More actions' %}"><ion-icon name="ellipsis-horizontal" aria-hidden="true"></ion-icon></summary><div class="neutron-action-menu-content">{% include "cbv/leave_requests/actions_col.html" %}    {% if instance.can_admin_intervene %}
+        <button type="button" class="oh-btn oh-btn--light oh-btn--small"
+            hx-get="{% url 'leave-admin-intervention' instance.pk %}" hx-target="#genericModalBody"
+            data-toggle="oh-modal-toggle" data-target="#genericModal">{% trans "Admin intervention" %}</button>
+    {% endif %}</div></details></div>

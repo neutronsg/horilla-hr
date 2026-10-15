@@ -18,7 +18,7 @@
     <span id="dynamicShift" style="display:none" data-toggle="oh-modal-toggle" data-target="#dynamicCreateModal"
           hx-get="{% url 'employee-shift-create' %}?dynamic=true" hx-target="#dynamicCreateModalBody"></span>
 
-    <div class="bg-white rounded-2xl shadow-card px-6 py-5">
+    <div class="neutron-editor-body">
         <div id="workMessage"></div>
         <form
             method="post"
@@ -39,11 +39,11 @@
             {{ work_form.non_field_errors }}
 
             <!-- Department / Job Position / Job Role -->
-            <div class="border border-[#ebebeb] rounded-md mb-5">
-                <h3 class="text-sm font-semibold bg-[#f3f3f3] px-3 py-3 text-[#333] flex items-center justify-between gap-2 flex-wrap rounded-t-md">
+            <div class="neutron-form-section">
+                <h3 class="neutron-form-section-title">
                     {% trans "Position" %}
                 </h3>
-                <div class="grid grid-cols-3 gap-x-4 gap-y-2 emp-grid-3 px-3 py-3">
+                <div class="grid grid-cols-3 gap-x-4 gap-y-2 emp-grid-3 neutron-form-section-fields">
                     <div>
                         <label class="block text-xs font-medium text-color-600 mb-1" for="id_department_id">{% trans "Department" %}</label>
                         {{ work_form.department_id|add_class:"emp-input w-full h-9 px-3 text-xs border border-secondary-200 rounded-md bg-white text-dark-500" }}
@@ -63,11 +63,11 @@
             </div>
 
             <!-- Work Type / Employee Type / Shift / Company -->
-            <div class="border border-[#ebebeb] rounded-md mb-5">
-                <h3 class="text-sm font-semibold bg-[#f3f3f3] px-3 py-3 text-[#333] flex items-center justify-between gap-2 flex-wrap rounded-t-md">
+            <div class="neutron-form-section">
+                <h3 class="neutron-form-section-title">
                     {% trans "Employment Details" %}
                 </h3>
-                <div class="grid grid-cols-3 gap-x-4 gap-y-2 emp-grid-3 px-3 py-3">
+                <div class="grid grid-cols-3 gap-x-4 gap-y-2 emp-grid-3 neutron-form-section-fields">
                     <div>
                         <label class="block text-xs font-medium text-color-600 mb-1" for="id_work_type_id">{% trans "Work Type" %}</label>
                         {{ work_form.work_type_id|add_class:"emp-input w-full h-9 px-3 text-xs border border-secondary-200 rounded-md bg-white text-dark-500" }}
@@ -92,11 +92,11 @@
             </div>
 
             <!-- Reporting Manager / Tags / Location -->
-            <div class="border border-[#ebebeb] rounded-md mb-5">
-                <h3 class="text-sm font-semibold bg-[#f3f3f3] px-3 py-3 text-[#333] flex items-center justify-between gap-2 flex-wrap rounded-t-md">
+            <div class="neutron-form-section">
+                <h3 class="neutron-form-section-title">
                     {% trans "Reporting & Location" %}
                 </h3>
-                <div class="grid grid-cols-3 gap-x-4 gap-y-2 emp-grid-3 px-3 py-3">
+                <div class="grid grid-cols-3 gap-x-4 gap-y-2 emp-grid-3 neutron-form-section-fields">
                     <div>
                         <label class="block text-xs font-medium text-color-600 mb-1" for="id_reporting_manager_id">{% trans "Reporting Manager" %}</label>
                         {{ work_form.reporting_manager_id|add_class:"emp-input w-full h-9 px-3 text-xs border border-secondary-200 rounded-md bg-white text-dark-500" }}
@@ -116,11 +116,11 @@
             </div>
 
             <!-- Contact & Dates & Salary -->
-            <div class="border border-[#ebebeb] rounded-md mb-5">
-                <h3 class="text-sm font-semibold bg-[#f3f3f3] px-3 py-3 text-[#333] flex items-center justify-between gap-2 flex-wrap rounded-t-md">
+            <div class="neutron-form-section">
+                <h3 class="neutron-form-section-title">
                     {% trans "Contact & Compensation" %}
                 </h3>
-                <div class="grid grid-cols-3 gap-x-4 gap-y-2 emp-grid-3 px-3 py-3">
+                <div class="grid grid-cols-3 gap-x-4 gap-y-2 emp-grid-3 neutron-form-section-fields">
                     <div>
                         <label class="block text-xs font-medium text-color-600 mb-1" for="id_email">{% trans "Work Email" %}</label>
                         {{ work_form.email|add_class:"emp-input w-full h-9 px-3 text-xs border border-secondary-200 rounded-md bg-white text-dark-500" }}
@@ -157,7 +157,7 @@
             {% include "employee/update_form/probation.html" %}
 
             <!-- Action Buttons -->
-            <div class="flex justify-end gap-3 mt-5 pt-4 border-t border-secondary-100">
+            <div class="neutron-editor-actions flex justify-end gap-3 mt-5 pt-4 border-t border-secondary-100">
                 <a href="{% url 'employee-view' %}?view=list" class="px-6 py-2 border border-secondary-200 rounded-lg text-sm font-medium text-color-600 hover:bg-secondary-50 no-underline transition-colors">
                     {% trans "Cancel" %}
                 </a>

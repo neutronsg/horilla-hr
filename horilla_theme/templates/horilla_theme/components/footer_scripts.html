@@ -9,14 +9,14 @@
       event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}'
     })
 </script>
-<script src="{% static '/index/index.js' %}"></script>
+<script src="{% static '/index/index.js' %}?v=neutron-ui-1"></script>
 <script src="{% static '/index/saveFilters.js' %}"></script>
-<script src="{% static 'horilla_theme/assets/js/htmxSelect2.js' %}"></script>
+<script src="{% static 'horilla_theme/assets/js/htmxSelect2.js' %}?v=neutron-ui-1"></script>
 <script src="{% static 'build/js/summernote-lite.min.js' %}"></script>
-<script src="{% static '/index/country.js' %}"></script>
+<script src="{% static '/index/country.js' %}?v=neutron-ui-1"></script>
 
 <!-- This CDN is for date format change -->
-<script src="{% static 'build/js/moment.js' %}"></script>
+
 <script src="{% static 'cdn/ajax/scripts/moment-with-locales.min.js' %}"></script>
 
 <script src="{% static '/base/date_settings.js' %}"></script>
@@ -24,14 +24,18 @@
 <script src="{% static '/base/time_settings.js' %}"></script>
 <script src="{% static '/base/date_formatting.js' %}"></script>
 
+{% if '/report/' in request.path %}
 <script src="{% static 'build/js/pivottable.min.js' %}"></script>
 <script src="{% static 'build/js/pivottable_plot.min.js' %}"></script>
 <script src="{% static 'build/js/pivottable_ploty.min.js' %}"></script>
 <script src="{% static 'build/js/pivottable_excel.min.js' %}"></script>
 <script src="{% static 'build/js/vendor/jspdf.umd.min.js' %}"></script>
 <script src="{% static 'build/js/vendor/jspdf.plugin.autotable.min.js' %}"></script>
+{% endif %}
+<script src="{% static 'base/actions.js' %}?v=neutron-ui-1"></script>
+{% if 'employee'|app_installed %}<script src="{% static 'employee/actions.js' %}?v=neutron-ui-1"></script>{% endif %}
 {% if 'attendance'|app_installed %}
-    <script src="{% static 'attendance/actions.js' %}"></script>
+    <script src="{% static 'attendance/actions.js' %}?v=neutron-ui-1"></script>
 {% endif %}
 <script type="module" src="{% static 'images/ionicons/ui_icons/ionicons/ionicons.esm.js' %}"></script>
 <script src="{% static '/build/js/sweetAlert.js' %}"></script>
@@ -43,6 +47,14 @@
     }
 </script>
 <script src="{% static 'horilla_theme/assets/js/footerScripts.js' %}"></script>
+<script>
+window.NEUTRON_ASSETS = {
+ dashboard: ["{% static 'build/vendor/apexcharts/apexcharts.min.js' %}"],
+ reports: ["{% static 'build/css/pivottable.min.css' %}", "{% static 'build/js/pivottable.min.js' %}", "{% static 'build/js/pivottable_plot.min.js' %}", "{% static 'build/js/pivottable_ploty.min.js' %}", "{% static 'build/js/pivottable_excel.min.js' %}", "{% static 'build/js/vendor/jspdf.umd.min.js' %}", "{% static 'build/js/vendor/jspdf.plugin.autotable.min.js' %}"],
+ organization: ["{% static 'build/css/orgChart.css' %}", "{% static 'build/js/orgChart.js' %}"]
+};
+</script>
+<script src="{% static 'horilla_theme/assets/js/neutron.js' %}?v=neutron-ui-1"></script>
 
 <!-- Product tour engine (horilla_tour) -->
 {% if request.user.is_authenticated %}

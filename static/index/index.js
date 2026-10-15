@@ -281,7 +281,21 @@ $(document).ready(function () {
                     if (clearableModals.includes(el.id)) {
                         setTimeout(function() {
                             if (!$(el).hasClass("oh-modal--show")) {
-                                $(el).find(".oh-modal__dialog").empty();
+                                const dialog = $(el).find(".oh-modal__dialog");
+                                const select2Nodes = dialog.find("[data-select2-id]").toArray();
+                                dialog.find("select").each(function () {
+                                    if ($(this).data("select2")) $(this).select2("destroy");
+                                });
+                                if ($.fn.select2 && $.fn.select2.amd) {
+                                    const utils = $.fn.select2.amd.require("select2/utils");
+                                    select2Nodes.forEach(node => utils.RemoveData(node));
+                                }
+                                dialog.find("[data-summernote]").each(function () {
+                                    if ($(this).next(".note-editor").length && $.fn.summernote) {
+                                        $(this).summernote("destroy");
+                                    }
+                                });
+                                dialog.empty();
                             }
                         }, 200); // 200ms delay to allow any close transitions to finish
                     }
@@ -303,15 +317,11 @@ $(document).ready(function () {
 // stripped through the `striptags` filter), and `striptags` only removes the
 // <script>/</script> tags themselves, not their contents - so the JS source
 // leaked into the tooltip text. Registering it once here, globally, fixes both.
-$(document).on("htmx:afterSwap", function () {
-    $("[data-toggle-count]")
-        .off("click")
-        .on("click", function (e) {
-            e.stopPropagation();
-            var recViewContainer = $(this).closest("tr");
-            recViewContainer.find(".count-span").toggle();
-            recViewContainer.toggleClass("oh-permission-table--collapsed");
-        });
+$(document).on("click.hlvCount", "[data-toggle-count]", function (e) {
+    e.stopPropagation();
+    var row = $(this).closest("tr");
+    row.find(".count-span").toggle();
+    row.toggleClass("oh-permission-table--collapsed");
 });
 
 function togglePublicComments() {
@@ -607,7 +617,7 @@ function switchGeneralTab(e) {
 
 function toggleReimbursmentType(element) {
     if (element.val() == "reimbursement") {
-        $("#genericModalBody [name=attachment]").parent().show();
+        $("#genericModalBody [name=attachment]").closest("[id$='_parent_div']").show();
         $("#genericModalBody [name=attachment]").attr("required", true);
         $("#genericModalBody [name=leave_type_id]")
             .parent().parent()
@@ -633,7 +643,7 @@ function toggleReimbursmentType(element) {
             .hide()
             .attr("required", false);
     } else if (element.val() == "leave_encashment") {
-        $("#genericModalBody [name=attachment]").parent().hide();
+        $("#genericModalBody [name=attachment]").closest("[id$='_parent_div']").hide();
         $("#genericModalBody [name=attachment]").attr("required", false);
         $("#genericModalBody [name=leave_type_id]")
             .parent().parent()
@@ -661,7 +671,7 @@ function toggleReimbursmentType(element) {
         // #819
         $("#objectCreateModalTarget [name=employee_id]").trigger("change");
     } else if (element.val() == "bonus_encashment") {
-        $("#genericModalBody [name=attachment]").parent().hide();
+        $("#genericModalBody [name=attachment]").closest("[id$='_parent_div']").hide();
         $("#genericModalBody [name=attachment]").attr("required", false);
         $("#genericModalBody [name=leave_type_id]")
             .parent().parent()
@@ -1440,14 +1450,14 @@ $(document).on("click", function (event) {
     }
 });
 
-$(document).on("htmx:afterSwap", function () {
+$(document).on("htmx:afterSwap", function (event) {
     // Only initialize elements that aren't already a live Summernote editor.
     // Re-calling .summernote(options) on one that already is can leave the
     // original textarea visible again alongside the rich editor UI (see
     // initializeSummernote() below, which guards the same way for the same
     // reason) -- this handler fires on EVERY htmx swap anywhere on the page,
     // so a modal reopened more than once was hitting this repeatedly.
-    $("[data-summernote]").each(function () {
+    $(event.detail.target).find("[data-summernote]").addBack("[data-summernote]").each(function () {
         var $source = $(this);
         if ($source.next(".note-editor").length > 0) {
             return;

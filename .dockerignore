@@ -92,3 +92,9 @@ CODEBASE_INDEX.md
 
 # Claude/AI
 .claude/
+
+# Frontend QA evidence and build tools are development-only.
+docs/interface/
+tools/interface/
+package.json
+package-lock.json

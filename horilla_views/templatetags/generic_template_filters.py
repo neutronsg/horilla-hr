@@ -65,7 +65,26 @@ def selected_format(date, company: object = None) -> str:
         elif isinstance(date, datetime.time):
             format = company.time_format if company.time_format else "hh:mm A"
             return date.strftime(time_format_mapping[format])
-    return date
+    return default_display_format(date)
+
+
+def default_display_format(value):
+    """
+    Readable default when the company has no date/time format configured
+    (previously raw ISO, e.g. "2026-10-14 13:14:39.272780+00:00").
+    Display only; aware datetimes are shown in the active time zone.
+    """
+    if isinstance(value, datetime.datetime):
+        from django.utils import timezone
+
+        if timezone.is_aware(value):
+            value = timezone.localtime(value)
+        return f"{value.day} {value:%b %Y}, {value:%H:%M}"
+    if isinstance(value, datetime.date):
+        return f"{value.day} {value:%b %Y}"
+    if isinstance(value, datetime.time):
+        return f"{value:%H:%M}"
+    return value
 
 
 @register.filter(name="cell_tooltip")

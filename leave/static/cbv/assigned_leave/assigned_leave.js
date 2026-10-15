@@ -1,4 +1,4 @@
-tickLeaveCheckboxes();
+if (typeof tickLeaveCheckboxes === "function") tickLeaveCheckboxes();
 function makeLeaveListUnique(list) {
     return Array.from(new Set(list));
 }

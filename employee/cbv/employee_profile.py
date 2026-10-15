@@ -64,6 +64,7 @@ class EmployeeProfileView(HorillaProfileView):
             self.actions = [
                 {
                     "title": _("Edit"),
+                    "primary": True,
                     "src": f"/{settings.STATIC_URL}images/ui/editing.png",
                     "accessibility": "employee.cbv.accessibility.edit_accessibility",
                     "attrs": """
@@ -108,6 +109,7 @@ class EmployeeProfileView(HorillaProfileView):
             self.actions = [
                 {
                     "title": _("Edit Profile"),
+                    "primary": True,
                     "src": f"/{settings.STATIC_URL}images/ui/editing.png",
                     "accessibility": "employee.cbv.accessibility.edit_accessibility",
                     "attrs": """onclick="window.location.href='{cbv_employee_profile_edi_url}'" """,

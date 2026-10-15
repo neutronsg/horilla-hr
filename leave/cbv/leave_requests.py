@@ -110,7 +110,12 @@ class LeaveRequestsListView(HorillaListView):
         qs = data.filter(id__in=queryset.values_list("id", flat=True))
         data = filtersubordinates(self.request, data, "leave.view_leaverequest") | qs
         return data.distinct().select_related(
-            "employee_id", "employee_id__employee_work_info", "leave_type_id"
+            "employee_id",
+            "employee_id__employee_user_id",
+            "employee_id__employee_work_info",
+            "employee_id__employee_work_info__reporting_manager_id",
+            "employee_id__employee_work_info__reporting_manager_id__employee_user_id",
+            "leave_type_id",
         )
 
     filter_class = LeaveRequestFilter

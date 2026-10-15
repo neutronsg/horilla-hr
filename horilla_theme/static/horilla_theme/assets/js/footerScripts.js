@@ -1,11 +1,22 @@
 $(function () {
     $(document).tooltip({
+        show: { delay: 450, duration: 100 },
+        hide: { duration: 80 },
         position: {
             my: "right top+8",
             at: "right bottom",
             collision: "flipfit"
         }
     });
+    // A click usually replaces or moves the hovered element (HTMX swaps, menus,
+    // row selection), so jQuery UI never sees mouseleave and the tooltip used to
+    // stay on screen. Close every open tooltip whenever the page changes under it.
+    function closeTooltips() {
+        $(".ui-tooltip").remove();
+    }
+    $(document).on("mousedown.neutronTooltip keydown.neutronTooltip htmx:beforeSwap.neutronTooltip", closeTooltips);
+    document.addEventListener("scroll", closeTooltips, { capture: true, passive: true });
+    document.addEventListener("toggle", closeTooltips, true);
 });
 
 Toast = Swal.mixin({

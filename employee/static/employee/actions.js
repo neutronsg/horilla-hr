@@ -20,7 +20,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
-$(".all-employee").change(function (e) {
+$(document).on("change", ".all-employee", function (e) {
     var is_checked = $(this).is(":checked");
     var closest = $(this)
         .closest(".oh-sticky-table__thead")
@@ -43,7 +43,7 @@ $(".all-employee").change(function (e) {
     addingIds();
 });
 
-$(".all-employee-row").change(function () {
+$(document).on("change", ".all-employee-row", function () {
     var parentTable = $(this).closest(".oh-sticky-table");
     var body = parentTable.find(".oh-sticky-table__tbody");
     var parentCheckbox = parentTable.find(".all-employee");
@@ -230,7 +230,7 @@ function unselectAllEmployees() {
     });
 }
 
-$("#exportEmployees").click(function (e) {
+$(document).on("click", "#exportEmployees", function (e) {
     var currentDate = new Date().toISOString().slice(0, 10);
     ids = [];
     ids.push($("#selectedInstances").attr("data-ids"));
@@ -274,7 +274,7 @@ $("#exportEmployees").click(function (e) {
     });
 });
 
-$("#employeeBulkUpdateId").click(function (e) {
+$(document).on("click", "#employeeBulkUpdateId", function (e) {
     ids = [];
     ids.push($("#selectedInstances").attr("data-ids"));
     ids = JSON.parse($("#selectedInstances").attr("data-ids"));
@@ -291,7 +291,7 @@ $("#employeeBulkUpdateId").click(function (e) {
     }
 });
 
-$("#archiveEmployees").click(function (e) {
+$(document).on("click", "#archiveEmployees", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedInstances").attr("data-ids"));
@@ -337,7 +337,7 @@ $("#archiveEmployees").click(function (e) {
     }
 });
 
-$("#unArchiveEmployees").click(function (e) {
+$(document).on("click", "#unArchiveEmployees", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedInstances").attr("data-ids"));
@@ -386,7 +386,7 @@ $("#unArchiveEmployees").click(function (e) {
     }
 });
 
-$("#deleteEmployees").click(function (e) {
+$(document).on("click", "#deleteEmployees", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedInstances").attr("data-ids"));
@@ -434,7 +434,7 @@ $("#deleteEmployees").click(function (e) {
     }
 });
 
-$("#select-all-fields").change(function () {
+$(document).on("change", "#select-all-fields", function () {
     const isChecked = $(this).prop("checked");
     $('[name="selected_fields"]').prop("checked", isChecked);
 });

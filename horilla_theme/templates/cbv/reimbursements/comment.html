@@ -1,0 +1,16 @@
+{% load i18n %}
+
+<div onclick="event.stopPropagation();">
+	<a
+		type="button"
+		hx-get="{% url 'payroll-request-view-comment' instance.id %}"
+		hx-target="#commentContainer"
+		data-target="#activitySidebar"
+		title="{% trans 'View Comment' %}"
+		aria-label="{% trans 'View Comment' %}"
+		class="neutron-row-action oh-activity-sidebar__open"
+		onclick="event.stopPropagation()"
+	>
+		<ion-icon name="chatbox-ellipses-outline" aria-hidden="true"></ion-icon>
+	</a>
+</div>

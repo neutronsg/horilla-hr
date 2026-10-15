@@ -689,6 +689,12 @@ s_a[252] =
 // Option labels below are user-facing. gettext() comes from Django's JS catalog,
 // which some standalone pages (e.g. the public application form) do not load —
 // fall back to English there instead of throwing a ReferenceError.
+function refreshSelect2(element) {
+    if (window.jQuery && jQuery(element).data('select2')) {
+        jQuery(element).trigger('change.select2');
+    }
+}
+
 function countryI18n(text) {
     return typeof gettext === "function" ? gettext(text) : text;
 }

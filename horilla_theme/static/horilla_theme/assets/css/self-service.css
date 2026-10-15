@@ -1,0 +1,618 @@
+:root {
+            --ess-indigo: #051c97;
+            --ess-green: #22c55e;
+            --ess-amber: #f59e0b;
+            --ess-red: #ef4444;
+            --ess-blue: #3b82f6;
+            --ess-purple: #a855f7;
+            --ess-teal: #14b8a6;
+            --ess-pink: #ec4899;
+        }
+
+        /* ── Dashboard shell ── */
+
+.ess-dashboard {min-height:calc(100vh - 110px);margin:0;padding:0;background:transparent;font-family:inherit;}
+
+.dark .ess-dashboard {background:transparent;}
+
+        /* ── Header ── */
+        .ess-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 12px;
+        }
+
+.ess-header h1 {font-size:24px;font-weight:600;margin:0 0 6px;}
+        .ess-header__date {
+            margin-top: 2px;
+            font-size: 13px;
+            opacity: 0.6;
+        }
+        .ess-header__actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Period picker — mirrors onboarding/recruitment style */
+        .ess-period-picker {
+            display: none !important; /* TEMP: hide period picker */
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+        .ess-period-picker input[type='date'] {
+            padding: 5px 8px;
+            border: 1px solid rgba(128, 128, 128, 0.2);
+            border-radius: 6px;
+            outline: none;
+            background: transparent;
+            color: inherit;
+            font-size: 12px;
+            transition: border-color 0.15s;
+        }
+        .ess-period-picker input[type='date']:focus {
+            border-color: var(--ess-indigo);
+        }
+        .ess-period-picker__sep {
+            font-size: 11px;
+            opacity: 0.4;
+        }
+        .ess-period-preset {
+            padding: 4px 10px;
+            border: 1px solid rgba(128, 128, 128, 0.15);
+            border-radius: 6px;
+            background: none;
+            color: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .ess-period-preset:hover {
+            border-color: var(--ess-indigo);
+            color: var(--ess-indigo);
+        }
+        .ess-period-preset--active {
+            border-color: var(--ess-indigo);
+            background: var(--ess-indigo);
+            color: #fff;
+        }
+        .dark .ess-period-picker input[type='date'] {
+            color-scheme: dark;
+        }
+
+        /* ── KPI Grid ── */
+
+.ess-kpi-grid {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin-bottom:24px;background:var(--neutron-surface);border:1px solid var(--neutron-border);border-radius:8px;}
+        @media (max-width: 1024px) {
+            .ess-kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 480px) {
+            .ess-kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+.ess-kpi-card {display:block;padding:20px 24px;border:0;border-right:1px solid var(--neutron-border);border-radius:0;background:transparent;box-shadow:none;color:inherit;text-decoration:none;}
+
+.ess-kpi-card::after {display:none;}
+
+.ess-kpi-card:hover {background:var(--neutron-hover);box-shadow:none;transform:none;}
+        .ess-kpi-card:active {
+            transform: scale(0.97);
+        }
+
+.dark .ess-kpi-card {background:transparent;box-shadow:none;border-color:var(--neutron-border);}
+
+.ess-kpi-card__icon {display:none;}
+        .ess-kpi-card__icon--indigo {
+            background: #eef2ff;
+            color: var(--ess-indigo);
+        }
+        .ess-kpi-card__icon--green {
+            background: #dcfce7;
+            color: var(--ess-green);
+        }
+        .ess-kpi-card__icon--amber {
+            background: #fef3c7;
+            color: var(--ess-amber);
+        }
+        .ess-kpi-card__icon--purple {
+            background: #f3e8ff;
+            color: var(--ess-purple);
+        }
+        .dark .ess-kpi-card__icon--indigo {
+            background: #312e81;
+        }
+        .dark .ess-kpi-card__icon--green {
+            background: #14532d;
+        }
+        .dark .ess-kpi-card__icon--amber {
+            background: #78350f;
+        }
+        .dark .ess-kpi-card__icon--purple {
+            background: #3b0764;
+        }
+
+        .ess-kpi-card__label {
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            opacity: 0.5;
+        }
+        .ess-kpi-card__value {
+            margin-bottom: 6px;
+            font-weight: 800;
+            font-size: 30px;
+            line-height: 1;
+        }
+        .ess-kpi-card__sub {
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        /* ── Two-column layout ── */
+        .ess-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            align-items: start;
+            gap: 20px;
+        }
+        @media (max-width: 1280px) {
+            .ess-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── Chart grid ── */
+        .ess-chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            margin-bottom: 18px;
+            gap: 18px;
+        }
+        @media (max-width: 768px) {
+            .ess-chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+.ess-chart-card {min-width:0;overflow:hidden;background:var(--neutron-surface);border:1px solid var(--neutron-border);border-radius:8px;box-shadow:none;}
+        .ess-chart-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+        }
+        .dark .ess-chart-card {
+            border-color: rgba(255, 255, 255, 0.07);
+            background: #242424;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+        .dark .ess-chart-card:hover {
+            box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Colored top border strip */
+
+.ess-chart-card::before {display:none;}
+        .ess-chart-card[data-section='leave']::before {
+            background: linear-gradient(90deg, #051c97, #a855f7);
+        }
+        .ess-chart-card[data-section='attendance']::before {
+            background: linear-gradient(90deg, #22c55e, #06b6d4);
+        }
+        .ess-chart-card[data-section='payroll']::before {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+        .ess-chart-card[data-section='goals']::before {
+            background: linear-gradient(90deg, #3b82f6, #051c97);
+        }
+        .ess-chart-card[data-section='calendar']::before {
+            background: linear-gradient(90deg, #22c55e, #06b6d4);
+        }
+
+        .ess-chart-card--wide {
+            margin-bottom: 18px;
+        }
+
+        .ess-chart-card__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 18px 4px;
+        }
+        .ess-chart-card__title {
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: -0.01em;
+        }
+        .ess-chart-card__subtitle {
+            margin-top: 2px;
+            font-weight: 500;
+            font-size: 11px;
+            opacity: 0.45;
+        }
+        .ess-chart-card__body {
+            padding: 4px 12px 16px;
+            overflow: visible;
+        }
+
+        .ess-dashboard .apexcharts-xaxis text,
+        .ess-dashboard .apexcharts-yaxis text,
+        .ess-dashboard .apexcharts-legend-text {
+            fill: #334155 !important;
+        }
+        .dark .ess-dashboard .apexcharts-xaxis text,
+        .dark .ess-dashboard .apexcharts-yaxis text,
+        .dark .ess-dashboard .apexcharts-legend-text {
+            fill: #cbd5e1 !important;
+        }
+
+        /* ── Attendance Calendar ── */
+        .ess-calendar-legend {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 4px 18px 0;
+            gap: 10px;
+            font-size: 10px;
+            opacity: 0.75;
+        }
+        .ess-cal-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-right: 3px;
+            border-radius: 50%;
+            vertical-align: middle;
+        }
+        .ess-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            padding: 10px 14px 6px;
+            gap: 4px;
+        }
+        .ess-cal-header {
+            padding: 2px 0;
+            font-weight: 600;
+            font-size: 10px;
+            text-align: center;
+            opacity: 0.45;
+        }
+
+.ess-cal-day {min-height:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-size:12px;cursor:pointer;}
+        .ess-cal-day--present {
+            background: rgba(34, 197, 94, 0.15);
+            color: #16a34a;
+        }
+        .ess-cal-day--absent {
+            background: rgba(239, 68, 68, 0.12);
+            color: #dc2626;
+        }
+        .ess-cal-day--late {
+            background: rgba(245, 158, 11, 0.15);
+            color: #d97706;
+        }
+        .ess-cal-day--leave {
+            background: rgba(99, 102, 241, 0.13);
+            color: #4f46e5;
+        }
+        .ess-cal-day--holiday {
+            background: rgba(168, 85, 247, 0.13);
+            color: #7c3aed;
+        }
+        .ess-cal-day--weekend {
+            opacity: 0.35;
+        }
+        .ess-cal-day--future {
+            opacity: 0.25;
+        }
+        .ess-cal-day--empty {
+            visibility: hidden;
+        }
+        .dark .ess-cal-day--present {
+            background: rgba(34, 197, 94, 0.18);
+            color: #4ade80;
+        }
+        .dark .ess-cal-day--absent {
+            background: rgba(239, 68, 68, 0.18);
+            color: #f87171;
+        }
+        .dark .ess-cal-day--late {
+            background: rgba(245, 158, 11, 0.18);
+            color: #fbbf24;
+        }
+        .dark .ess-cal-day--leave {
+            background: rgba(99, 102, 241, 0.18);
+            color: #818cf8;
+        }
+        .dark .ess-cal-day--holiday {
+            background: rgba(168, 85, 247, 0.18);
+            color: #c084fc;
+        }
+
+        .ess-cal-summary {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 6px 18px 12px;
+            gap: 16px;
+            font-size: 12px;
+        }
+        .ess-cal-summary__item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* ── Goals ── */
+        #essGoalsContainer {
+            max-height: 240px;
+            padding: 6px 16px 10px;
+            overflow-y: auto;
+        }
+        .ess-goal-row {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+            cursor: pointer;
+        }
+        .ess-goal-row:last-child {
+            border-bottom: none;
+        }
+        .ess-goal-row:hover {
+            opacity: 0.8;
+        }
+        .ess-goal-row__header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            gap: 8px;
+        }
+        .ess-goal-row__title {
+            flex: 1;
+            font-weight: 500;
+            font-size: 12px;
+        }
+        .ess-goal-row__meta {
+            margin-top: 3px;
+            font-size: 10px;
+            opacity: 0.5;
+        }
+        .ess-progress {
+            height: 5px;
+            overflow: hidden;
+            border-radius: 3px;
+            background: rgba(128, 128, 128, 0.12);
+        }
+        .ess-progress__bar {
+            height: 100%;
+            border-radius: 3px;
+            background: var(--ess-indigo);
+            transition: width 0.4s;
+        }
+
+        /* ── Status badges ── */
+        .ess-badge {
+            flex-shrink: 0;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 10px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .ess-badge--requested {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--ess-indigo);
+        }
+        .ess-badge--approved {
+            background: rgba(34, 197, 94, 0.1);
+            color: #16a34a;
+        }
+        .ess-badge--rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+        .ess-badge--cancelled {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+        }
+        .ess-badge--Not\ Started, .ess-badge--On\ Track {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--ess-indigo);
+        }
+        .ess-badge--Closed {
+            background: rgba(34, 197, 94, 0.1);
+            color: #16a34a;
+        }
+        .ess-badge--At\ Risk, .ess-badge--Behind {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        /* ── Sidebar ── */
+        .ess-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+.ess-info-panel {background:var(--neutron-surface);border:1px solid var(--neutron-border);border-radius:8px;overflow:hidden;}
+        .dark .ess-info-panel {
+            border-color: rgba(255, 255, 255, 0.08);
+            background: #242424;
+        }
+
+        .ess-info-panel__header {
+            display: flex;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px 10px;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.08);
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .ess-info-panel__body {
+            flex: 1;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+        .ess-info-panel__footer {
+            padding: 8px 14px;
+            border-top: 1px solid rgba(128, 128, 128, 0.08);
+            font-size: 11px;
+            text-align: right;
+        }
+        .ess-info-panel__footer a {
+            color: var(--ess-indigo);
+            text-decoration: none;
+        }
+        .ess-info-panel__footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Quick actions */
+        .ess-quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            padding: 12px;
+            gap: 8px;
+        }
+        .ess-action-btn {
+            display: flex;
+            align-items: center;
+            padding: 9px 10px;
+            gap: 6px;
+            border-radius: 8px;
+            color: inherit;
+            font-weight: 500;
+            font-size: 12px;
+            text-decoration: none;
+            transition: opacity 0.15s, transform 0.15s;
+        }
+        .ess-action-btn:hover {
+            transform: translateY(-1px);
+            color: inherit;
+            text-decoration: none;
+            opacity: 0.85;
+        }
+        .ess-action-btn--green {
+            background: rgba(34, 197, 94, 0.1);
+            color: #16a34a;
+        }
+        .ess-action-btn--blue {
+            background: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+        }
+        .ess-action-btn--indigo {
+            background: rgba(99, 102, 241, 0.1);
+            color: #4f46e5;
+        }
+        .ess-action-btn--purple {
+            background: rgba(168, 85, 247, 0.1);
+            color: #7c3aed;
+        }
+        .dark .ess-action-btn--green {
+            color: #4ade80;
+        }
+        .dark .ess-action-btn--blue {
+            color: #60a5fa;
+        }
+        .dark .ess-action-btn--indigo {
+            color: #818cf8;
+        }
+        .dark .ess-action-btn--purple {
+            color: #c084fc;
+        }
+
+        /* List rows */
+        .ess-list-row {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.07);
+            font-size: 12px;
+        }
+        .ess-list-row:last-child {
+            border-bottom: none;
+        }
+        .ess-list-row__main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2px;
+            gap: 6px;
+        }
+        .ess-list-row__title {
+            font-weight: 500;
+        }
+        .ess-list-row__sub {
+            font-size: 11px;
+            opacity: 0.5;
+        }
+
+        /* Upcoming rows */
+        .ess-upcoming-row {
+            display: flex;
+            align-items: center;
+            padding: 9px 14px;
+            gap: 8px;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.07);
+            font-size: 12px;
+        }
+        .ess-upcoming-row:last-child {
+            border-bottom: none;
+        }
+        .ess-upcoming-row svg {
+            flex-shrink: 0;
+        }
+        .ess-upcoming-row--birthday {
+            color: var(--ess-pink);
+        }
+        .ess-upcoming-row--anniversary {
+            color: var(--ess-amber);
+        }
+        .ess-upcoming-row--holiday {
+            color: var(--ess-purple);
+        }
+
+        /* Empty / skeleton */
+        .ess-empty {
+            padding: 28px 16px;
+            font-size: 12px;
+            text-align: center;
+            opacity: 0.4;
+        }
+        .ess-empty-sm {
+            padding: 14px;
+            font-size: 11px;
+            text-align: center;
+            opacity: 0.4;
+        }
+        .ess-skeleton {
+            border-radius: 16px;
+            background: linear-gradient(90deg, rgba(128, 128, 128, 0.1) 25%, transparent 50%, rgba(128, 128, 128, 0.1) 75%);
+            background-size: 200% 100%;
+            animation: ess-shimmer 1.5s infinite;
+        }
+        .ess-skeleton--kpi {
+            height: 110px;
+        }
+        @keyframes ess-shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+.ess-kpi-card:last-child {border-right:0;}
+
+@media(max-width:767px) {.ess-kpi-grid {grid-template-columns:repeat(2,minmax(0,1fr));}}

@@ -242,7 +242,7 @@
     {% include "generic/export_fields_modal.html" %}
     <script>
         if (!$(".HTV").length) {
-        	$("#reloadMessagesButton").click();
+        {% if messages %}$("#reloadMessagesButton").click();{% endif %}
         }
     </script>
 

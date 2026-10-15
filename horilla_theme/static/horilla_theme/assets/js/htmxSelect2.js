@@ -3997,241 +3997,57 @@
         t = e.require("jquery.select2");
     return (u.fn.select2.amd = e), t;
 });
-staticUrl = $("#statiUrl").attr("data-url");
-
-$(document).ready(function () {
-    $(".oh-select").each(function () {
-        if ($(this).hasClass("select2-hidden-accessible") && $(this).data("select2")) {
-            $(this).select2("destroy");
-        }
-        $(this).select2({ width: '100%' });
-    });
-
-    $("select").on("select2:select", function (e) {
-        $(this)[0].dispatchEvent(new Event("change"));
-    });
-});
-
-
-// Reliable, delegated modal opener.
-// The only other place that opens `oh-modal-toggle` modals is inside an
-// `htmx:afterSettle` handler (further down this file), which is fragile:
-// it re-binds per-swap, only reaches elements whose swap target has an id,
-// and is skipped entirely if an earlier afterSettle handler throws. A single
-// document-level delegated handler guarantees the modal opens for any current
-// or htmx-loaded toggle (e.g. the document-request pipeline edit action).
-$(document).on("click", "[data-toggle='oh-modal-toggle']", function () {
-    var modalId = $(this).attr("data-target");
-    if (modalId) {
-        $(modalId).addClass("oh-modal--show");
-    }
-});
-
-
-$(document).on("htmx:afterSettle", function (event) {
-    var target = $(event.target);
-    target.find(".oh-select").select2({ width: '100%' });
-
-    target.find("select").off("select2:select").on("select2:select", function (e) {
-        this.dispatchEvent(new Event("change"));
-    });
-});
-
-
-// Helper function to hash data using SHA-256
-async function hashData(data) {
-    const encoder = new TextEncoder();
-    const dataBuffer = encoder.encode(data);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-}
-
-// Save installed apps with a hash to localStorage
-async function saveToLocalStorage(data) {
-    const dataString = JSON.stringify(data);
-    const hash = await hashData(dataString);
-    localStorage.setItem("cachedInstalledApps", dataString);
-    localStorage.setItem("cachedInstalledAppsHash", hash);
-}
-
-// Verify and load installed apps from localStorage
-async function loadFromLocalStorage() {
-    const dataString = localStorage.getItem("cachedInstalledApps");
-    const storedHash = localStorage.getItem("cachedInstalledAppsHash");
-    if (dataString && storedHash) {
-        const currentHash = await hashData(dataString);
-        if (currentHash === storedHash) {
-            return JSON.parse(dataString);
-        }
-    }
-    return null;
-}
-
-$(document).on("htmx:afterSwap", async function (evt) {
-    if ($('[role="tooltip"]:visible').length) {
-        $('[role="tooltip"]').hide();
-    }
-    cachedInstalledApps = await loadFromLocalStorage();
-    // Try loading cached data from localStorage first
-    if (cachedInstalledApps) {
-        // Use the cached data
-        loadScripts(cachedInstalledApps);
-    } else {
-        // Fetch the data via AJAX if not cached or cache is invalid
-        $.ajax({
-            url: '/get-horilla-installed-apps/',
-            method: 'GET',
-            success: async function (response) {
-                cachedInstalledApps = response.installed_apps;
-                await saveToLocalStorage(cachedInstalledApps);
-                loadScripts(cachedInstalledApps);
-            },
-            error: function (error) {
-                console.error("Error fetching installed apps:", error);
-            }
+// One Select2 instance per element, scoped to the inserted fragment.
+(function () {
+    function initialize(root) {
+        $(root).find('.oh-select').addBack('.oh-select').each(function () {
+            if (!$(this).data('select2')) $(this).select2({width: '100%'});
         });
     }
-});
-
-function loadScripts(installedApps) {
-    // Helper function to safely remove and add a script
-    function loadScriptIfNeeded(appName) {
-        const scriptSrc = `${staticUrl}${appName}/actions.js`;
-        const existingScript = document.querySelector(`[src='${scriptSrc}']`);
-
-        // Remove existing script if it exists
-        if (existingScript) {
-            existingScript.remove();
-        }
-
-        // Add the new script
-        const script = document.createElement("script");
-        script.src = scriptSrc;
-        script.defer = true;
-        document.head.appendChild(script);
-    }
-
-    // Conditionally load scripts based on installed apps
-    if (installedApps.includes('attendance')) {
-        loadScriptIfNeeded('attendance');
-    }
-    if (installedApps.includes('employee')) {
-        loadScriptIfNeeded('employee');
-    }
-    if (installedApps.includes('candidate')) {
-        loadScriptIfNeeded('candidate');
-    }
-
-    // Always load base script
-    loadScriptIfNeeded('base');
-}
-
-
-
-$(document).on("htmx:afterSettle", function (e) {
-    var targetId = e.detail.target.id;
-    if (targetId == "") {
-        targetId = "someDemoId"
-    }
-    // $(`#${targetId} .oh-accordion-header`).on("click", function (e) {
-    //     e.preventDefault();
-    //     $(this).parent().toggleClass("oh-accordion--show");
-    // });
-
-    $(`#${targetId} .oh-table__toggle-parent`).on("click", function () {
-        $(this)
-            .parent()
-            .find(".oh-table__toggle-child")
-            .toggleClass("oh-table__toggle-child--show");
+    $(function () { initialize(document); });
+    $(document).on('htmx:afterSwap.neutronSelect', function (event) {
+        initialize(event.detail.target);
     });
-
-    //   $(`#${targetId} .oh-accordion-meta__header`).on("click", function () {
-    //     $(this).toggleClass("oh-accordion-meta__header--show");
-    //     $(this).next().toggleClass("d-none");
-    //   });
-
-    $(`#${targetId} .oh-permission-table--toggle`).on("click", function (e) {
-        e.stopPropagation();
-        let clickedEl = $(e.target).closest(".oh-permission-table--toggle");
-        let parentRow = clickedEl.closest(".oh-permission-table__tr");
-        // let collapsedPanel = parentRow.find(".oh-collapse-panel");
-        let count = parentRow.data("count");
-        let labelText = parentRow.data("label");
-        // Count number of permissions.
-        // let permissionCount = collapsedPanel.length;
-        let cellEl = parentRow
-            .find(".oh-collapse-panel")
-            .closest(".oh-sticky-table__td");
-        // Label
-        let labelEl = null;
-        if (labelText) {
-            if (count > 1) {
-                labelEl = `<span class='oh-permission-count'>${count} ${labelText}s</span>`;
-            } else {
-                labelEl = `<span class='oh-permission-count'>${count} ${labelText}</span>`;
-            }
-        }
-        // Collapse / Hide Permission Panels
-        parentRow.toggleClass("oh-permission-table--collapsed");
-        if (parentRow.hasClass("oh-permission-table--collapsed")) {
-            if (labelEl) {
-                $(cellEl).append(labelEl);
-            }
-        } else {
-            $(cellEl).find(".oh-permission-count").remove();
+    $(document).on('select2:select.neutronSelect', 'select', function () {
+        this.dispatchEvent(new Event('change', {bubbles: true}));
+    });
+    document.addEventListener('htmx:beforeCleanupElement', function (event) {
+        var element = event.detail.elt;
+        if (element.matches && element.matches('select') && $(element).data('select2')) {
+            $(element).select2('destroy');
         }
     });
-
-    $(`#${targetId} [data-toggle='oh-modal-toggle']`).on("click", function () {
-        let modalId = $(this).attr("data-target");
-        $(`${modalId}`).addClass("oh-modal--show");
+    $(document).on('click.neutronModal', '[data-toggle="oh-modal-toggle"]', function () {
+        var target = this.getAttribute('data-target');
+        if (target) $(target).addClass('oh-modal--show');
     });
-    $(`#${targetId} .oh-modal__close, .oh-modal__cancel`).on(
-        "click",
-        function () {
-            $(".oh-modal--show").removeClass("oh-modal--show");
-        }
-    );
-
-    $(`#${targetId} .oh-activity-sidebar__open`).on("click", function () {
-        let sideBarId = $(this).attr("data-target");
-        $(`${sideBarId}`).addClass("oh-activity-sidebar--show");
+    $(document).on('click.neutronModal', '.oh-modal__close, .oh-modal__cancel', function () {
+        $(this).closest('.oh-modal--show').removeClass('oh-modal--show');
     });
-
-    $(`#${targetId} .oh-activity-sidebar__open`).on("click", function () {
-        $(".oh-modal--show").removeClass("oh-activity-sidebar__close");
+    $(document).on('click.neutronSidebar', '.oh-activity-sidebar__open', function () {
+        $(this.getAttribute('data-target')).addClass('oh-activity-sidebar--show');
     });
-
-    $(`#${targetId} .oh-accordion-meta__header`).on("click", function () {
-        target = $(this).attr("data-target");
-        $(this).toggleClass("oh-accordion-meta__header--show");
-        $(target).toggleClass("d-none");
+    $(document).on('click.neutronSidebar', '.oh-activity-sidebar__close', function () {
+        $(this).closest('.oh-activity-sidebar').removeClass('oh-activity-sidebar--show');
     });
-
-    $(`#${targetId} .oh-accordion-meta__item`).on('click', function (e) {
-        e.preventDefault;
-        e.stopPropagation;
-        let clickedEl = $(e.target).closest(".oh-accordion-meta__header");
-        let accordionItemBody = clickedEl
-            .parent(".oh-accordion-meta__item")
-            .find(".oh-accordion-meta__body");
-
-        if (clickedEl) {
-            clickedEl.toggleClass("oh-accordion-meta__header--show");
-        }
-        if (accordionItemBody) {
-            accordionItemBody.toggleClass("d-none");
+    $(document).on('click.neutronPermissions', '.oh-permission-table--toggle', function (event) {
+        event.stopPropagation();
+        const row = $(this).closest('.oh-permission-table__tr');
+        row.toggleClass('oh-permission-table--collapsed');
+        const cells = row.find('.oh-collapse-panel').closest('.oh-sticky-table__td');
+        cells.find('.oh-permission-count').remove();
+        const count = row.data('count'), label = row.data('label');
+        if (row.hasClass('oh-permission-table--collapsed') && label) {
+            $('<span>', {class: 'oh-permission-count', text: count + ' ' + label + (count > 1 ? 's' : '')}).appendTo(cells);
         }
     });
-
-    $(`#${targetId} .oh-sticky-table__tr.oh-table__toggle-parent`).on("click", function (e) {
-        $(this).parent().find(".oh-table__toggle-child").toggleClass("oh-table__toggle-child--show")
-    })
-
-    $(`#${targetId} [data-toggle-count]`).click(function (e) {
-        e.preventDefault();
-        span = $(this).parent().find(".count-span").toggle()
+    $(document).on('click.neutronTable' , '.oh-table__toggle-parent', function () {
+        $(this).parent().find('.oh-table__toggle-child').toggleClass('oh-table__toggle-child--show');
     });
-
-});
+    $(document).on('click.neutronMeta', '.oh-accordion-meta__header', function () {
+        $(this).toggleClass('oh-accordion-meta__header--show');
+        var target = this.getAttribute('data-target');
+        if (target) $(target).toggleClass('d-none');
+        else $(this).closest('.oh-accordion-meta__item').find('.oh-accordion-meta__body').toggleClass('d-none');
+    });
+})();

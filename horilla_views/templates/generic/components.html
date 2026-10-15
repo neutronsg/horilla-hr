@@ -1,3 +1,4 @@
+{% if not neutron_shell %}
 {% load i18n %}
 
 <div
@@ -152,18 +153,7 @@
 </div>
 
 <script>
-    $(document).on("htmx:afterOnLoad", function (event) {
-    	$("[data-toggle='oh-modal-toggle']").click(function (e) {
-    		e.preventDefault();
-    		let clickedEl = $(e.target).closest(
-    			'[data-toggle = "oh-modal-toggle"]'
-    		);
-    		if (clickedEl != null) {
-    			const targetEl = clickedEl.data("target");
-    			$(targetEl).addClass("oh-modal--show");
-    		}
-    	});
-    });
+    // Modal open/close is delegated once by the shared Select2/UI bootstrap.
     {% comment %} function switchTab(e) {
     	let parentContainerEl = e.target.closest(".oh-tabs");
     	let tabElement = e.target.closest(".oh-tabs__tab");
@@ -205,3 +195,5 @@
 </script>
 {% block generic_components %}
 {% endblock generic_components %}
+
+{% endif %}

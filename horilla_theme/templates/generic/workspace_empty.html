@@ -1,0 +1,13 @@
+{% load i18n %}
+<section class="neutron-empty neutron-data-surface" aria-live="polite">
+    <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+    {% if filter_dict or request.GET.search %}
+        <h2>{% trans "No matches found" %}</h2>
+        <p>{% trans "Try a different search or adjust your filters." %}</p>
+        {% if request.GET.search %}<button type="button" class="neutron-row-action" data-neutron-clear-search>{% trans "Clear search" %}</button>{% endif %}
+    {% else %}
+        <h2>{% trans "No records yet" %}</h2>
+        <p>{% trans "Records will appear here when they are added." %}</p>
+    {% endif %}
+    {% include "generic/import_block.html" %}
+</section>

@@ -59,7 +59,7 @@ function validateActivityIds(event) {
 
 }
 
-$(".all-hour-account").change(function (e) {
+$(document).on("change", ".all-hour-account", function (e) {
     var is_checked = $(this).is(":checked");
     var closest = $(this)
         .closest(".oh-sticky-table__thead")
@@ -545,7 +545,7 @@ function unselectAllActivity() {
     });
 }
 
-$(".attendance-info-import").click(function (e) {
+$(document).on("click", ".attendance-info-import", function (e) {
     e.preventDefault();
     Swal.fire({
         text: i18nMessages.downloadTemplate,
@@ -585,7 +585,7 @@ $(".attendance-info-import").click(function (e) {
 
 
 function selectAllLatecome() {
-    // $("#selectAllLatecome").click(function () {
+    // $(document).on("click", "#selectAllLatecome", function () {
 
     $("#selectedLatecome").attr("data-clicked", 0);
     $("#selectedShowLatecome").removeAttr("style");
@@ -667,7 +667,7 @@ function selectAllLatecome() {
 }
 
 function unselectAllLatecome() {
-    // $("#unselectAllLatecome").click(function () {
+    // $(document).on("click", "#unselectAllLatecome", function () {
     $("#selectedLatecome").attr("data-clicked", 0);
 
     $.ajax({
@@ -704,12 +704,12 @@ function unselectAllLatecome() {
     // });
 }
 
-$("#select-all-fields").change(function () {
+$(document).on("change", "#select-all-fields", function () {
     const isChecked = $(this).prop("checked");
     $('[name="selected_fields"]').prop("checked", isChecked);
 });
 
-$(".all-latecome").change(function (e) {
+$(document).on("change", ".all-latecome", function (e) {
     var is_checked = $(this).is(":checked");
     var closest = $(this)
         .closest(".oh-sticky-table__thead")
@@ -732,7 +732,7 @@ $(".all-latecome").change(function (e) {
     }
 });
 
-$(".all-attendance-activity").change(function (e) {
+$(document).on("change", ".all-attendance-activity", function (e) {
     var is_checked = $(this).is(":checked");
     var closest = $(this)
         .closest(".oh-sticky-table__thead")
@@ -755,7 +755,7 @@ $(".all-attendance-activity").change(function (e) {
     }
 });
 
-$("#validateAttendances").click(function (e) {
+$(document).on("click", "#validateAttendances", function (e) {
     e.preventDefault();
     var confirmMessage = gettext("Do you really want to validate all the selected attendances?")
     var textMessage = gettext("No rows are selected from Validate Attendances.")
@@ -801,7 +801,7 @@ $("#validateAttendances").click(function (e) {
 
 });
 
-$("#approveOt").click(function (e) {
+$(document).on("click", "#approveOt", function (e) {
     e.preventDefault();
 
     var confirmMessage = gettext("Do you really want to approve OT for all the selected attendances?")
@@ -850,7 +850,7 @@ $("#approveOt").click(function (e) {
 
 // -------------------------------------------Data Export Handlers---------------------------------------------------------------
 
-$("#exportAccounts").click(function (e) {
+$(document).on("click", "#exportAccounts", function (e) {
     var currentDate = new Date().toISOString().slice(0, 10);
     ids = [];
     ids.push($("#selectedInstances").attr("data-ids"));
@@ -895,7 +895,7 @@ $("#exportAccounts").click(function (e) {
     });
 });
 
-$("#exportActivity").click(function (e) {
+$(document).on("click", "#exportActivity", function (e) {
     var currentDate = new Date().toISOString().slice(0, 10);
     ids = [];
     ids.push($("#selectedActivity").attr("data-ids"));
@@ -940,7 +940,7 @@ $("#exportActivity").click(function (e) {
     });
 });
 
-$("#exportLatecome").click(function (e) {
+$(document).on("click", "#exportLatecome", function (e) {
     var currentDate = new Date().toISOString().slice(0, 10);
 
     ids = [];
@@ -990,7 +990,7 @@ $("#exportLatecome").click(function (e) {
 
 // -------------------------------------------------Data Delete Handlers---------------------------------------------------------
 
-$("#bulkDelete").click(function (e) {
+$(document).on("click", "#bulkDelete", function (e) {
     e.preventDefault();
     var checkedRows = $(".attendance-checkbox").filter(":checked");
     if (checkedRows.length === 0) {
@@ -1022,7 +1022,7 @@ $("#bulkDelete").click(function (e) {
     }
 });
 
-$("#attendanceAddToBatch").click(function (e) {
+$(document).on("click", "#attendanceAddToBatch", function (e) {
     e.preventDefault();
     var checkedRows = $(".attendance-checkbox").filter(":checked");
     if (checkedRows.length === 0) {
@@ -1042,7 +1042,7 @@ $("#attendanceAddToBatch").click(function (e) {
     }
 });
 
-$("#hourAccountbulkDelete").click(function (e) {
+$(document).on("click", "#hourAccountbulkDelete", function (e) {
     e.preventDefault();
     ids = [];
     ids.push($("#selectedInstances").attr("data-ids"));
@@ -1085,7 +1085,7 @@ $("#hourAccountbulkDelete").click(function (e) {
     }
 });
 
-// $("#attendanceActivityDelete").click(function (e) {
+// $(document).on("click", "#attendanceActivityDelete", function (e) {
 //     e.preventDefault();
 //
 //         var confirmMessage = gettext("Do you really want to delete all the selected attendances?");
@@ -1132,7 +1132,7 @@ cancelButtonText: i18nMessages.cancel,
     //
     // });
 
-    $("#lateComeBulkDelete").click(function (e) {
+    $(document).on("click", "#lateComeBulkDelete", function (e) {
         e.preventDefault();
 
         ids = [];
@@ -1338,7 +1338,7 @@ function unselectAllReqAttendance() {
 }
 
 
-$("#reqAttendanceBulkApprove").click(function (e) {
+$(document).on("click", "#reqAttendanceBulkApprove", function (e) {
     e.preventDefault();
 
     var checkedRows = JSON.parse($("#selectedInstances").attr("data-ids") || "[]");
@@ -1378,7 +1378,7 @@ $("#reqAttendanceBulkApprove").click(function (e) {
     }
 });
 
-$("#reqAttendanceBulkReject").click(function (e) {
+$(document).on("click", "#reqAttendanceBulkReject", function (e) {
     e.preventDefault();
     var checkedRows = JSON.parse($("#selectedInstances").attr("data-ids") || "[]");
     if (checkedRows.length === 0) {
@@ -1449,7 +1449,7 @@ function addingRequestAttendanceIds() {
 
 }
 
-$(".requested-attendances-select-all").click(function (e) {
+$(document).on("click", ".requested-attendances-select-all", function (e) {
     var is_checked = $(this).is(":checked");
     var closest = $(this)
         .closest(".oh-sticky-table__thead")
@@ -1481,7 +1481,7 @@ function checkReqAttentanceSelectAll() {
         body.find(".requested-attendance-row").length
     );
 }
-$(".requested-attendance-row").change(function () {
+$(document).on("change", ".requested-attendance-row", function () {
     var parentTable = $(this).closest(".oh-sticky-table");
     var body = parentTable.find(".oh-sticky-table__tbody");
     var parentCheckbox = parentTable.find(".requested-attendances-select-all");

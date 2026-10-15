@@ -1,4 +1,4 @@
-{% load static i18n generic_template_filters %}
+{% load static i18n generic_template_filters neutron_ui %}
 
 <style>
     #{{ view_id|safe }} .stickyleft-second {
@@ -24,7 +24,7 @@
         {% include "generic/export_fields_modal.html" %}
         <script>
             if (!$(".HTV").length) {
-                reloadMessage(null);
+                {% if messages %}reloadMessage(null);{% endif %}
             }
         </script>
         <button
@@ -38,10 +38,10 @@
         ></button>
         {% if show_filter_tags %} {% include "generic/filter_tags.html" %} {% endif %}
 
-        {% include "generic/quick_actions.html" %}
+        {% include "generic/quick_actions.html" with bulk_only=True %}
         {% if queryset|length %}
 
-            <div class="bg-white p-2 rounded-md shadow-card relative"{% if show_toggle_form %} x-data="{ open: false }"{% endif %}>
+            <div class="neutron-data-surface relative"{% if show_toggle_form %} x-data="{ open: false }"{% endif %}>
                 <div
                     class="max-h-[calc(100vh_-_260px)] overflow-hidden overflow-y-auto overflow-x-auto heightContainer"
                 >
@@ -73,8 +73,8 @@
                                     <th
                                         class="text-sm font-medium text-left min-w-[85px]"
                                         id="{{view_id}}-{{ forloop.counter }}-{{cell.1}}-header"
-                                        {{cell_attr|safe}}
-                                        {% if cell.2 and not cell_attr %}style="min-width:180px;"{% endif %}
+                                        {{cell_attr|strip_column_widths|safe}}
+                                        {% if cell.2 and not cell_attr %}style="min-width:150px;"{% endif %}
                                     >
                                         <div class="flex gap-1.5 px-1.5 py-1.5 items-center{% for sort_map in sortby_mapping %}{% if sort_map.0 == cell.0 %}cursor-pointer{% endif %}{% endfor %}"
                                             {% for sort_map in sortby_mapping %}
@@ -83,8 +83,8 @@
                                                     hx-target="#{{view_id}}"
                                                 {% endif %}
                                             {% endfor %}
-                                            {{cell_attr|safe}}
-                                            {% if cell.2 and not cell_attr %}style="min-width:180px;"{% endif %}
+                                            {{cell_attr|strip_column_widths|safe}}
+                                            {% if cell.2 and not cell_attr %}style="min-width:150px;"{% endif %}
                                         >
                                             <div class="flex gap-1.5 items-center">
                                                 {% for sort_map in sortby_mapping %}
@@ -110,15 +110,15 @@
                                     {% endwith %}
                                 {% endfor %}
                                 {% if options or option_method %}
-                                    <th class="option-col-header text-sm font-medium min-w-[85px]" {{header_attrs.option|safe}}>
-                                        <div class="p-1.5 flex items-center justify-center" {{header_attrs.option|safe}}>
+                                    <th class="option-col-header text-sm font-medium min-w-[85px]" {{header_attrs.option|strip_column_widths|safe}}>
+                                        <div class="p-1.5 flex items-center justify-center" {{header_attrs.option|strip_column_widths|safe}}>
                                             <span class="flex-1 text-center">{% trans "Options" %}</span>
                                         </div>
                                     </th>
                                 {% endif %}
                                 {% if actions or action_method %}
-                                    <th class="stickyright action-col-header text-sm font-medium min-w-[85px]" {{header_attrs.action|safe}} >
-                                        <div class="p-1.5 flex items-center justify-center" {{header_attrs.action|safe}}>
+                                    <th class="stickyright action-col-header text-sm font-medium min-w-[85px]" {{header_attrs.action|strip_column_widths|safe}} >
+                                        <div class="p-1.5 flex items-center justify-center" {{header_attrs.action|strip_column_widths|safe}}>
                                             <span class="flex-1 text-center">{% trans "Actions" %}</span>
                                         </div>
                                     </th>
@@ -184,11 +184,13 @@
                                     {% endif %}
                                     {% for cell in columns %}
                                         {% with attribute=cell.1 index=forloop.counter %}
-                                            <td class="text-sm text-left px-1 py-1 text-[#666] h-[30px] max-w-0">
+                                            <td class="text-sm text-left px-1 py-1 text-[#666] h-[30px] max-w-0" data-field="{{attribute}}">
                                                 {% if not cell.2 %}
                                                     {% with cell_value=instance|getattribute:attribute|selected_format:request.user.employee_get.employee_work_info.company_id %}
                                                         <div class="truncate" title="{{ cell_value|cell_tooltip }}">
-                                                            {{ cell_value|safe }}
+                                                            {% if attribute == "get_status_display" or attribute == "custom_status_col" %}<span class="neutron-status-label" data-status="{{instance.status}}">{% endif %}
+                                                            {% if attribute == "amount" and cell_value != "" and cell_value is not None %}{{ cell_value|floatformat:"2g" }}{% else %}{{ cell_value|display_cell|safe }}{% endif %}
+                                                            {% if attribute == "get_status_display" or attribute == "custom_status_col" %}</span>{% endif %}
                                                         </div>
                                                     {% endwith %}
                                                 {% else %}
@@ -203,7 +205,7 @@
                                                                     width="22"
                                                                 />
                                                             </div>
-                                                            <span class="truncate flex-1 min-w-0" title="{{ cell_value|cell_tooltip }}">{{ cell_value|safe }}</span>
+                                                            <span class="truncate flex-1 min-w-0" title="{{ cell_value|cell_tooltip }}">{{ cell_value|display_cell|safe }}</span>
                                                         </div>
                                                     {% endwith %}
                                                 {% endif %}
@@ -302,23 +304,12 @@
                     </div>
                 {% endif %}
             </div>
+            {% include "generic/quick_actions.html" with footer_only=True %}
         {% else %}
             {% if custom_empty_template %}
                 {% include custom_empty_template %}
             {% else %}
-                <div class="oh-wrapper h-full" align="center" >
-                    <div class="xl:col-span-4 md:col-span-6 col-span-12 bg-white p-6 rounded-md shadow-card h-[70%]">
-                        <div class="flex flex-col items-center justify-center h-full">
-                            <img src="/static/horilla_theme/assets/img/no-records.svg" alt="" width="300" class="mb-4">
-                            {% if filter_dict %}
-                                <p class="text-[#666] mb-5">{% trans "No filtered records found at the moment" %}</p>
-                            {% else %}
-                                <p class="text-[#666] mb-5">{% trans "No records available at the moment" %}</p>
-                            {% endif %}
-                            {% include "generic/import_block.html" %}
-                        </div>
-                    </div>
-                </div>
+                {% include "generic/workspace_empty.html" %}
             {% endif %}
         {% endif %}
    <script>
