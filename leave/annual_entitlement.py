@@ -66,8 +66,14 @@ def calculate_entitlement(
     period_basis: str = "service_year",
     unpaid_by_calendar_year: dict | None = None,
     unpaid_by_service_year: dict | None = None,
+    opens_on: date | None = None,
 ) -> AnnualEntitlement:
     """Calculate earned whole days for the employee's current service year.
+
+    ``opens_on`` is an earlier date from which the company grants annual leave
+    (HR-confirmed probation, or no probation required). Days still accrue by
+    completed months exactly as MOM prescribes; only the three-month gate opens
+    earlier, so the employee is never below the statutory entitlement.
 
     The contract end date caps *earned* service; a future end date does not
     advance the balance. The leave type supplies annual days from year one;
@@ -78,6 +84,10 @@ def calculate_entitlement(
 
     effective_date = min(as_of, employment_end_date) if employment_end_date else as_of
     eligible_date = add_months(joining_date, 3)
+    if opens_on is not None and opens_on < eligible_date:
+        eligible_date = max(joining_date, opens_on)
+    else:
+        opens_on = None
     if effective_date < joining_date:
         return AnnualEntitlement(joining_date, eligible_date, 0, 0, 0)
 
@@ -88,6 +98,7 @@ def calculate_entitlement(
             unpaid_by_service_year if unpaid_by_service_year is not None else {
                 service_year_start(joining_date, effective_date).year - joining_date.year: unpaid_days_in_service_year
             },
+            opens_on=opens_on,
         )
 
     anniversary = service_year_start(joining_date, effective_date)
@@ -112,7 +123,9 @@ def calculate_entitlement(
                 Decimal("1"), rounding=ROUND_HALF_UP
             )
         )
-        if months >= 3 or year_start > joining_date
+        if months >= 3
+        or year_start > joining_date
+        or (opens_on is not None and effective_date >= opens_on)
         else 0
     )
     return AnnualEntitlement(
@@ -120,7 +133,7 @@ def calculate_entitlement(
     )
 
 
-def calendar_entitlement(joined, effective_date, configured_days, calendar_unpaid, service_unpaid):
+def calendar_entitlement(joined, effective_date, configured_days, calendar_unpaid, service_unpaid, opens_on=None):
     """Calendar-year accrual with a cumulative service-entitlement safeguard.
 
     The safeguard preserves initial service spanning January and prevents
@@ -140,7 +153,7 @@ def calendar_entitlement(joined, effective_date, configured_days, calendar_unpai
         annual_days = max(configured_days, min(7 + tenure, 14))
         months = min(12, completed_months(first, last, calendar_unpaid.get(year, 0)))
         earned = 0
-        if completed_months(joined, last) >= 3:
+        if completed_months(joined, last) >= 3 or (opens_on is not None and last >= opens_on):
             service_total = 0
             for service_year in range(tenure + 1):
                 service_start = add_months(joined, service_year * 12)
@@ -149,4 +162,5 @@ def calendar_entitlement(joined, effective_date, configured_days, calendar_unpai
                 service_total += rounded(service_months, max(configured_days, min(7 + service_year, 14)))
             earned = max(rounded(months, annual_days), service_total - credited)
         credited += earned
-    return AnnualEntitlement(first, add_months(joined, 3), months, annual_days, earned)
+    eligible = max(joined, opens_on) if opens_on is not None else add_months(joined, 3)
+    return AnnualEntitlement(first, eligible, months, annual_days, earned)
