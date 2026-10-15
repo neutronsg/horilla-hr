@@ -26,14 +26,28 @@
     function setPopover(wrapper, open, restoreFocus = false) {
         const {trigger, panel} = popoverParts(wrapper);
         if (!trigger || !panel) return;
+        if (!open) panel.querySelectorAll('select.select2-hidden-accessible').forEach(select => {
+            const picker = window.jQuery?.(select).data('select2');
+            if (picker?.isOpen()) picker.close();
+        });
         wrapper.classList.toggle('neutron-popover-open', open);
         wrapper.classList.remove('force-open');
         trigger.setAttribute('aria-expanded', String(open));
         panel.inert = !open;
         if (restoreFocus) trigger.focus({preventScroll: true});
     }
+    function popoverOwner(target) {
+        const wrapper = target.closest('.neutron-popover');
+        if (wrapper) return wrapper;
+        // Select2 mounts its option/search panel under body, outside the filter.
+        for (const select of document.querySelectorAll('.neutron-popover-open select.select2-hidden-accessible')) {
+            const picker = window.jQuery?.(select).data('select2');
+            if (picker?.dropdown?.$dropdown?.[0]?.contains(target)) return select.closest('.neutron-popover');
+        }
+        return null;
+    }
     function closePopovers(except = null) {
-        document.querySelectorAll('.neutron-popover-open').forEach(wrapper => { if (wrapper !== except) setPopover(wrapper, false); });
+        document.querySelectorAll('.neutron-popover-open').forEach(wrapper => { if (!except || !wrapper.contains(except)) setPopover(wrapper, false); });
     }
     function preparePopovers() {
         document.querySelectorAll('.dropdown-wrapper:not(.neutron-popover)').forEach(wrapper => {
@@ -71,7 +85,7 @@
                 picker.closest('#ngbToolbarPanel')?.classList.remove('ngb-dropdown-open');
             }
         });
-        const wrapper = event.target.closest('.neutron-popover');
+        const wrapper = popoverOwner(event.target);
         if (wrapper) {
             const {trigger} = popoverParts(wrapper);
             if (trigger?.contains(event.target)) {
@@ -82,6 +96,15 @@
         } else closePopovers();
     }, true);
     document.addEventListener('keydown', event => {
+        // Pointer clicks on non-focusable panel content can focus the page's
+        // tabindex=-1 container before click. Only keyboard traversal dismisses
+        // on focus leaving a panel; pointer dismissal is handled by outside click.
+        if (event.key === 'Tab') {
+            setTimeout(() => closePopovers(popoverOwner(document.activeElement)), 0);
+            return;
+        }
+        // Select2 owns Escape while its nested option panel is open.
+        if (event.key === 'Escape' && event.target.closest('.select2-container--open')) return;
         const picker = event.target.closest('.ngb-crumb-select-wrap');
         if (picker) {
             const trigger = picker.querySelector('.ngb-crumb-select-trigger');
@@ -99,7 +122,7 @@
                 controls[next]?.focus(); event.preventDefault(); return;
             }
         }
-        const wrapper = event.target.closest('.neutron-popover');
+        const wrapper = popoverOwner(event.target) || (event.key === 'Escape' ? [...document.querySelectorAll('.neutron-popover-open')].at(-1) : null);
         if (!wrapper) return;
         const {trigger, panel} = popoverParts(wrapper);
         const isTrigger = trigger.contains(event.target);
@@ -118,9 +141,6 @@
             controls[next]?.focus(); event.preventDefault();
         }
     }, true);
-    document.addEventListener('focusin', event => {
-        document.querySelectorAll('.neutron-popover-open').forEach(wrapper => { if (!wrapper.contains(event.target)) setPopover(wrapper, false); });
-    });
     // Native details menus retain the server's exact permitted action markup.
     // Fixed positioning keeps them outside a scrollable table's clipping box.
     function positionMenu(menu) {

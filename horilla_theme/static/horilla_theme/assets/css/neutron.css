@@ -122,7 +122,9 @@ html.dark .neutron-when-light,body.dark .neutron-when-light {display:none;}
 .neutron-app .oh-main-content {position:relative;margin:var(--neutron-gap) var(--neutron-gap) var(--neutron-gap) calc(var(--neutron-sidebar-width) + 0px)!important;height:calc(100dvh - 2 * var(--neutron-gap))!important;border-radius:12px;background:var(--neutron-surface);box-shadow:var(--neutron-e1);overflow:auto;}
 /* z2 — the context bar floats over content as it scrolls beneath */
 .neutron-app #header {position:sticky;top:0;z-index:45;}
-.neutron-app .oh-main-header {position:relative!important;left:auto!important;right:auto!important;top:auto!important;width:auto!important;min-height:48px;height:48px;padding:0 24px;border:0;border-bottom:1px solid rgba(15,23,42,.06);box-shadow:none;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);}
+.neutron-app .oh-main-header {position:relative!important;left:auto!important;right:auto!important;top:auto!important;width:auto!important;min-height:48px;height:48px;padding:0 24px;border:0;border-bottom:1px solid rgba(15,23,42,.06);box-shadow:none;background:transparent;}
+/* A separate glass plane lets child popovers blur the page behind the header. */
+.neutron-app .oh-main-header::before {content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);}
 .neutron-app #ohMainContent {padding:24px 28px 32px!important;}
 .neutron-breadcrumb {margin:0!important;font-size:13px;color:var(--neutron-muted);}
 .neutron-app .breadcrumb li:last-child {color:var(--neutron-ink)!important;font-weight:600;}
@@ -597,14 +599,14 @@ body.dark .neutron-status-label[data-status=confirmed] {color:var(--neutron-ink)
 .neutron-app :is(.md-kpi-card__label,.ess-kpi-card__label) {text-transform:none!important;letter-spacing:0!important;font-size:13px!important;font-weight:600!important;color:var(--neutron-text-2)!important;opacity:1!important;}
 .neutron-app :is(.md-kpi-card__value,.ess-kpi-card__value) {font-weight:700;letter-spacing:-.02em;color:var(--neutron-ink);}
 .neutron-app :is(.md-info-panel__title,.md-chart-card__title,.ess-chart-card__title,.ess-info-panel__title) {font-weight:650!important;color:var(--neutron-ink)!important;}
-/* Work queue: items needing action lead; empty queues step back */
-.neutron-app .md-pending-card {background:transparent!important;border-radius:8px;transition:background .12s;}
+/* Work queue metrics share the outer card's plane, with room for every item. */
+.neutron-app .md-pending-grid {grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:4px;}
+.neutron-app .md-pending-card {min-width:0;background:transparent!important;border:0!important;border-radius:6px;box-shadow:none!important;transform:none!important;transition:background .12s;}
 .neutron-app .md-pending-card:hover {background:var(--neutron-hover)!important;}
 .neutron-app .md-pending-card__count {color:var(--neutron-ink)!important;font-weight:700;letter-spacing:-.02em;}
 .neutron-app .md-pending-card:not(.md-pending-card--empty) .md-pending-card__label {color:var(--neutron-text-2);font-weight:500;}
-.neutron-app .md-pending-card:not(.md-pending-card--empty)::before {content:"";display:block;width:6px;height:6px;border-radius:50%;background:#d98e04;margin-bottom:8px;}
+.neutron-app .md-pending-card::before,.neutron-app .md-pending-card::after {display:none!important;content:none!important;}
 .neutron-app .md-pending-card--empty .md-pending-card__count,.neutron-app .md-pending-card--empty .md-pending-card__label {color:var(--neutron-faint)!important;font-weight:500;}
-.neutron-app .md-pending-card--empty::before {content:"";display:block;width:6px;height:6px;margin-bottom:8px;}
 
 /* Hidden helper submit buttons must stay hidden even though .oh-btn sets a display value */
 #applyFilter[hidden],.navFilterForm button[type=submit][hidden] {display:none!important;}
@@ -764,12 +766,12 @@ body.dark .neutron-app #ohMainContent .accordion-btn-gp:hover,body.dark.neutron-
 .neutron-app #ohMainContent li.nav-view-btn.border-primary-500:hover {background:var(--neutron-hover)!important;}
 
 /* Ledger component contracts. Module dashboards own their layout and data, not their surfaces. */
-.neutron-app #ohMainContent :is(.am-chart-card,.am-kpi-card,.as-chart-card,.as-kpi-card,.ed-chart-card,.ed-kpi-card,.ed-profile-card,.ess-chart-card,.ess-kpi-card,.hd-chart-card,.hd-kpi-card,.ld-chart-card,.ld-kpi-card,.md-chart-card,.md-kpi-card,.md-pending-card,.ob-chart-card,.ob-kpi-card,.on-chart-card,.on-kpi-card,.pd-chart-card,.pd-kpi-card,.pm-chart-card,.pm-kpi-card,.pr-chart-card,.pr-kpi-card,.rd-chart-card,.rd-kpi-card,.md-info-panel,.hcl-banner,.clc) {
+.neutron-app #ohMainContent :is(.am-chart-card,.am-kpi-card,.as-chart-card,.as-kpi-card,.ed-chart-card,.ed-kpi-card,.ed-profile-card,.ess-chart-card,.ess-kpi-card,.hd-chart-card,.hd-kpi-card,.ld-chart-card,.ld-kpi-card,.md-chart-card,.md-kpi-card,.ob-chart-card,.ob-kpi-card,.on-chart-card,.on-kpi-card,.pd-chart-card,.pd-kpi-card,.pm-chart-card,.pm-kpi-card,.pr-chart-card,.pr-kpi-card,.rd-chart-card,.rd-kpi-card,.md-info-panel,.hcl-banner,.clc) {
  border:0!important;border-radius:12px!important;background:var(--neutron-surface)!important;background-image:none!important;color:var(--neutron-ink);box-shadow:var(--neutron-e1)!important;transform:none!important;transition:box-shadow .15s!important;
 }
-.neutron-app #ohMainContent :is(.am-chart-card,.am-kpi-card,.as-chart-card,.as-kpi-card,.ed-chart-card,.ed-kpi-card,.ed-profile-card,.ess-chart-card,.ess-kpi-card,.hd-chart-card,.hd-kpi-card,.ld-chart-card,.ld-kpi-card,.md-chart-card,.md-kpi-card,.md-pending-card,.ob-chart-card,.ob-kpi-card,.on-chart-card,.on-kpi-card,.pd-chart-card,.pd-kpi-card,.pm-chart-card,.pm-kpi-card,.pr-chart-card,.pr-kpi-card,.rd-chart-card,.rd-kpi-card,.md-info-panel,.hcl-banner,.clc):hover {background:var(--neutron-surface)!important;box-shadow:var(--neutron-e2)!important;transform:none!important;}
-.neutron-app #ohMainContent :is(.am-chart-card,.am-kpi-card,.as-chart-card,.as-kpi-card,.ed-chart-card,.ed-kpi-card,.ed-profile-card,.ess-chart-card,.ess-kpi-card,.hd-chart-card,.hd-kpi-card,.ld-chart-card,.ld-kpi-card,.md-chart-card,.md-kpi-card,.md-pending-card,.ob-chart-card,.ob-kpi-card,.on-chart-card,.on-kpi-card,.pd-chart-card,.pd-kpi-card,.pm-chart-card,.pm-kpi-card,.pr-chart-card,.pr-kpi-card,.rd-chart-card,.rd-kpi-card,.md-info-panel,.hcl-banner,.clc)::before,
-.neutron-app #ohMainContent :is(.am-chart-card,.am-kpi-card,.as-chart-card,.as-kpi-card,.ed-chart-card,.ed-kpi-card,.ed-profile-card,.ess-chart-card,.ess-kpi-card,.hd-chart-card,.hd-kpi-card,.ld-chart-card,.ld-kpi-card,.md-chart-card,.md-kpi-card,.md-pending-card,.ob-chart-card,.ob-kpi-card,.on-chart-card,.on-kpi-card,.pd-chart-card,.pd-kpi-card,.pm-chart-card,.pm-kpi-card,.pr-chart-card,.pr-kpi-card,.rd-chart-card,.rd-kpi-card,.md-info-panel,.hcl-banner,.clc)::after {display:none!important;content:none!important;}
+.neutron-app #ohMainContent :is(.am-chart-card,.am-kpi-card,.as-chart-card,.as-kpi-card,.ed-chart-card,.ed-kpi-card,.ed-profile-card,.ess-chart-card,.ess-kpi-card,.hd-chart-card,.hd-kpi-card,.ld-chart-card,.ld-kpi-card,.md-chart-card,.md-kpi-card,.ob-chart-card,.ob-kpi-card,.on-chart-card,.on-kpi-card,.pd-chart-card,.pd-kpi-card,.pm-chart-card,.pm-kpi-card,.pr-chart-card,.pr-kpi-card,.rd-chart-card,.rd-kpi-card,.md-info-panel,.hcl-banner,.clc):hover {background:var(--neutron-surface)!important;box-shadow:var(--neutron-e2)!important;transform:none!important;}
+.neutron-app #ohMainContent :is(.am-chart-card,.am-kpi-card,.as-chart-card,.as-kpi-card,.ed-chart-card,.ed-kpi-card,.ed-profile-card,.ess-chart-card,.ess-kpi-card,.hd-chart-card,.hd-kpi-card,.ld-chart-card,.ld-kpi-card,.md-chart-card,.md-kpi-card,.ob-chart-card,.ob-kpi-card,.on-chart-card,.on-kpi-card,.pd-chart-card,.pd-kpi-card,.pm-chart-card,.pm-kpi-card,.pr-chart-card,.pr-kpi-card,.rd-chart-card,.rd-kpi-card,.md-info-panel,.hcl-banner,.clc)::before,
+.neutron-app #ohMainContent :is(.am-chart-card,.am-kpi-card,.as-chart-card,.as-kpi-card,.ed-chart-card,.ed-kpi-card,.ed-profile-card,.ess-chart-card,.ess-kpi-card,.hd-chart-card,.hd-kpi-card,.ld-chart-card,.ld-kpi-card,.md-chart-card,.md-kpi-card,.ob-chart-card,.ob-kpi-card,.on-chart-card,.on-kpi-card,.pd-chart-card,.pd-kpi-card,.pm-chart-card,.pm-kpi-card,.pr-chart-card,.pr-kpi-card,.rd-chart-card,.rd-kpi-card,.md-info-panel,.hcl-banner,.clc)::after {display:none!important;content:none!important;}
 .neutron-app :is(.md-kpi-grid,.ess-kpi-grid) {gap:16px!important;background:transparent!important;border:0!important;box-shadow:none!important;}
 .neutron-app [class*="-card__header"] {background:transparent!important;border-color:var(--neutron-border)!important;}
 .neutron-app #ohMainContent [class*="bg-gradient"] {background-image:none!important;background-color:var(--neutron-surface)!important;}
@@ -783,9 +785,13 @@ body.dark .neutron-app #ohMainContent .accordion-btn-gp:hover,body.dark.neutron-
 .neutron-app #ohMainContent :is([class*="-period-controls"],[class*="-period-bar"]) {flex-wrap:wrap;}
 
 /* All click popovers share an explicit state; hover and focus never override closure. */
-.neutron-app .dropdown-wrapper.neutron-popover > .dropdown-content {display:none!important;visibility:hidden!important;opacity:0!important;transform:none!important;max-width:calc(100vw - 24px);border:0!important;border-radius:10px!important;background:var(--neutron-material-strong)!important;box-shadow:var(--neutron-edge),var(--neutron-e3)!important;backdrop-filter:var(--neutron-blur);z-index:10080;}
+.neutron-app .dropdown-wrapper.neutron-popover > .dropdown-content {display:none!important;visibility:hidden!important;opacity:0!important;transform:none!important;max-width:calc(100vw - 24px);border:0!important;border-radius:10px!important;background:var(--neutron-material-strong)!important;box-shadow:var(--neutron-edge),var(--neutron-e3)!important;-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);z-index:10080;}
 .neutron-app .dropdown-wrapper.neutron-popover.neutron-popover-open > .dropdown-content {display:block!important;visibility:visible!important;opacity:1!important;}
 .neutron-app .dropdown-wrapper.neutron-popover > .dropdown-content::before {display:none!important;}
+.neutron-app > .select2-container--open {z-index:10090;}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+ .neutron-app .dropdown-wrapper.neutron-popover > .dropdown-content,.neutron-app .oh-main-header::before {background:var(--neutron-surface)!important;}
+}
 .neutron-app .neutron-notify {position:relative;}
 .neutron-app #mainHeader .neutron-notification-panel {position:absolute;top:calc(100% + 8px);right:0;left:auto;width:360px;min-width:0;padding:0;max-height:min(75vh,600px);overflow:auto;}
 .neutron-popover-header {display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px;border-bottom:1px solid var(--neutron-border);}
@@ -868,7 +874,9 @@ body.dark.neutron-app :is(.oh-modal__dialog,.dropdown-content,.neutron-payslip-d
 .neutron-app .hcl-circle-pending {background:var(--neutron-surface)!important;border-color:var(--neutron-border-strong)!important;}
 .neutron-app :is(.hcl-title,.hcl-action-title,.hcl-label-active) {color:var(--neutron-ink)!important;}
 .neutron-app :is(.hcl-subtitle,.hcl-action-desc,.hcl-label-pending) {color:var(--neutron-muted)!important;}
-.neutron-app .md-pending-grid {gap:12px!important;}
+.neutron-app .hcl-steps {padding:6px 0;}
+.neutron-app .hcl-step,.neutron-app .hcl-step:first-child,.neutron-app .hcl-step:last-child {flex:1;min-width:88px;}
+.neutron-app .hcl-label {word-break:normal;overflow-wrap:normal;}
 body.dark.neutron-app #sidebar {background:transparent!important;}
 .neutron-app #breadcrumbs-container :is(a,span) {color:var(--neutron-muted);}
 .neutron-app #ohMainContent :is(.oh-btn,button.btn) {height:32px;min-height:32px;font-size:13.5px;padding:0 12px;}
