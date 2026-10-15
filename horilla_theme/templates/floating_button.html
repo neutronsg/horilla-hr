@@ -6,7 +6,7 @@
   original endpoint, modal target and permission branch.
 {% endcomment %}
 <div class="relative dropdown-wrapper neutron-quick-create">
-    <button type="button" class="neutron-workspace-row neutron-new-button" aria-haspopup="true">
+    <button type="button" class="neutron-workspace-row neutron-new-button" aria-haspopup="true" aria-expanded="false" onclick="this.focus()">
         {% neutron_icon "plus" 15 %}<span>{% trans "New request" %}</span>
     </button>
     <div class="dropdown-content neutron-quick-create-menu" role="menu" aria-label="{% trans 'Quick create' %}">
@@ -75,3 +75,10 @@
         {% endif %}
     </div>
 </div>
+<script>
+    // Choosing an item opens its modal; release focus so the menu closes behind it.
+    document.addEventListener("click", function (event) {
+        var item = event.target.closest(".neutron-quick-create-menu [role=menuitem]");
+        if (item) setTimeout(function () { item.blur(); }, 0);
+    });
+</script>

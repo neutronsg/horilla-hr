@@ -19,7 +19,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 
 # ---------------------------------------------------------------------------
-# Style tokens — Horilla primary (coral / #E54F38)
+# Style tokens — Horilla primary (coral / #051c97)
 # ---------------------------------------------------------------------------
 COLOR_PRIMARY = "E54F38"
 COLOR_PRIMARY_DARK = "CE4732"

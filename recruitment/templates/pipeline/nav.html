@@ -291,7 +291,7 @@
         {% trans "Open" %}
     </span>
 </div>
-<script src="{% static 'build/js/pipelineDriver.js' %}"></script>
+{% if product_tours_enabled %}<script src="{% static 'build/js/pipelineDriver.js' %}"></script>{% endif %}
 <script>
     initialAvtiveTab = $(".oh-tabs__content--active").length;
     if (!initialAvtiveTab) {

@@ -591,3 +591,7 @@ body.dark.neutron-app .oh-titlebar__tag.filter-field {background:#232b45!importa
 body.dark.neutron-app .neutron-related-links a,body.dark.neutron-app .neutron-section-action {color:var(--neutron-text-2);}
 .neutron-app .neutron-modal-form :is(.errorlist,.errorlist li) {background:transparent!important;border:0!important;padding:0!important;margin-left:0!important;color:var(--neutron-bad)!important;font-size:12.5px;font-weight:500;}
 .neutron-status-label .oh-sticky-table__td {display:inline;padding:0!important;margin:0!important;width:auto!important;min-width:0!important;border:0!important;background:transparent!important;}
+
+/* Sidebar menus open with a small gap; an invisible bridge keeps :hover while the pointer crosses it */
+.neutron-app #sidebar .dropdown-content::before {content:"";position:absolute;left:0;right:0;top:-10px;height:10px;}
+.neutron-app #sidebar .neutron-profile-menu .dropdown-content::before {top:auto;bottom:-10px;}

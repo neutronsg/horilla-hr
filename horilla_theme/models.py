@@ -421,6 +421,41 @@ THEMES_DATA = [
 ]
 
 
+NEUTRON_THEME = {
+    "name": "Neutron",
+    "description": "Neutron brand: navy primary on cool neutrals",
+    "is_default": True,
+    "primary_50": "#f7f8fc",
+    "primary_100": "#eef1fb",
+    "primary_200": "#e3e9ff",
+    "primary_300": "#cad5fc",
+    "primary_400": "#9cacfa",
+    "primary_500": "#617be3",
+    "primary_600": "#051c97",
+    "primary_700": "#041778",
+    "primary_800": "#03125f",
+    "primary_900": "#020c40",
+    "dark_50": "#e3e6ea",
+    "dark_100": "#5a606b",
+    "dark_200": "#444a55",
+    "dark_300": "#22262e",
+    "dark_400": "#5a606b",
+    "dark_500": "#0b0d12",
+    "dark_600": "#0b0d12",
+    "secondary_50": "#f8fafc",
+    "secondary_100": "#f1f5f9",
+    "secondary_200": "#e2e8f0",
+    "secondary_300": "#cbd5e1",
+    "secondary_400": "#e3e9ff",
+    "secondary_500": "#cad5fc",
+    "secondary_600": "#051c97",
+    "secondary_700": "#334155",
+    "secondary_800": "#1e293b",
+    "secondary_900": "#0f172a",
+}
+# Seeded last so its is_default wins; earlier entries keep their positions.
+THEMES_DATA.append(NEUTRON_THEME)
+
 class HorillaColorTheme(HorillaModel):
     """
     Model to store predefined color themes for Horilla
@@ -577,7 +612,10 @@ class HorillaColorTheme(HorillaModel):
         default_theme = cls.objects.filter(is_default=True).first()
         if default_theme:
             return default_theme
-        return cls.objects.filter(name="Coral Red Theme (Default)").first()
+        return (
+            cls.objects.filter(name=NEUTRON_THEME["name"]).first()
+            or cls.objects.filter(name="Coral Red Theme (Default)").first()
+        )
 
 
 class CompanyTheme(HorillaModel):

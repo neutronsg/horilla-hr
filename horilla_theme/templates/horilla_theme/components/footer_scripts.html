@@ -57,7 +57,7 @@ window.NEUTRON_ASSETS = {
 <script src="{% static 'horilla_theme/assets/js/neutron.js' %}?v=neutron-ui-1"></script>
 
 <!-- Product tour engine (horilla_tour) -->
-{% if request.user.is_authenticated %}
+{% if request.user.is_authenticated and product_tours_enabled %}
 <script>
   window.HORILLA_TOUR = {
     page: "{{ request.resolver_match.url_name|default:'' }}",

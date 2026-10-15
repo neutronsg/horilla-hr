@@ -36,6 +36,9 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
 HORILLA_ENV = env("HORILLA_ENV", default="")
 REDIS_URL = env("REDIS_URL", default=None)
+# Guided product tours (horilla_tour). Their copy predates the Neutron UI, so they are
+# off by default: no launcher, auto-start or tour assets. Tour data is kept.
+NEUTRON_PRODUCT_TOURS = env.bool("NEUTRON_PRODUCT_TOURS", default=False)
 
 # Default site ID for django.contrib.sites framework.
 SITE_ID = 1

@@ -8,13 +8,14 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title class="time-runner stop-runner">Neutron HR{% if white_label_company_name != "Horilla" %} · {{ white_label_company_name }}{% endif %}</title>
+        <title class="time-runner stop-runner">Neutron HR{% if white_label_company_name != "Horilla" and white_label_company_name != "Neutron HR" %} · {{ white_label_company_name }}{% endif %}</title>
         <link rel="stylesheet" href="{% static 'build/css/sweetalert2.min.css' %}">
         <link rel="stylesheet" href="{% static 'build/css/summernote-lite.min.css' %}">
         {% if 'organisation-chart' in request.path %}<link rel="stylesheet" href="{% static 'build/css/orgChart.css' %}">{% endif %}
-        <link rel="stylesheet" href="{% static 'build/css/driver.min.css' %}">
+        {% if product_tours_enabled %}<link rel="stylesheet" href="{% static 'build/css/driver.min.css' %}">{% endif %}
 
         <link rel="manifest" href="{% static 'build/manifest.json' %}">
+        {% if not white_label_company.icon %}<link rel="icon" type="image/svg+xml" href="{% static 'favicons/favicon.svg' %}">{% endif %}
         <link
             rel="apple-touch-icon"
             sizes="180x180"
@@ -80,7 +81,7 @@
         {% get_current_language_bidi as LANGUAGE_BIDI %}
         {% get_current_language as LANGUAGE_CODE %}
         <div hidden id="statiUrl" data-url='{% static "" %}'></div>
-        <span hidden id="whiteLabelCompany" data-company="Neutron HR{% if white_label_company_name != 'Horilla' %} · {{ white_label_company_name }}{% endif %}"></span>
+        <span hidden id="whiteLabelCompany" data-company="Neutron HR{% if white_label_company_name != 'Horilla' and white_label_company_name != 'Neutron HR' %} · {{ white_label_company_name }}{% endif %}"></span>
 
         <div id="reloadMessages">
             {% include "generic/messages.html" %}

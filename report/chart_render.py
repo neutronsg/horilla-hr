@@ -25,7 +25,7 @@ from reportlab.lib import colors
 # distinct hues for additional series — kept visually consistent with the
 # in-app charts and the rest of the exported document.
 PALETTE = [
-    colors.HexColor("#E54F38"),  # coral — brand primary
+    colors.HexColor("#051c97"),  # coral — brand primary
     colors.HexColor("#2563EB"),  # blue
     colors.HexColor("#15803D"),  # green
     colors.HexColor("#7C3AED"),  # violet

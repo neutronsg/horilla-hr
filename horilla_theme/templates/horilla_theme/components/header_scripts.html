@@ -77,7 +77,7 @@
        plain, unscoped .oh-general__tab-link--active rule in v1_styles.css
        already follows the theme via index.html's remap, but this selector's
        extra .oh-modal__dialog--custom .oh-general__tab ancestor prefix gives
-       it higher specificity, so its own hardcoded #e54f38 always wins over
+       it higher specificity, so its own hardcoded #051c97 always wins over
        that remap regardless of load order. */
     .oh-modal__dialog--custom .oh-general__tab .oh-general__tab-link--active {
         background-color: var(--primary-600) !important;
@@ -144,7 +144,7 @@
 <script src="{% static '/jquery/jqueryui.js' %}"></script>
 <script src="{% static '/base/toggleColumn.js' %}"></script>
 {% if 'organisation-chart' in request.path %}<script src="{% static '/build/js/orgChart.js' %}"></script>{% endif %}
-<script src="{% static 'build/js/driver.js' %}"></script>
+{% if product_tours_enabled %}<script src="{% static 'build/js/driver.js' %}"></script>{% endif %}
 <script src="{% static 'build/js/clearFilter.js' %}"></script>
 <script defer src="{% static '/cdn/alpine/alpine.min.js' %}"></script>
 <script src="{% static 'cdn/chartJs/scripts/chart.js' %}"></script>

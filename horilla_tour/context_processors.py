@@ -14,9 +14,14 @@ logger = logging.getLogger(__name__)
 
 def pending_tours_flag(request):
     """Return launcher availability + whether the user has an unfinished tour."""
+    from django.conf import settings
+
+    disabled = {"tour_launcher_enabled": False, "tour_has_pending": False, "product_tours_enabled": False}
+    if not getattr(settings, "NEUTRON_PRODUCT_TOURS", False):
+        return disabled
     user = getattr(request, "user", None)
     if not user or not user.is_authenticated:
-        return {"tour_launcher_enabled": False, "tour_has_pending": False}
+        return disabled
 
     has_pending = False
     try:
@@ -37,4 +42,4 @@ def pending_tours_flag(request):
     except Exception as exc:  # never let the launcher break a page render
         logger.debug("pending_tours_flag skipped: %s", exc)
 
-    return {"tour_launcher_enabled": True, "tour_has_pending": has_pending}
+    return {"tour_launcher_enabled": True, "tour_has_pending": has_pending, "product_tours_enabled": True}
