@@ -1246,7 +1246,7 @@ input[type="checkbox"].custom-checkbox:hover {
 .oh-column-config__search:focus-within {
   border-color: #051c97;
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(229, 79, 56, 0.12);
+  box-shadow: 0 0 0 3px rgba(5, 28, 151, 0.12);
 }
 
 .oh-column-config__search ion-icon {
@@ -1389,7 +1389,7 @@ input[type="checkbox"].custom-checkbox:hover {
   margin: 0 2px;
   border-radius: 8px;
   border: 1px dashed #051c97;
-  background: rgba(229, 79, 56, 0.06);
+  background: rgba(5, 28, 151, 0.06);
 }
 
 .oh-column-config__empty {

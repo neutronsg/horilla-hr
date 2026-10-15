@@ -80,6 +80,46 @@
     document.addEventListener('click', event => { if (event.target.closest('.quick-bulk-action')) setTimeout(updateSelection, 0); });
     document.addEventListener('htmx:afterSettle', () => updateSelection());
     document.addEventListener('DOMContentLoaded', () => updateSelection());
+    // Charts: module dashboards hard-code Tailwind colours. Remap series colours to the
+    // Neutron palette as each chart is created, render bars solid, and use the UI font.
+    const CHART_COLOURS = {
+        '#22c55e': '#2aa9ac', '#16a34a': '#2aa9ac', '#4ade80': '#2aa9ac', '#10b981': '#2aa9ac',
+        '#ef4444': '#c4322a', '#dc2626': '#c4322a', '#f87171': '#c4322a',
+        '#f59e0b': '#d98e04', '#d97706': '#d98e04', '#fbbf24': '#d98e04', '#f97316': '#d98e04',
+        '#3b82f6': '#617be3', '#2563eb': '#617be3', '#4f46e5': '#617be3', '#6366f1': '#617be3',
+        '#a855f7': '#9cacfa', '#8b5cf6': '#9cacfa', '#ec4899': '#9cacfa',
+        '#06b6d4': '#60cfd2', '#14b8a6': '#60cfd2', '#0ea5e9': '#60cfd2',
+    };
+    const remapColour = c => typeof c === 'string' ? (CHART_COLOURS[c.trim().toLowerCase()] || c) : c;
+    function themeChartOptions(options) {
+        if (!options || typeof options !== 'object') return options;
+        if (Array.isArray(options.colors)) options.colors = options.colors.map(remapColour);
+        if (options.markers && Array.isArray(options.markers.colors)) options.markers.colors = options.markers.colors.map(remapColour);
+        if (options.fill && Array.isArray(options.fill.colors)) options.fill.colors = options.fill.colors.map(remapColour);
+        const type = options.chart && options.chart.type;
+        if (type === 'bar' && options.fill && options.fill.type === 'gradient') options.fill = Object.assign({}, options.fill, {type: 'solid'});
+        // No entrance animation: after the loading skeleton, growing bars read as a second load.
+        options.chart = Object.assign({fontFamily: 'Geist, Inter, -apple-system, sans-serif'}, options.chart || {}, {animations: {enabled: false}});
+        return options;
+    }
+    function wrapApexCharts(Base) {
+        if (!Base || Base.__neutron) return Base;
+        class NeutronApexCharts extends Base {
+            constructor(el, options) { super(el, themeChartOptions(options)); }
+        }
+        NeutronApexCharts.__neutron = true;
+        return NeutronApexCharts;
+    }
+    (function () {
+        let current = wrapApexCharts(window.ApexCharts);
+        try {
+            Object.defineProperty(window, 'ApexCharts', {
+                configurable: true,
+                get: () => current,
+                set: value => { current = wrapApexCharts(value); },
+            });
+        } catch (_) { if (current) window.ApexCharts = current; }
+    })();
     const status = document.querySelector('.neutron-status');
     const message = text => typeof gettext === 'function' ? gettext(text) : text;
     const assets = new Map();
@@ -104,7 +144,7 @@
     let navigationGeneration = 0;
     function assetGroup(url) {
         const path = new URL(url, location.href).pathname;
-        return path.includes('/report/') ? 'reports' : path.includes('organisation-chart') ? 'organization' : (path.includes('dashboard') || path === '/ess/') ? 'dashboard' : null;
+        return path.includes('/report/') ? 'reports' : path.includes('organisation-chart') ? 'organization' : (path.includes('dashboard') || path === '/my/' || path === '/ess/') ? 'dashboard' : null;
     }
     function assetsReady(group) {
         // A tag we inserted is ready only once it has loaded; tags from the page HTML already ran.

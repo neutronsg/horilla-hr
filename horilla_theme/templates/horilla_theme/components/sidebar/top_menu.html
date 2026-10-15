@@ -1,18 +1,13 @@
 {% load i18n static neutron_ui %}
 {% comment %}
-  Dashboard (top-level icon, no submenu panel). We attach the same
-  htmx boost params used by submenu links so clicking Dashboard swaps
-  only the main content region instead of doing a full page reload.
+  Dashboard (top-level icon, no submenu panel). The sidebar script swaps only
+  the main content region on click; no hx-* attributes here, so one click
+  sends one request.
 {% endcomment %}
 <a
-    href="{% url 'dashboard' %}"
+    href="{% neutron_home_url %}"
     class="sideboxmain group flex items-center gap-3 px-3 py-2.5 rounded-lg w-full transition duration-300"
     data-menu="Dashboard"
-    hx-get="{% url 'dashboard' %}"
-    hx-target="#ohMainContent"
-    hx-select="#ohMainContent > *"
-    hx-swap="innerHTML show:window:top"
-    hx-push-url="true"
 >
     {% neutron_icon "dashboard" 18 %}
     <span

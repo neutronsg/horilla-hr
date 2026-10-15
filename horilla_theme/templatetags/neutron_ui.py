@@ -52,10 +52,26 @@ NAV_GROUPS = (
 )
 
 
-@register.simple_tag
-def neutron_nav_groups(menus):
+# Sidebar sections that only hold check-in data; hidden while check-in is disabled.
+ATTENDANCE_APPS = ("attendance", "biometric")
+
+
+def attendance_tracking(request):
+    """Whether the selected company records attendance (check-in enabled), once per request."""
+    if request is None:
+        return True
+    from base.dashboard import attendance_tracking_enabled
+    from horilla.request_cache import request_value
+
+    return request_value(request, "neutron.attendance_tracking", lambda: attendance_tracking_enabled(request))
+
+
+@register.simple_tag(takes_context=True)
+def neutron_nav_groups(context, menus):
     """Return [(label, [menu, ...]), ...] in a stable order; unknown apps go last."""
     menus = list(menus or [])
+    if not attendance_tracking(context.get("request")):
+        menus = [m for m in menus if m.get("app") not in ATTENDANCE_APPS]
     placed, groups = set(), []
     for _key, label, apps in NAV_GROUPS:
         items = [m for app in apps for m in menus if m.get("app") == app]
@@ -159,3 +175,38 @@ def neutron_theme_vars(theme):
     if not declarations:
         return ""
     return mark_safe(f"<style id=\"neutron-theme-vars\">:root{{{''.join(declarations)}}}</style>")
+
+
+@register.simple_tag
+def company_calendar_today():
+    """Today's date for the company leave calendar (Singapore time), as ISO text."""
+    from base.company_leave_calendar import _today
+
+    return _today().isoformat()
+
+
+@register.simple_tag(takes_context=True)
+def neutron_home_url(context):
+    """
+    The sidebar's Dashboard link: the analytics overview for HR, managers and
+    leadership, the personal dashboard for everyone else (no redirect hop).
+    """
+    from django.urls import reverse
+
+    from horilla.request_cache import request_value
+
+    request = context.get("request")
+    if request is None or not getattr(request, "user", None) or not request.user.is_authenticated:
+        return reverse("dashboard")
+
+    def compute():
+        try:
+            from base.dashboard_roles import can_see_analytics_home, resolve_home_role
+
+            if not can_see_analytics_home(resolve_home_role(request)):
+                return reverse("ess-dashboard")
+        except Exception:
+            pass
+        return reverse("dashboard")
+
+    return request_value(request, "neutron.home_url", compute)

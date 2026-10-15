@@ -32,7 +32,7 @@
                 hx-target="#genericModalBody"
             >{% neutron_icon "receipt" 16 %}{% trans "Reimbursement" %}</button>
         {% endif %}
-        {% if "attendance"|app_installed %}
+        {% if "attendance"|app_installed and request|is_check_in_enabled %}
             <button
                 type="button" role="menuitem"
                 data-toggle="oh-modal-toggle"

@@ -8,7 +8,7 @@
         <!-- Header -->
         <div class="ess-header">
             <div>
-                <span class="neutron-eyebrow">{% trans "Workspace" %}</span><h1>{% trans "My workspace" %}</h1>
+                <h1>{% trans "My dashboard" %}</h1>
                 <div class="ess-header__date" id="essHeaderDate"></div>
             </div>
             <div class="ess-header__actions">
@@ -34,11 +34,13 @@
             <div class="ess-skeleton ess-skeleton--kpi"></div>
             <div class="ess-skeleton ess-skeleton--kpi"></div>
         </div>
+        {% include "base/company_leave_calendar.html" %}
 
         <!-- Main layout -->
         <div class="ess-layout">
             <!-- Left: charts -->
             <div class="ess-main">
+                {% if request|is_check_in_enabled %}
                 <!-- Row 1: Leave balance + Work hours -->
                 <div class="ess-chart-grid">
                     <div class="ess-chart-card" data-section="leave">
@@ -52,8 +54,6 @@
                             <div id="essLeaveBalanceChart"></div>
                         </div>
                     </div>
-
-                    {% if request|is_check_in_enabled %}
                         <div class="ess-chart-card" data-section="attendance">
                             <div class="ess-chart-card__header">
                                 <div>
@@ -65,7 +65,6 @@
                                 <div id="essWorkHoursChart"></div>
                             </div>
                         </div>
-                    {% endif %}
                 </div>
 
                 <!-- Row 2: Attendance calendar -->
@@ -108,30 +107,27 @@
 
                 <!-- Row 3: Payslips + Goals -->
                 <div class="ess-chart-grid">
-                    <div class="ess-chart-card" data-section="payroll">
+                    {% include "base/ess/payslips_card.html" %}
+                    {% include "base/ess/goals_card.html" %}
+                </div>
+                {% else %}
+                <!-- Without attendance tracking: leave and pay first, goals below. -->
+                <div class="ess-chart-grid">
+                    <div class="ess-chart-card" data-section="leave">
                         <div class="ess-chart-card__header">
                             <div>
-                                <div class="ess-chart-card__title">{% trans "Recent Payslips" %}</div>
-                                <div class="ess-chart-card__subtitle">
-                                    {% trans "Net pay vs gross pay — click to view" %}
-                                </div>
+                                <div class="ess-chart-card__title">{% trans "Leave Balance" %}</div>
+                                <div class="ess-chart-card__subtitle">{% trans "Available days by type" %}</div>
                             </div>
                         </div>
                         <div class="ess-chart-card__body">
-                            <div id="essPayslipChart"></div>
+                            <div id="essLeaveBalanceChart"></div>
                         </div>
                     </div>
-
-                    <div class="ess-chart-card" data-section="goals">
-                        <div class="ess-chart-card__header">
-                            <div>
-                                <div class="ess-chart-card__title">{% trans "My Goals" %}</div>
-                                <div class="ess-chart-card__subtitle">{% trans "Active objectives and progress" %}</div>
-                            </div>
-                        </div>
-                        <div id="essGoalsContainer" class="ess-empty">{% trans "Loading..." %}</div>
-                    </div>
+                    {% include "base/ess/payslips_card.html" %}
                 </div>
+                {% include "base/ess/goals_card.html" with wide=True %}
+                {% endif %}
             </div>
             <!-- /ess-main -->
 
@@ -167,7 +163,6 @@
             <!-- /ess-sidebar -->
         </div>
         <!-- /ess-layout -->
-        {% include "base/company_leave_calendar.html" %}
     </div><!-- /ess-dashboard -->
 
     <script>
@@ -427,6 +422,7 @@
 
           // ── Attendance Calendar ───────────────────────────────────────────────────────
           function loadAttendanceCalendar() {
+            if (!document.getElementById('essAttendanceCalendar')) return;
             fetchP('/ess/api/attendance-calendar/')
               .then(function (r) { return r.json(); })
               .then(function (d) {

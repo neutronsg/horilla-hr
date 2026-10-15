@@ -215,7 +215,7 @@
                 <span class="ld-period-picker__sep">&rarr;</span>
                 <input type="date" id="ld-to-date" title="{% trans 'To' %}">
             </div>
-            <button class="ld-btn-customize" id="ld-open-customize" title="{% trans 'Customize' %}">⚙ {% trans "Customize" %}</button>
+            <button class="ld-btn-customize" id="ld-open-customize" title="{% trans 'Customize' %}">{% trans "Customize" %}</button>
         </div>
     </div>
 
@@ -228,6 +228,8 @@
     </div>
 
     <!-- Main layout with sidebar -->
+    {% include "neutron/company_leave_calendar.html" %}
+
     <div class="ld-layout">
 
         <!-- Left: Charts -->

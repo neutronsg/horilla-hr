@@ -543,6 +543,6 @@ body.dark .oh-column-config__item.ui-sortable-helper {
 
 body.dark .oh-sticky-dropdown_btn.is-column-config-trigger:hover,
 body.dark .oh-sticky-dropdown_btn.is-column-config-trigger[aria-expanded="true"] {
-  background: rgba(229, 79, 56, 0.12);
-  border-color: rgba(229, 79, 56, 0.35);
+  background: rgba(5, 28, 151, 0.12);
+  border-color: rgba(5, 28, 151, 0.35);
 }

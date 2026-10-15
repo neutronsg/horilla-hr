@@ -81,6 +81,14 @@
             </li>
         {% endif %}
 
+        <li>
+            <button
+                id="themeToggleButton" type="button" role="switch" class="neutron-menu-switch"
+                aria-checked="{% if request.session.theme == 'dark' %}true{% else %}false{% endif %}"
+            >
+                <span>{% trans "Dark mode" %}</span><span class="neutron-switch" aria-hidden="true"></span>
+            </button>
+        </li>
         <hr class="text-[#1c1c1c] my-2">
         <li>
             <button class="py-1.5 hover:text-primary-600 transition duration-300 text-sm gap-4 items-center flex w-full">

@@ -1,6 +1,7 @@
 from django.contrib.auth.models import Group
 from django.urls import path, re_path
 from django.utils.translation import gettext_lazy as _
+from django.views.generic import RedirectView
 
 from base import announcement
 from base import dashboard as dashboard_module
@@ -199,7 +200,9 @@ urlpatterns = [
         name="dashboard-dismiss-setup-checklist",
     ),
     # ── ESS Dashboard ──────────────────────────────────────────────────────────
-    path("ess/", ess_dashboard.ess_dashboard, name="ess-dashboard"),
+    path("my/", ess_dashboard.ess_dashboard, name="ess-dashboard"),
+    # Old address of the personal dashboard; keeps bookmarks and links working.
+    path("ess/", RedirectView.as_view(pattern_name="ess-dashboard", query_string=True)),
     path("avatar/initials.svg", avatar.initials_avatar, name="initials-avatar"),
     path("ess/api/company-leave/", company_leave_calendar.company_leave_calendar, name="ess-company-leave"),
     path("ess/api/company-leave/<int:pk>/", company_leave_calendar.company_leave_detail, name="ess-company-leave-detail"),

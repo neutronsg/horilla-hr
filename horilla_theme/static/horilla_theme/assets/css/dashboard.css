@@ -1164,7 +1164,7 @@
             cursor: pointer;
         }
         .md-funnel-step:hover {
-            background: rgba(229, 79, 56, 0.06);
+            background: rgba(5, 28, 151, 0.06);
         }
         .md-funnel-step__label {
             min-width: 88px;

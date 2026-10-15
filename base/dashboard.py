@@ -355,6 +355,23 @@ def _company_scope_context(request) -> dict:
     }
 
 
+def attendance_tracking_enabled(request):
+    """
+    True when the company records attendance (check-in/check-out is enabled).
+    Teams that don't clock in get dashboards without attendance widgets.
+    """
+    from django.apps import apps
+
+    if not apps.is_installed("attendance"):
+        return False
+    from base.templatetags.horillafilters import is_check_in_enabled
+
+    try:
+        return bool(is_check_in_enabled(request))
+    except Exception:
+        return False
+
+
 @login_required
 def main_dashboard_view(request):
     """Render the modern analytics dashboard (manager/HR/leadership).
@@ -411,6 +428,7 @@ def main_dashboard_view(request):
 
     context = {
         "enabled_timerunner": enabled_timerunner,
+        "attendance_tracking": attendance_tracking_enabled(request),
         "get_forecasted_at_work": get_forecasted_at_work,
         "employee_chart_prefs": employee_chart_prefs,
         "home_role": home_role,

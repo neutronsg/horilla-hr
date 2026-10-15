@@ -30,8 +30,8 @@
             id="messageDiv"
             class="leave-count-badge text-xs font-bold"
             style="
-                background-color: {{ theme_obj.primary_600|default:'rgba(229, 79, 56, 0.17)' }};
-                border: 2px solid {{ theme_obj.primary_600|default:'hsl(8, 77%, 56%)' }};
+                background-color: {{ theme_obj.primary_600|default:'rgba(5, 28, 151, 0.17)' }};
+                border: 2px solid {{ theme_obj.primary_600|default:'#051c97' }};
             "
         >
             {% trans "Leave type is not assigned for the selected employee." %}
@@ -41,8 +41,8 @@
             id="messageDiv"
             class="leave-count-badge text-xs font-bold"
             style="
-                background-color: {{ theme_obj.primary_600|default:'rgba(229, 79, 56, 0.17)' }};
-                border: 2px solid {{ theme_obj.primary_600|default:'hsl(8, 77%, 56%)' }};
+                background-color: {{ theme_obj.primary_600|default:'rgba(5, 28, 151, 0.17)' }};
+                border: 2px solid {{ theme_obj.primary_600|default:'#051c97' }};
             "
         >
             {% trans "Available Leaves" %} : {{ total_leave_days }}
@@ -67,8 +67,8 @@
             id="pendingDiv"
             class="leave-count-badge text-xs font-bold"
             style="
-                background-color: {{ theme_obj.primary_600|default:'rgba(229, 79, 56, 0.17)' }};
-                border: 2px solid {{ theme_obj.primary_600|default:'hsl(8, 77%, 56%)' }};
+                background-color: {{ theme_obj.primary_600|default:'rgba(5, 28, 151, 0.17)' }};
+                border: 2px solid {{ theme_obj.primary_600|default:'#051c97' }};
             "
         >
             {% trans "Pending Leaves Requests" %} : {{ pending_requests }}
@@ -80,8 +80,8 @@
             class="leave-count-badge text-xs font-bold"
             style="
                 width: 100%;
-                background-color: rgba(229, 79, 56, 0.17);
-                border: 2px solid hsl(8, 77%, 56%);
+                background-color: rgba(5, 28, 151, 0.17);
+                border: 2px solid #051c97;
             "
         >
             {% trans "The selected dates result in 0 leave days for this leave type. This request cannot be submitted." %}

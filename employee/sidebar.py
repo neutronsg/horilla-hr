@@ -18,7 +18,7 @@ IMG_SRC = "images/ui/employees.svg"
 
 SUBMENUS = [
     {
-        "menu": _("My Dashboard"),
+        "menu": _("My dashboard"),
         "redirect": reverse_lazy("ess-dashboard"),
     },
     {

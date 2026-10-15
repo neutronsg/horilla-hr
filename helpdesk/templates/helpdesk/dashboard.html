@@ -141,8 +141,8 @@
                 <span class="hd-period-picker__sep">&rarr;</span>
                 <input type="date" id="hd-to-date" title="{% trans 'To' %}">
             </div>
-            <button class="hd-btn-customize" id="hd-open-customize" title="{% trans 'Customize' %}">⚙ {% trans "Customize" %}</button>
-            <a href="{% url 'ticket-view' %}" class="hd-btn-back">← {% trans "Pipeline View" %}</a>
+            <button class="hd-btn-customize" id="hd-open-customize" title="{% trans 'Customize' %}">{% trans "Customize" %}</button>
+            <a href="{% url 'ticket-view' %}" class="hd-btn-back">{% trans "Pipeline View" %}</a>
         </div>
     </div>
 

@@ -109,6 +109,7 @@ def _sidebar_destination(path, menus):
 BREADCRUMB_URL_NAMES = {
     "monthly-summary": _("Monthly Summary"),
     "ess": "Employee",
+    "my": "My dashboard",
     "offboarding": "Offboarding",
     "helpdesk": "Helpdesk",
     "policies-discipline": "Policies & Discipline",
@@ -127,6 +128,7 @@ BREADCRUMB_URL_NAMES = {
 sidebar_urls = [
     "dashboard",
     "ess",
+    "my",
     "pipeline",
     "recruitment-survey-question-template-view",
     "candidate-view",

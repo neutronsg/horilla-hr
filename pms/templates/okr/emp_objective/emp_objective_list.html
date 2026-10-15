@@ -118,7 +118,7 @@
                                 {% endif %}
                                 {% if request.user.employee_get in emp_objective.objective_id.managers.all or perms.pms.add_employeekeyresult %}
                                     <button
-                                        style="border-right: 1px solid {{ theme_obj.primary_600|default:'hsl(8, 77%, 56%)' }}"
+                                        style="border-right: 1px solid {{ theme_obj.primary_600|default:'#051c97' }}"
                                         class="oh-btn oh-btn--secondary-outline float-end"
                                         hx-get='{% url "employee-key-result-creation" emp_objective.id %}'
                                         hx-target="#genericModalBody"

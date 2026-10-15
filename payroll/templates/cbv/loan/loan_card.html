@@ -10,7 +10,7 @@
 		class="oh-progress-bar__state"
 		role="progressbar"
 		aria-valuemax="100"
-		style="background-color: {{ theme_obj.primary_600|default:'hsl(8, 77%, 56%)' }}; position: absolute; left: 0px; height: 5px; width: {{ instance.installment_ratio }}%; border-radius: 15px;"
+		style="background-color: {{ theme_obj.primary_600|default:'#051c97' }}; position: absolute; left: 0px; height: 5px; width: {{ instance.installment_ratio }}%; border-radius: 15px;"
 	></div>
 </div>
 <span style="display:none; visibility:hidden;">{{ instance.installment_ratio|floatformat:0 }}%</span>

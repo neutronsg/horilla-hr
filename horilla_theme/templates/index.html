@@ -9,7 +9,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title class="time-runner stop-runner">Neutron HR{% if white_label_company_name != "Horilla" and white_label_company_name != "Neutron HR" %} · {{ white_label_company_name }}{% endif %}</title>
+        <title>Neutron HR{% if white_label_company_name != "Horilla" and white_label_company_name != "Neutron HR" %} · {{ white_label_company_name }}{% endif %}</title>
         <link rel="stylesheet" href="{% static 'build/css/sweetalert2.min.css' %}">
         <link rel="stylesheet" href="{% static 'build/css/summernote-lite.min.css' %}">
         {% if 'organisation-chart' in request.path %}<link rel="stylesheet" href="{% static 'build/css/orgChart.css' %}">{% endif %}

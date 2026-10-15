@@ -597,7 +597,7 @@
            section labels -- the previous very light gray (#9aa1ab) at 10px
            was too low-contrast to read comfortably and gave no visual hint
            that the row does anything. The icon uses the app's own brand
-           accent (hsl(8, 77%, 56%), same as the Templates/Export Table
+           accent (#051c97, same as the Templates/Export Table
            buttons elsewhere on this page) so it's immediately recognizable
            as an interactive affordance, not decoration. */
         #pivot-container .oh-fields-toggle-header {
@@ -620,18 +620,18 @@
 
         #pivot-container .oh-fields-toggle-header:hover {
             color: #1f2937;
-            background-color: hsl(8, 77%, 56%, 0.1);
+            background-color: rgba(5, 28, 151, 0.1);
         }
 
         #pivot-container .oh-fields-toggle-icon {
             flex-shrink: 0;
             font-size: 15px;
-            color: hsl(8, 77%, 56%);
+            color: #051c97;
             transition: transform 0.15s ease;
         }
 
         #pivot-container .oh-fields-toggle-header:hover .oh-fields-toggle-icon {
-            color: hsl(8, 77%, 48%);
+            color: #041778;
         }
 
         /* Folded, vertical boxes (Available Fields / Columns): shrink to a
