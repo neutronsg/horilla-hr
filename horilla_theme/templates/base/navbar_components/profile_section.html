@@ -17,7 +17,7 @@
         </div>
         <div class="hidden md:block">
             <div class="flex flex-col justify-center items-start h-full">
-                <h5 class="font-semibold text-sm">{{ user.employee_get.get_full_name|title }}</h5>
+                <h5 class="font-semibold text-sm">{{ user.employee_get.get_full_name }}</h5>
                 <p class="text-xs text-dark-200">
                     {% if user.employee_get.check_online %}
                         {% trans "Online" %}

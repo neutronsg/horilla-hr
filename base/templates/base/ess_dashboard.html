@@ -408,8 +408,8 @@
                     axisBorder: { show: false }, axisTicks: { show: false }
                   },
                   yaxis: {
-                    max: 12,
-                    labels: { formatter: function (v) { return v + 'h'; }, style: { colors: axisColor(), fontSize: '11px' } }
+                    min: 0, max: 12, tickAmount: 4,
+                    labels: { formatter: function (v) { return Math.round(v) + 'h'; }, style: { colors: axisColor(), fontSize: '11px' } }
                   },
                   colors: ['#051c97'],
                   plotOptions: { bar: { borderRadius: 5, columnWidth: '55%' } },

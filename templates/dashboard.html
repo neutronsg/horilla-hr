@@ -1667,27 +1667,27 @@
             function renderPendingCards(p) {
                 return `
                 <div class="md-pending-grid">
-                    <a href="{% url 'request-view' %}?status=requested&filter_applied=1" class="md-pending-card md-pending-card--amber">
+                    <a href="{% url 'request-view' %}?status=requested&filter_applied=1" class="md-pending-card md-pending-card--amber${p.leave_requests ? '' : ' md-pending-card--empty'}">
                         <div class="md-pending-card__count">${p.leave_requests}</div>
                         <div class="md-pending-card__label">{% trans "Leave" %}</div>
                     </a>
-                    <a href="{% url 'request-attendance-view' %}?open_tab=1&is_validate_request_approved=false&filter_applied=1" class="md-pending-card md-pending-card--blue">
+                    <a href="{% url 'request-attendance-view' %}?open_tab=1&is_validate_request_approved=false&filter_applied=1" class="md-pending-card md-pending-card--blue${p.attendance_requests ? '' : ' md-pending-card--empty'}">
                         <div class="md-pending-card__count">${p.attendance_requests}</div>
                         <div class="md-pending-card__label">{% trans "Attendance" %}</div>
                     </a>
-                    <a href="{% url 'asset-request-allocation-view' %}?open_tab=2&asset_request_status=Requested&filter_applied=1" class="md-pending-card md-pending-card--green">
+                    <a href="{% url 'asset-request-allocation-view' %}?open_tab=2&asset_request_status=Requested&filter_applied=1" class="md-pending-card md-pending-card--green${p.asset_requests ? '' : ' md-pending-card--empty'}">
                         <div class="md-pending-card__count">${p.asset_requests}</div>
                         <div class="md-pending-card__label">{% trans "Assets" %}</div>
                     </a>
-                    <a href="{% url 'shift-request-view' %}?open_tab=1&status=requested&filter_applied=1" class="md-pending-card" style="background:#f0fdfa;">
+                    <a href="{% url 'shift-request-view' %}?open_tab=1&status=requested&filter_applied=1" class="md-pending-card${p.shift_requests ? '' : ' md-pending-card--empty'}" style="background:#f0fdfa;">
                         <div class="md-pending-card__count" style="color:#0d9488;">${p.shift_requests}</div>
                         <div class="md-pending-card__label">{% trans "Shift" %}</div>
                     </a>
-                    <a href="{% url 'work-type-request-view' %}?status=requested&filter_applied=1" class="md-pending-card" style="background:#eef2ff;">
+                    <a href="{% url 'work-type-request-view' %}?status=requested&filter_applied=1" class="md-pending-card${p.work_type_requests ? '' : ' md-pending-card--empty'}" style="background:#eef2ff;">
                         <div class="md-pending-card__count" style="color:#4f46e5;">${p.work_type_requests}</div>
                         <div class="md-pending-card__label">{% trans "Work Type" %}</div>
                     </a>
-                    <a href="{% url 'view-reimbursement' %}?open_tab=1&status=requested&type=reimbursement&filter_applied=1" class="md-pending-card md-pending-card--purple">
+                    <a href="{% url 'view-reimbursement' %}?open_tab=1&status=requested&type=reimbursement&filter_applied=1" class="md-pending-card md-pending-card--purple${p.reimbursements ? '' : ' md-pending-card--empty'}">
                         <div class="md-pending-card__count">${p.reimbursements}</div>
                         <div class="md-pending-card__label">{% trans "Reimbursements" %}</div>
                     </a>
