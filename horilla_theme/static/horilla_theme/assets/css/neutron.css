@@ -133,58 +133,89 @@ html.dark .neutron-when-light,body.dark .neutron-when-light {display:none;}
 .neutron-app #notifyBadgeCircle {width:16px!important;height:16px!important;min-width:16px;padding:0 4px!important;right:-3px!important;top:-3px!important;font-size:10px;border-width:2px;}
 
 /* Page heading and shared list workbench. */
-.neutron-page-heading {display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:18px;}
-.neutron-eyebrow {display:block;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--neutron-muted);margin-bottom:5px;}
+.neutron-eyebrow {display:none!important;}
+.neutron-page-heading {display:flex;align-items:center;justify-content:space-between;gap:24px;margin:0 0 14px;min-height:36px;}
 .neutron-page-heading h1 {margin:0;}
 .neutron-page-controls,.neutron-search-tools {display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.neutron-page-controls :is(button,a.nav-view-btn,li.nav-view-btn,.dropdown-wrapper>button) {font-size:13px!important;border-color:#d8dfe9!important;border-radius:6px;height:36px;background:var(--neutron-surface);color:var(--neutron-ink);}
-.neutron-page-controls input[name=search] {width:220px;height:36px;padding-left:32px;font-size:13px;background:var(--neutron-surface);border-color:#d8dfe9;}
-.neutron-page-controls .nav-view-btn {padding:8px 10px;}
-.neutron-page-controls .oh-view-btn--active {background:var(--primary-100)!important;color:var(--primary-600)!important;}
-.neutron-page-controls .neutron-primary-action {background:var(--primary-600)!important;color:white!important;font-size:13px;padding:9px 14px;border-radius:6px;}
-.neutron-page-controls .neutron-primary-action:hover {background:var(--primary-700)!important;}
+.neutron-page-controls :is(button,a.nav-view-btn,li.nav-view-btn,.dropdown-wrapper>button) {font-size:13.5px!important;font-weight:500;border:1px solid #d3d8e0!important;border-radius:6px;height:32px;padding:0 11px!important;background:var(--neutron-surface)!important;color:var(--neutron-ink)!important;box-shadow:var(--neutron-xs);display:inline-flex;align-items:center;gap:6px;}
+.neutron-page-controls :is(button,.dropdown-wrapper>button):hover {background:var(--neutron-hover)!important;}
+.neutron-page-controls :is(button,.dropdown-wrapper>button) img {filter:grayscale(1) brightness(.4);opacity:.8;}
+.neutron-page-controls input[name=search] {width:240px;height:32px;padding-left:30px;font-size:13.5px;background:var(--neutron-surface);border-color:#d3d8e0;box-shadow:var(--neutron-well);}
+.neutron-page-controls input[name=search]:focus {border-color:var(--primary-600);box-shadow:var(--neutron-well),0 0 0 3px rgba(5,28,151,.14);}
+.neutron-page-controls .nav-view-btn {padding:0 9px!important;width:32px;justify-content:center;}
+.neutron-page-controls .oh-view-btn--active {background:var(--primary-100)!important;color:var(--primary-600)!important;border-color:#c9d2f5!important;box-shadow:none;}
+.neutron-page-controls .neutron-primary-action {background:var(--primary-600)!important;color:#fff!important;border-color:#04167a!important;font-weight:600;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3),0 4px 10px -4px rgba(5,28,151,.45)!important;}
+.neutron-page-controls .neutron-primary-action:hover {background:#0820a8!important;}
+.neutron-page-controls .neutron-primary-action :is(img,ion-icon,i) {filter:brightness(0) invert(1);opacity:1;}
+/* Filter dropdown and other header menus are z3 overlays */
+.neutron-app .neutron-page-controls .dropdown-content {border-radius:10px!important;background:var(--neutron-material-strong)!important;-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);box-shadow:var(--neutron-edge),var(--neutron-e3)!important;border:0;}
 .neutron-app #filterTagContainerSectionNav {display:flex;align-items:center;justify-content:flex-start!important;gap:6px;margin:0 0 12px;padding:0;min-height:0;}
 .neutron-app #filterTagContainerSectionNav:empty {display:none;}
-.neutron-app :is(.oh-titlebar__tag,.oh-titlebar__save) {border-radius:5px;font-size:12px;line-height:1.4;padding:4px 8px;min-height:26px;}
-.neutron-app .oh-titlebar__tag--custom {background:transparent!important;color:var(--neutron-muted)!important;padding-left:0;}
-.neutron-app .oh-titlebar__tag.filter-field {background:var(--neutron-surface);border:1px solid var(--neutron-border)!important;color:var(--neutron-ink);font-weight:400;}
-.neutron-app .oh-titlebar__tag-close {background:transparent!important;color:var(--neutron-muted)!important;width:18px;height:18px;margin-left:5px;}
+.neutron-app :is(.oh-titlebar__tag,.oh-titlebar__save) {border-radius:6px;font-size:12.5px;line-height:1.4;padding:3px 8px;min-height:26px;}
+.neutron-app .oh-titlebar__tag--custom {background:transparent!important;color:var(--neutron-muted)!important;padding-left:0;border:0!important;font-weight:500;}
+.neutron-app .oh-titlebar__tag.filter-field {background:var(--primary-100)!important;border:1px solid #cdd5f3!important;color:var(--primary-600)!important;font-weight:500;}
+.neutron-app .oh-titlebar__tag-close {background:transparent!important;color:inherit!important;opacity:.7;width:18px;height:18px;margin-left:4px;}
 .neutron-app .oh-titlebar__save {background:transparent!important;color:var(--neutron-muted)!important;box-shadow:none;border:0;}
-.neutron-app .clear-all {color:var(--neutron-muted)!important;}
-.neutron-data-surface {background:var(--neutron-surface);border:1px solid var(--neutron-border);border-radius:8px;box-shadow:0 1px 2px #10182803;}
-.neutron-app .neutron-data-surface .heightContainer {border:0;border-radius:8px;min-height:0!important;}
-.neutron-app .fixed-table {border-collapse:collapse;border-spacing:0;font-variant-numeric:tabular-nums;}
-.neutron-app .fixed-table :is(td,th) {border-left:0;border-right:0;border-color:var(--neutron-border);padding:10px 12px;}
-.neutron-app .fixed-table th {background:var(--neutron-hover)!important;color:var(--neutron-muted);font-size:12px;font-weight:500!important;line-height:1.5;}
+.neutron-app .clear-all {color:var(--neutron-muted)!important;border:0!important;background:transparent!important;}
+/* The table sits flush on the workspace: no card, only hairlines */
+.neutron-data-surface {background:transparent;border:0;border-radius:0;box-shadow:none;margin:0 -28px;}
+.neutron-app .neutron-data-surface .heightContainer {border:0;border-radius:0;min-height:0!important;}
+.neutron-app .fixed-table {border-collapse:collapse;border-spacing:0;font-variant-numeric:tabular-nums;width:100%;}
+.neutron-app .fixed-table :is(td,th) {border:0!important;border-bottom:1px solid var(--neutron-border)!important;border-radius:0!important;padding:10px 8px;}
+.neutron-app .fixed-table :is(td,th):first-child {padding-left:28px;}
+.neutron-app .fixed-table :is(td,th):last-child {padding-right:16px;}
+/* z2: header is material; rows scroll beneath it */
+.neutron-app .fixed-table thead {background:transparent!important;}
+.neutron-app .fixed-table th {background:var(--neutron-material-strong)!important;-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);color:#555b66;font-size:12.5px;font-weight:500!important;line-height:1.4;height:36px;padding-top:0;padding-bottom:0;white-space:nowrap;border-bottom-color:var(--neutron-border-strong)!important;}
 .neutron-app .fixed-table th>div {padding:0;}
-.neutron-app .fixed-table th .text-primary-600 {color:#98a2b3;}
-.neutron-app .fixed-table td {font-size:13px;color:var(--neutron-ink);height:52px;background:var(--neutron-surface)!important;}
+.neutron-app .fixed-table th :is(.text-primary-600,img) {color:#9aa0a9;opacity:.7;}
+.neutron-app .fixed-table td {font-size:13.5px;color:var(--neutron-text-2);height:42px;background:var(--neutron-surface)!important;vertical-align:middle;}
 .neutron-app .fixed-table tbody tr:nth-child(n) {background:var(--neutron-surface);}
-.neutron-app .fixed-table tbody tr:hover td {background:var(--neutron-hover)!important;}
-.neutron-app .fixed-table tbody tr.highlight-selected td {background:var(--primary-100)!important;}
-.neutron-app .fixed-table .oh-profile__image {width:28px;height:28px;}
+.neutron-app .fixed-table tbody tr:hover td {background:#f7f8fb!important;}
+.neutron-app .fixed-table tbody tr.highlight-selected td {background:#f1f3f8!important;}
+.neutron-app .fixed-table tbody tr.highlight-selected td:first-child {box-shadow:inset 3px 0 0 var(--primary-600);}
+/* Columns size to their content: values stay on one line (ellipsis only beyond ~280px, full text in the tooltip);
+   people and long free text (titles, descriptions, reasons) may wrap to two lines. */
+.neutron-app .fixed-table td.max-w-0 {max-width:none;}
+.neutron-app .fixed-table td>.truncate {white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;}
+.neutron-app .fixed-table td:is([data-field*=description],[data-field*=title],[data-field*=reason],[data-field=comment],[data-field*=note],[data-field*=address],[data-field*=job_position],[data-field*=subject]) .truncate {white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:break-word;min-width:120px;max-width:320px;}
+.neutron-app .fixed-table td .oh-profile .truncate {white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:220px;min-width:110px;color:var(--neutron-ink);font-weight:500;font-size:14px;letter-spacing:-.005em;}
+.neutron-app .fixed-table td:is([data-field*=amount],[data-field$=pay_display],[data-field=deduction_display]) {text-align:right;}
+.neutron-app .fixed-table .oh-profile__image {width:24px;height:24px;}
+.neutron-app .fixed-table .oh-profile__avatar {width:24px!important;height:24px!important;}
+.neutron-app .fixed-table input[type=checkbox] {accent-color:var(--primary-600);width:15px;height:15px;}
 .neutron-app .fixed-table .action-col-cell:has(details[open]) {z-index:40;}
 .neutron-app .fixed-table .is-column-config-trigger {background:transparent;border:0;width:26px;height:26px;}
-.neutron-list-footer {display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;color:var(--neutron-muted);font-size:12px;}
-.neutron-record-count {white-space:nowrap;}
-.neutron-list-footer button {border:0!important;background:transparent!important;padding:4px 6px!important;color:var(--neutron-muted);font-size:12px;}
+.neutron-app .fixed-table th.stickyright {background:var(--neutron-material-strong)!important;}
+.neutron-app .fixed-table td.stickyright {background:var(--neutron-surface)!important;}
+.neutron-app .fixed-table tbody tr:hover td.stickyright {background:#f7f8fb!important;}
+.neutron-app .heightContainer:has(.fixed-table) .stickyright {box-shadow:-10px 0 14px -14px rgba(15,23,42,.35);}
+.neutron-list-footer {display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 -28px;padding:8px 28px;color:var(--neutron-muted);font-size:13px;border-top:1px solid var(--neutron-border);}
+.neutron-record-count {white-space:nowrap;color:var(--neutron-text-2);}
+.neutron-list-footer button {border:0!important;background:transparent!important;padding:4px 6px!important;color:var(--neutron-muted);font-size:13px;}
 .neutron-list-footer .hlv-pagination {border:0!important;background:transparent!important;}
-.neutron-list-footer button span.rounded-full {width:7px;height:7px;}
-.neutron-bulk-bar {display:none!important;padding:10px 12px;margin:0 0 12px!important;background:var(--primary-100);border-radius:6px;}
+.neutron-list-footer button span.rounded-full {width:6px;height:6px;}
+/* z2: the selection bar detaches and floats over the list, so the table never shifts */
+.neutron-bulk-bar {display:none!important;position:fixed;z-index:60;left:calc(var(--neutron-sidebar-width) + (100vw - var(--neutron-sidebar-width)) / 2);bottom:28px;transform:translateX(-50%);width:max-content;max-width:calc(100vw - var(--neutron-sidebar-width) - 64px);margin:0!important;padding:6px 6px 6px 14px;gap:6px!important;border-radius:14px;background:var(--neutron-material)!important;-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);box-shadow:var(--neutron-edge),var(--neutron-e3);}
 .hlv-container.has-selection .neutron-bulk-bar {display:flex!important;}
-/* Row actions: frequent edit and review controls, with a labelled overflow menu. */
-.neutron-row-actions {display:flex;justify-content:flex-end;align-items:center;gap:4px;white-space:nowrap;}
-.neutron-row-action {display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:500;padding:5px 8px;min-height:30px;border:0;border-radius:5px;background:transparent;color:var(--neutron-muted);}
-.neutron-row-action:hover {background:var(--primary-100);color:var(--primary-600);}
-.neutron-action-menu>summary {list-style:none;cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:5px;color:var(--neutron-muted);}
+.neutron-bulk-bar :is(button,a,.oh-btn) {height:30px!important;min-height:30px!important;border-radius:7px!important;font-size:13px!important;font-weight:500;padding:0 10px!important;box-shadow:var(--neutron-xs);}
+@media(max-width:991px) {.neutron-bulk-bar {left:calc(64px + (100vw - 64px) / 2);max-width:calc(100vw - 96px);}}
+/* Row actions: one direct action, everything else in a labelled overflow menu. */
+.neutron-row-actions {display:flex;justify-content:flex-end;align-items:center;gap:2px;white-space:nowrap;}
+.neutron-row-action {display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;padding:4px 8px;min-height:28px;border:0;border-radius:6px;background:transparent;color:var(--neutron-text-2);}
+.neutron-row-action:hover {background:rgba(15,23,42,.06);color:var(--neutron-ink);}
+.neutron-action-menu>summary {list-style:none;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:var(--neutron-muted);}
 .neutron-action-menu>summary::-webkit-details-marker {display:none;}
-.neutron-action-menu[open]>summary {background:var(--primary-100);color:var(--primary-600);}
-.neutron-action-menu-content {position:fixed;z-index:10070;background:var(--neutron-surface);border:1px solid var(--neutron-border);border-radius:8px;box-shadow:0 12px 32px #10182826;padding:5px;width:210px;text-align:left;max-height:calc(100dvh - 32px);overflow:auto;}
-.neutron-action-menu-content :is(button,a) {display:flex;align-items:center;justify-content:flex-start;gap:9px;width:100%;height:auto;min-height:34px;background:transparent!important;color:var(--neutron-ink)!important;border:0!important;padding:8px 10px;border-radius:4px;font-size:13px;font-weight:400;cursor:pointer;text-align:left;}
-.neutron-action-menu-content :is(button,a):hover {background:var(--neutron-hover)!important;}
-.neutron-action-menu-content .neutron-danger {color:#b42318!important;}
-.neutron-action-menu-content ion-icon {font-size:16px;}
-.neutron-action-menu-content hr {margin:5px;border:0;border-top:1px solid var(--neutron-border);}
+.neutron-action-menu>summary:hover {background:rgba(15,23,42,.06);color:var(--neutron-ink);}
+.neutron-action-menu[open]>summary {background:rgba(15,23,42,.08);color:var(--neutron-ink);}
+/* z3 overflow menu */
+.neutron-action-menu-content {position:fixed;z-index:10070;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);border:0;border-radius:10px;box-shadow:var(--neutron-edge),var(--neutron-e3);padding:5px;width:216px;text-align:left;max-height:calc(100dvh - 32px);overflow:auto;}
+.neutron-action-menu-content :is(button,a) {display:flex;align-items:center;justify-content:flex-start;gap:9px;width:100%;height:auto;min-height:32px;background:transparent!important;color:var(--neutron-ink)!important;border:0!important;padding:6px 9px;border-radius:6px;font-size:13.5px;font-weight:400;cursor:pointer;text-align:left;}
+.neutron-action-menu-content :is(button,a):hover {background:rgba(15,23,42,.06)!important;}
+.neutron-action-menu-content .neutron-danger {color:var(--neutron-bad)!important;}
+.neutron-action-menu-content ion-icon {font-size:16px;color:var(--neutron-muted);}
+.neutron-action-menu-content .neutron-danger ion-icon {color:inherit;}
+.neutron-action-menu-content hr {margin:4px -5px;border:0;border-top:1px solid var(--neutron-border);}
 /* Standard controls, dialogs and feedback. */
 .neutron-app :is(.oh-btn,button.btn) {border-radius:6px;min-height:36px;font-size:13px;font-weight:500;transition:background .15s;}
 .neutron-app :is(.oh-btn--secondary,.btn) {background:var(--primary-600)!important;color:#fff!important;border-color:var(--primary-600)!important;}
@@ -315,9 +346,6 @@ body.dark.neutron-app .neutron-action-menu-content .neutron-danger {color:#fda29
 .neutron-app [data-neutron-payslip] #payslipBody {height:auto;max-height:none;}
 .neutron-app .payslip__netpay__summary {background:var(--primary-100)!important;color:var(--primary-600);border-radius:5px;padding:5px 8px;}
 @media(max-width:767px) {.neutron-payslip-document {padding:16px;}.neutron-pay-summary {grid-template-columns:1fr;gap:16px;}.neutron-section-tabs,.emp-profile-page .usertablist {gap:18px;}.neutron-profile-content {padding:16px;}}
-.neutron-app .fixed-table td[data-field$="date"],.neutron-app .fixed-table td[data-field$="date_joining"] {min-width:116px;}
-.neutron-app .fixed-table td[data-field="get_email"] {min-width:170px;}
-.neutron-app .fixed-table td[data-field="employee_work_info__company_id"] {min-width:120px;}
 .neutron-detail-section {padding:0 0 24px;margin:0 0 24px;border:0;border-bottom:1px solid var(--neutron-border);border-radius:0;overflow:visible;}
 .neutron-detail-section-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 12px 12px;}
 .neutron-detail-section-title {font-size:15px!important;font-weight:600;}
@@ -338,12 +366,18 @@ body.dark.neutron-app .neutron-action-menu-content .neutron-danger {color:#fda29
 .neutron-empty p {font-size:13px;color:var(--neutron-muted);margin:0 0 16px;}
 .neutron-empty button {border:1px solid var(--neutron-border);padding:8px 14px;}
 .neutron-app .neutron-data-surface td[class*="status-"] {border-left:0!important;border-radius:0;}
-.neutron-status-label {display:inline-flex;align-items:center;padding:3px 8px;border-radius:5px;background:#f2f4f7;font-size:12px;color:#475467;}
-.neutron-status-label[data-status=requested],.neutron-status-label[data-status=draft] {background:#f2f4f7;color:#475467;}
-.neutron-status-label[data-status=approved],.neutron-status-label[data-status=paid] {background:#ecfdf3;color:#027a48;}
-.neutron-status-label[data-status=rejected],.neutron-status-label[data-status=canceled] {background:#fef3f2;color:#b42318;}
-.neutron-status-label[data-status=confirmed] {background:#eef2ff;color:#051c97;}
-body.dark .neutron-status-label {background:#303949;color:#d6e0ee;}
+.neutron-status-label {display:inline-flex;align-items:center;gap:6px;padding:0;border-radius:0;background:transparent;font-size:13px;font-weight:500;color:var(--neutron-text-2);white-space:nowrap;}
+.neutron-status-label::before {content:"";width:6px;height:6px;border-radius:50%;flex:none;background:var(--neutron-faint);}
+.neutron-status-label[data-status=requested],.neutron-status-label[data-status=review_ongoing] {color:var(--neutron-warn);}
+.neutron-status-label:is([data-status=requested],[data-status=review_ongoing])::before {background:#d98e04;}
+.neutron-status-label[data-status=draft] {color:var(--neutron-muted);}
+.neutron-status-label:is([data-status=approved],[data-status=paid]) {color:var(--neutron-ok);}
+.neutron-status-label:is([data-status=approved],[data-status=paid])::before {background:var(--neutron-ok);}
+.neutron-status-label:is([data-status=rejected],[data-status=canceled],[data-status=cancelled]) {color:var(--neutron-bad);}
+.neutron-status-label:is([data-status=rejected],[data-status=canceled],[data-status=cancelled])::before {background:var(--neutron-bad);}
+.neutron-status-label[data-status=confirmed] {color:var(--neutron-ink);}
+.neutron-status-label[data-status=confirmed]::before {background:var(--primary-600);}
+body.dark .neutron-status-label[data-status=confirmed] {color:var(--neutron-ink);}
 .neutron-personal-tasks {display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px 24px;background:var(--neutron-surface);border:1px solid var(--neutron-border);border-radius:8px;margin-bottom:24px;}
 .neutron-personal-tasks h2 {font-size:16px;margin:0 0 4px;}
 .neutron-personal-tasks p {font-size:13px;color:var(--neutron-muted);margin:0;}
@@ -353,13 +387,47 @@ body.dark .neutron-status-label {background:#303949;color:#d6e0ee;}
 @media(max-width:991px) {.neutron-personal-tasks {flex-direction:column;align-items:flex-start;gap:16px;}}
 .neutron-claim-balance:has(#availableTable[style*="display: none"]) {display:none;}
 .neutron-profile-overflow>summary.neutron-selected-overflow {border-bottom:2px solid var(--primary-600);border-radius:0;color:var(--primary-600);}
-.neutron-app .fixed-table td[data-field="allowance_on"] {min-width:116px;}
 .neutron-app .fixed-table td[data-field="amount"] {text-align:right;min-width:80px;}
 .neutron-app .fixed-table td[data-field$="pay_display"],.neutron-app .fixed-table td[data-field="deduction_display"] {text-align:right;}
-.neutron-app .fixed-table td[data-field$="pay_display"],.neutron-app .fixed-table td[data-field="deduction_display"] {min-width:120px;}
-.neutron-app .fixed-table td[data-field="custom_status_col"]:has(select) {min-width:160px;}
+.neutron-app .fixed-table td[data-field="custom_status_col"]:has(select) {min-width:132px;}
 .neutron-status-label:has(select) {display:block;background:transparent;padding:0;}
-.neutron-status-label select {width:100%;min-width:130px;padding:6px 24px 6px 8px;border:1px solid var(--neutron-border)!important;border-radius:6px;font-size:13px;height:34px!important;color:var(--neutron-ink)!important;background:var(--neutron-surface)!important;}
+.neutron-status-label:has(select)::before {display:none;}
+.neutron-status-label select {width:100%;min-width:118px;padding:4px 24px 4px 8px;border:1px solid transparent!important;border-radius:6px;font-size:13px;font-weight:500;height:30px!important;color:var(--neutron-ink)!important;background-color:transparent!important;cursor:pointer;}
+.neutron-status-label select:is(:hover,:focus) {border-color:#d3d8e0!important;background-color:var(--neutron-surface)!important;box-shadow:var(--neutron-xs);}
 /* Keep selected view glyphs and small dashboard annotations readable. */
 .neutron-app .neutron-page-controls .oh-view-btn--active :is(a,ion-icon) {color:var(--primary-600)!important;}
 .neutron-app :is(.md-kpi-card__sub,.md-kpi-card__sub [style*="opacity"],.md-header__date,.md-chart-card__subtitle,.md-info-panel__empty,.ess-kpi-card__sub,.ess-header__date,.ess-chart-card__subtitle,.ess-info-panel__empty,.ed-kpi-card__sub,.ed-header__date) {color:var(--neutron-muted);opacity:1!important;}
+/* Secondary links that belong to a page (e.g. claim reports, reminders) sit quietly under its heading */
+.neutron-related-links {display:flex;flex-wrap:wrap;gap:2px;margin:-8px 0 10px -8px;}
+.neutron-related-links a {display:inline-flex;align-items:center;height:28px;padding:0 8px;border-radius:6px;font-size:13px;font-weight:500;color:var(--neutron-text-2);}
+.neutron-related-links a:hover {background:rgba(15,23,42,.05);color:var(--neutron-ink);}
+.neutron-related-links a+a::before {content:"";width:3px;height:3px;border-radius:50%;background:var(--neutron-faint);margin:0 10px 0 -2px;}
+/* Text inputs: a single soft focus ring, not outline + ring */
+.neutron-app :is(input[type=text],input[type=search],input[type=email],input[type=number],input[type=date],input:not([type]),textarea,select):focus-visible {outline:none;}
+/* Below 1440px, review actions become icon buttons (labels stay as tooltip and accessible name) */
+@media(max-width:1439px) {
+ .neutron-row-actions .neutron-row-action:is(.neutron-review-action,.neutron-reject-action)>span {position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+ .neutron-row-actions .neutron-row-action:is(.neutron-review-action,.neutron-reject-action) {width:30px;padding:0;}
+ .neutron-app .fixed-table td .oh-profile .truncate {max-width:170px;min-width:96px;}
+ .neutron-app .fixed-table :is(td,th) {padding-left:7px;padding-right:7px;}
+ .neutron-app .fixed-table :is(td,th):first-child {padding-left:20px;}
+ .neutron-app .fixed-table :is(td,th):last-child {padding-right:16px;}
+ .neutron-data-surface,.neutron-list-footer {margin-left:-28px;margin-right:-28px;}
+ .neutron-app .fixed-table td:is([data-field*=department],[data-field*=manager],[data-field*=company],[data-field*=job]) .truncate {white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-width:90px;max-width:170px;}
+ .neutron-app .fixed-table td:is([data-field*=email]) .truncate {max-width:170px;}
+ .neutron-app .fixed-table :is(td,th):last-child {padding-right:10px;}
+ .neutron-app .fixed-table td:is([data-field*=description],[data-field*=title],[data-field*=reason],[data-field=comment],[data-field*=note],[data-field*=address],[data-field*=job_position],[data-field*=subject]) .truncate {min-width:96px;max-width:220px;}
+}
+/* Checkboxes: brand blue when checked (was the danger red) */
+.neutron-app input[type="checkbox"].custom-checkbox {background-color:var(--neutron-surface);border:1.5px solid #bcc3cd;border-radius:4px;box-shadow:var(--neutron-well);}
+.neutron-app input[type="checkbox"].custom-checkbox:hover {border-color:var(--primary-600);}
+.neutron-app input[type="checkbox"].custom-checkbox:checked {background-color:var(--primary-600);border-color:var(--primary-600);box-shadow:none;}
+.neutron-app input[type="checkbox"].custom-checkbox:checked::after {left:4px;top:1px;width:4px;height:8px;}
+.neutron-app .fixed-table tbody tr.highlight-selected td.stickyright {background:#f1f3f8!important;}
+/* Floating selection bar content */
+.neutron-bulk-bar {bottom:72px;}
+.neutron-bulk-bar .quick-bulk-action:not(.d-none) {display:inline-flex;align-items:center;gap:4px;background:var(--neutron-surface)!important;border:1px solid #d3d8e0!important;color:var(--neutron-ink)!important;}
+.neutron-bulk-bar .quick-bulk-action:hover {background:var(--neutron-hover)!important;color:var(--neutron-ink)!important;}
+.neutron-bulk-bar .quick-bulk-action[data-target^="#bulkUpdateModal"] {background:var(--primary-600)!important;border-color:#04167a!important;color:#fff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3)!important;}
+.neutron-bulk-bar .oh-checkpoint-badge {color:var(--neutron-warn)!important;}
+.ui-tooltip {border:0!important;border-radius:6px!important;background:#101218!important;color:#fff!important;font:500 12px/1.4 var(--neutron-font)!important;padding:5px 8px!important;box-shadow:0 6px 16px -6px rgba(15,23,42,.35)!important;}

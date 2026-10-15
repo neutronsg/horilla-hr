@@ -74,7 +74,7 @@
                                         class="text-sm font-medium text-left min-w-[85px]"
                                         id="{{view_id}}-{{ forloop.counter }}-{{cell.1}}-header"
                                         {{cell_attr|safe}}
-                                        {% if cell.2 and not cell_attr %}style="min-width:180px;"{% endif %}
+                                        {% if cell.2 and not cell_attr %}style="min-width:150px;"{% endif %}
                                     >
                                         <div class="flex gap-1.5 px-1.5 py-1.5 items-center{% for sort_map in sortby_mapping %}{% if sort_map.0 == cell.0 %}cursor-pointer{% endif %}{% endfor %}"
                                             {% for sort_map in sortby_mapping %}
@@ -84,7 +84,7 @@
                                                 {% endif %}
                                             {% endfor %}
                                             {{cell_attr|safe}}
-                                            {% if cell.2 and not cell_attr %}style="min-width:180px;"{% endif %}
+                                            {% if cell.2 and not cell_attr %}style="min-width:150px;"{% endif %}
                                         >
                                             <div class="flex gap-1.5 items-center">
                                                 {% for sort_map in sortby_mapping %}
@@ -189,7 +189,7 @@
                                                     {% with cell_value=instance|getattribute:attribute|selected_format:request.user.employee_get.employee_work_info.company_id %}
                                                         <div class="truncate" title="{{ cell_value|cell_tooltip }}">
                                                             {% if attribute == "get_status_display" or attribute == "custom_status_col" %}<span class="neutron-status-label" data-status="{{instance.status}}">{% endif %}
-                                                            {{ cell_value|display_cell|safe }}
+                                                            {% if attribute == "amount" and cell_value != "" and cell_value is not None %}{{ cell_value|floatformat:"2g" }}{% else %}{{ cell_value|display_cell|safe }}{% endif %}
                                                             {% if attribute == "get_status_display" or attribute == "custom_status_col" %}</span>{% endif %}
                                                         </div>
                                                     {% endwith %}

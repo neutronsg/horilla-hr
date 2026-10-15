@@ -184,14 +184,9 @@ class ReimbursementsAndEncashmentsListView(HorillaListView):
         (_("Comment"), "comment_col"),
     ]
 
-    header_attrs = {
-        "description": """
-                        style="width:250px !important;"
-                        """,
-        "action": """
-                        style="width:200px !important;"
-                        """,
-    }
+    # Column widths follow content (see neutron.css list rules); fixed widths
+    # here pushed the table past the workspace at 1280px.
+    header_attrs = {}
     # Mirrors ReimbursementsNav.nested_group_by_fields below -- List and
     # Nav are separate classes/templates (see employee/cbv/employees.py's
     # EmployeesList/EmployeeNav for the same split). Inherited by
