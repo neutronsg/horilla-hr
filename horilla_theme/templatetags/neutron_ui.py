@@ -1,4 +1,6 @@
 """Presentation labels; never used for authorization or model values."""
+import re
+
 from django import template
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -108,3 +110,18 @@ def neutron_icon(name, size=16):
         size,
         mark_safe(shape),
     )
+
+
+_WIDTH_DECLARATION = re.compile(r"(?:min-|max-)?width\s*:\s*[^;\"']*;?", re.IGNORECASE)
+
+
+@register.filter
+def strip_column_widths(attrs):
+    """
+    Drop fixed width declarations from a list view's header_attrs. Widths were
+    tuned for the old fixed, truncating table layout; columns now size to their
+    content. Other attributes are kept as written.
+    """
+    if not attrs:
+        return attrs
+    return _WIDTH_DECLARATION.sub("", str(attrs))

@@ -73,7 +73,7 @@
                                     <th
                                         class="text-sm font-medium text-left min-w-[85px]"
                                         id="{{view_id}}-{{ forloop.counter }}-{{cell.1}}-header"
-                                        {{cell_attr|safe}}
+                                        {{cell_attr|strip_column_widths|safe}}
                                         {% if cell.2 and not cell_attr %}style="min-width:150px;"{% endif %}
                                     >
                                         <div class="flex gap-1.5 px-1.5 py-1.5 items-center{% for sort_map in sortby_mapping %}{% if sort_map.0 == cell.0 %}cursor-pointer{% endif %}{% endfor %}"
@@ -83,7 +83,7 @@
                                                     hx-target="#{{view_id}}"
                                                 {% endif %}
                                             {% endfor %}
-                                            {{cell_attr|safe}}
+                                            {{cell_attr|strip_column_widths|safe}}
                                             {% if cell.2 and not cell_attr %}style="min-width:150px;"{% endif %}
                                         >
                                             <div class="flex gap-1.5 items-center">
@@ -110,15 +110,15 @@
                                     {% endwith %}
                                 {% endfor %}
                                 {% if options or option_method %}
-                                    <th class="option-col-header text-sm font-medium min-w-[85px]" {{header_attrs.option|safe}}>
-                                        <div class="p-1.5 flex items-center justify-center" {{header_attrs.option|safe}}>
+                                    <th class="option-col-header text-sm font-medium min-w-[85px]" {{header_attrs.option|strip_column_widths|safe}}>
+                                        <div class="p-1.5 flex items-center justify-center" {{header_attrs.option|strip_column_widths|safe}}>
                                             <span class="flex-1 text-center">{% trans "Options" %}</span>
                                         </div>
                                     </th>
                                 {% endif %}
                                 {% if actions or action_method %}
-                                    <th class="stickyright action-col-header text-sm font-medium min-w-[85px]" {{header_attrs.action|safe}} >
-                                        <div class="p-1.5 flex items-center justify-center" {{header_attrs.action|safe}}>
+                                    <th class="stickyright action-col-header text-sm font-medium min-w-[85px]" {{header_attrs.action|strip_column_widths|safe}} >
+                                        <div class="p-1.5 flex items-center justify-center" {{header_attrs.action|strip_column_widths|safe}}>
                                             <span class="flex-1 text-center">{% trans "Actions" %}</span>
                                         </div>
                                     </th>

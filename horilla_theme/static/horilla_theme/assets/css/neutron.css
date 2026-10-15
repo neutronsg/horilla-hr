@@ -178,7 +178,7 @@ html.dark .neutron-when-light,body.dark .neutron-when-light {display:none;}
    people and long free text (titles, descriptions, reasons) may wrap to two lines. */
 .neutron-app .fixed-table td.max-w-0 {max-width:none;}
 .neutron-app .fixed-table td>.truncate {white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;}
-.neutron-app .fixed-table td:is([data-field*=description],[data-field*=title],[data-field*=reason],[data-field=comment],[data-field*=note],[data-field*=address],[data-field*=job_position],[data-field*=subject]) .truncate {white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:break-word;min-width:120px;max-width:320px;}
+.neutron-app .fixed-table td:is([data-field*=description],[data-field*=title],[data-field*=reason],[data-field=comment],[data-field*=note],[data-field*=address],[data-field*=job_position],[data-field*=subject],[data-field=employee_id],[data-field$=__employee_id],[data-field*=contract_name],[data-field$=_name]):not([data-field*=email])>.truncate {white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:break-word;min-width:96px;max-width:320px;}
 .neutron-app .fixed-table td .oh-profile .truncate {white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:220px;min-width:110px;color:var(--neutron-ink);font-weight:500;font-size:14px;letter-spacing:-.005em;}
 .neutron-app .fixed-table td:is([data-field*=amount],[data-field$=pay_display],[data-field=deduction_display]) {text-align:right;}
 .neutron-app .fixed-table .oh-profile__image {width:24px;height:24px;}
@@ -581,3 +581,11 @@ body.dark .neutron-status-label[data-status=confirmed] {color:var(--neutron-ink)
 .neutron-app .md-pending-card:not(.md-pending-card--empty)::before {content:"";display:block;width:6px;height:6px;border-radius:50%;background:#d98e04;margin-bottom:8px;}
 .neutron-app .md-pending-card--empty .md-pending-card__count,.neutron-app .md-pending-card--empty .md-pending-card__label {color:var(--neutron-faint)!important;font-weight:500;}
 .neutron-app .md-pending-card--empty::before {content:"";display:block;width:6px;height:6px;margin-bottom:8px;}
+
+/* Hidden helper submit buttons must stay hidden even though .oh-btn sets a display value */
+#applyFilter[hidden],.navFilterForm button[type=submit][hidden] {display:none!important;}
+/* Inline section headers inside settings/tab pages (legacy grey band) */
+.neutron-app .oh-tabs__content .bg-\[\#f3f3f3\],.neutron-app #ohMainContent .bg-\[\#f3f3f3\].px-3.py-3 {background:transparent!important;border-bottom:1px solid var(--neutron-border);padding-left:0!important;padding-right:0!important;font-size:15px!important;font-weight:650!important;color:var(--neutron-ink)!important;}
+.neutron-app .navFilterForm input[name=search] {height:32px;border-radius:6px;border-color:#d3d8e0;box-shadow:var(--neutron-well);font-size:13.5px;}
+body.dark.neutron-app .oh-titlebar__tag.filter-field {background:#232b45!important;border-color:#34416e!important;color:#c9d4ff!important;}
+body.dark.neutron-app .neutron-related-links a,body.dark.neutron-app .neutron-section-action {color:var(--neutron-text-2);}
