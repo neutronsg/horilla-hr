@@ -216,6 +216,9 @@ class EmployeeProbationTests(TestCase):
         )
 
     def test_early_confirmation_only_opens_annual_leave_not_sick_leave(self):
+        accrual_day = patch("leave.annual_policy.timezone.localdate", return_value=TODAY)
+        accrual_day.start()
+        self.addCleanup(accrual_day.stop)
         self.confirm()
         for policy, allowed in [
             ("annual", True),
@@ -242,7 +245,9 @@ class EmployeeProbationTests(TestCase):
         balance = AvailableLeave.objects.get(
             employee_id=self.employee, leave_type_id__auto_leave_policy="annual"
         )
-        self.assertEqual(balance.available_days, 0)  # no automatic full-year grant
+        # Pro-rata for completed months (14 Aug to 14 Oct = 2 months: 14 x 2/12 = 2.33,
+        # rounded to 2), never an automatic full-year grant.
+        self.assertEqual(balance.available_days, 2)
 
     def candidate(self, **changes):
         values = {

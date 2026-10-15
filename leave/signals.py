@@ -134,8 +134,14 @@ def auto_approve_self_approval_stage(sender, instance, created, **kwargs):
             sender.objects.filter(pk=instance.pk).update(is_approved=True)
 
 
-# Automatic leave entitlement depends on these dates.
-AUTO_LEAVE_DATE_FIELDS = ("date_joining", "contract_end_date")
+# Automatic leave entitlement depends on these fields. Probation status and the
+# confirmation date decide when annual leave opens (employee.probation).
+AUTO_LEAVE_DATE_FIELDS = (
+    "date_joining",
+    "contract_end_date",
+    "probation_status",
+    "probation_passed_on",
+)
 
 
 @receiver(pre_save, sender=EmployeeWorkInformation)
@@ -153,7 +159,8 @@ def remember_auto_leave_dates(sender, instance, raw=False, **kwargs):
 def resync_auto_leave_on_date_change(sender, instance, created, raw=False, **kwargs):
     """
     Recalculate annual and sick leave when HR corrects the joining or
-    contract end date, instead of waiting for the periodic leave job.
+    contract end date, or records the probation outcome, instead of waiting
+    for the periodic leave job.
     """
     if raw or created:
         return
