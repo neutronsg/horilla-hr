@@ -894,3 +894,13 @@ body.dark.neutron-app .hcl-circle-active {border-color:var(--primary-400)!import
 .neutron-app #ohMainContent .ngb-crumb-dropdown {background:var(--neutron-material-strong)!important;backdrop-filter:var(--neutron-blur);border:0!important;border-radius:10px!important;box-shadow:var(--neutron-edge),var(--neutron-e3)!important;}
 .neutron-app #ohMainContent .ngb-crumb-option {font-size:13.5px!important;color:var(--neutron-ink)!important;border-radius:6px;}
 .neutron-app #ohMainContent .ngb-crumb-option:hover {background:var(--neutron-hover)!important;}
+/* Group trees own a padded surface as well as cell borders. Theme both planes. */
+.neutron-app #ohMainContent .oh-nested-accordion {background:var(--neutron-surface)!important;}
+.neutron-app #ohMainContent :is(#ngbToolbarPanel,#ngbToolbarPanel [class*="border"],.oh-nested-accordion,.ngb-leaf-table) {border-color:var(--neutron-border)!important;}
+.neutron-app #ohMainContent .bg-white.shadow-card:has(> #ngbToolbarPanel) {background:var(--neutron-surface)!important;border-radius:12px!important;box-shadow:var(--neutron-e1)!important;}
+.neutron-app #ohMainContent :is(.ngb-crumb-select-trigger,.ngb-crumb-select-label,#ngbToolbarPanel button,#ngbBreadcrumbLevels > span) {color:var(--neutron-text-2)!important;}
+.neutron-app #ohMainContent td :is(.oh-btn--light-bkg,.oh-btn--sq-sm) {height:28px!important;min-height:28px;width:28px;padding:0!important;border:0!important;border-radius:6px!important;background:transparent!important;color:var(--neutron-muted)!important;box-shadow:none!important;}
+.neutron-app #ohMainContent td :is(.oh-btn--light-bkg,.oh-btn--sq-sm):hover {background:var(--neutron-hover)!important;color:var(--neutron-ink)!important;}
+.neutron-app #ohMainContent td .oh-btn--danger.oh-btn--sq-sm:hover {background:#fff1f0!important;color:var(--neutron-bad)!important;}
+.neutron-app #ohMainContent :is(#ngbToolbarPanel,.ngb-leaf-table) {background:var(--neutron-surface)!important;}
+.neutron-app #ohMainContent .ngb-hscroll::-webkit-scrollbar-corner {background:var(--neutron-surface);}
