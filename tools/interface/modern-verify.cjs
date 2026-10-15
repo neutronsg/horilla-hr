@@ -24,7 +24,7 @@ const {chromium}=require('playwright');const fs=require('fs');const assert=requi
   const requests=[];const listener=r=>requests.push({url:r.url(),type:r.resourceType()});page.on('request',listener);
   await page.locator('input[name=search]').first().fill('');await page.waitForTimeout(650);
   const pagination=await page.locator('[hx-get]').evaluateAll(es=>es.filter(e=>/page=2(?:&|$)/.test(e.getAttribute('hx-get'))).map(e=>e.getAttribute('hx-get')));
- 
+
   if(pagination.length){await page.evaluate(u=>document.querySelector(`[hx-get="${CSS.escape(u)}"]`).click(),pagination[0]);}
   else {const pageInput=page.locator('input[name=page]').first();assert.ok(await pageInput.count());await pageInput.fill('2');await pageInput.press('Enter');}
   await page.waitForTimeout(650);page.off('request',listener);assert.equal(requests.filter(r=>r.type==='document').length,0);assert.ok(requests.some(r=>r.url.includes('page=2')));assert.equal(await page.locator('.fixed-table tbody tr').count(),20);

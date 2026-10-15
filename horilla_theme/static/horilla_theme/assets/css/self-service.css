@@ -612,7 +612,7 @@
                 background-position: -200% 0;
             }
         }
-    
+
 .ess-kpi-card:last-child {border-right:0;}
 
 @media(max-width:767px) {.ess-kpi-grid {grid-template-columns:repeat(2,minmax(0,1fr));}}

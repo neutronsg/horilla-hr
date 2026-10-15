@@ -1,9 +1,9 @@
 /* Neutron product UI — "Ledger" (v3). Quiet, dense workbench with spatial layering:
  *   z-1 wells (inputs) · z0 canvas + sidebar · z1 workspace panel · z2 floating chrome · z3 overlays.
  * Depth comes from planes, elevation and translucent material — not from colour. */
-@font-face {font-family:"Geist";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../../../fonts/geist/geist-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
-@font-face {font-family:"Geist";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../../../fonts/geist/geist-latin-ext-wght-normal.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
-@font-face {font-family:"Geist Mono";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../../../fonts/geist/geist-mono-latin-wght-normal.woff2") format("woff2");}
+@font-face {font-family:"Geist";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../../fonts/geist/geist-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face {font-family:"Geist";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../../fonts/geist/geist-latin-ext-wght-normal.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face {font-family:"Geist Mono";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../../fonts/geist/geist-mono-latin-wght-normal.woff2") format("woff2");}
 :root {
  --primary-50:#f7f8fc;--primary-100:#eef1fb;--primary-200:#e3e9ff;--primary-300:#cad5fc;--primary-400:#9cacfa;--primary-500:#617be3;--primary-600:#051c97;--primary-700:#041778;--primary-800:#03125f;--primary-900:#020c40;
  --secondary-50:#f8fafc;--secondary-100:#f1f5f9;--secondary-200:#e2e8f0;--secondary-300:#cbd5e1;--secondary-400:#94a3b8;--secondary-500:#64748b;--secondary-600:#475569;--secondary-700:#334155;--secondary-800:#1e293b;--secondary-900:#0f172a;
@@ -589,3 +589,5 @@ body.dark .neutron-status-label[data-status=confirmed] {color:var(--neutron-ink)
 .neutron-app .navFilterForm input[name=search] {height:32px;border-radius:6px;border-color:#d3d8e0;box-shadow:var(--neutron-well);font-size:13.5px;}
 body.dark.neutron-app .oh-titlebar__tag.filter-field {background:#232b45!important;border-color:#34416e!important;color:#c9d4ff!important;}
 body.dark.neutron-app .neutron-related-links a,body.dark.neutron-app .neutron-section-action {color:var(--neutron-text-2);}
+.neutron-app .neutron-modal-form :is(.errorlist,.errorlist li) {background:transparent!important;border:0!important;padding:0!important;margin-left:0!important;color:var(--neutron-bad)!important;font-size:12.5px;font-weight:500;}
+.neutron-status-label .oh-sticky-table__td {display:inline;padding:0!important;margin:0!important;width:auto!important;min-width:0!important;border:0!important;background:transparent!important;}
