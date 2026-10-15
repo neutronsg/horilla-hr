@@ -42,11 +42,11 @@
                     hx-get="{% url 'request-approve' instance.id %}"
                     hx-swap="none"
                     {% if instance.leave_type_id.allows_overdraft %}
-                        hx-confirm="{% trans 'Approving annual leave may make the balance negative. Future accruals will repay any deficit. Approve this request?' %}"
+                        hx-confirm="{% blocktrans with name=instance.employee_id.get_full_name type=instance.leave_type_id start=instance.start_date|date:'j M Y' end=instance.end_date|date:'j M Y' days=instance.requested_days|floatformat:'-1' plural=instance.requested_days|pluralize %}Approve {{ name }}'s {{ type }} from {{ start }} to {{ end }} ({{ days }} day{{ plural }})?{% endblocktrans %} {% trans 'The balance may become negative; future accruals repay any deficit.' %}"
                     {% elif instance.end_date.month > current_date.month %}
-                        hx-confirm="{% trans "This leave request is for the month of" %} {{ instance.start_date|date:'F' }}. {% trans "Approval depends on the" %} {{ instance.employee_id.get_full_name }} {% trans "having available leave days for this month." %}"
+                        hx-confirm="{% blocktrans with name=instance.employee_id.get_full_name type=instance.leave_type_id start=instance.start_date|date:'j M Y' end=instance.end_date|date:'j M Y' days=instance.requested_days|floatformat:'-1' plural=instance.requested_days|pluralize %}Approve {{ name }}'s {{ type }} from {{ start }} to {{ end }} ({{ days }} day{{ plural }})?{% endblocktrans %} {% blocktrans with month=instance.start_date|date:'F' %}It can only be approved if enough leave is available for {{ month }}.{% endblocktrans %}"
                     {% else %}
-                        hx-confirm='{% trans "Do you really want to approve this request?" %}'
+                        hx-confirm="{% blocktrans with name=instance.employee_id.get_full_name type=instance.leave_type_id start=instance.start_date|date:'j M Y' end=instance.end_date|date:'j M Y' days=instance.requested_days|floatformat:'-1' plural=instance.requested_days|pluralize %}Approve {{ name }}'s {{ type }} from {{ start }} to {{ end }} ({{ days }} day{{ plural }})?{% endblocktrans %}"
                     {% endif %}
                     title="{% trans 'Approve' %}"
                     class="neutron-row-action neutron-review-action"

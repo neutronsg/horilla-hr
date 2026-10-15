@@ -4,12 +4,12 @@
     <div class="neutron-pay-section">
         <div class="neutron-pay-section-title">
             <p>{% trans "Employee Net Pay" %}</p>
-            <p>{{ net_pay|floatformat:2|currency_symbol_position }}</p>
+            <p>{{ net_pay|floatformat:"2g"|currency_symbol_position }}</p>
         </div>
         <div class="grid sm:flex text-sm justify-between mb-2 px-2">
             <p class="text-sm">{% trans "Contract Basic Pay" %}</p>
             <p class="font-semibold">
-                {{ instance.contract_wage|currency_symbol_position }}
+                {{ instance.contract_wage|floatformat:"2g"|currency_symbol_position }}
             </p>
         </div>
         <div class="grid sm:flex text-sm justify-between mb-2 px-2">
@@ -23,8 +23,8 @@
                     >
                 </button>
             </p>
-            <p class="font-semibold text-lg">
-                {{ basic_pay|floatformat:2|currency_symbol_position }}
+            <p class="font-semibold">
+                {{ basic_pay|floatformat:"2g"|currency_symbol_position }}
             </p>
         </div>
         <div class="grid sm:flex text-sm justify-between px-2">
@@ -39,7 +39,7 @@
                 </button>
             </p>
             <p class="font-semibold">
-                {{ taxable_gross_pay|floatformat:2|currency_symbol_position }}
+                {{ taxable_gross_pay|floatformat:"2g"|currency_symbol_position }}
             </p>
         </div>
     </div>
@@ -49,15 +49,15 @@
         </div>
         <div class="grid sm:flex text-sm justify-between mb-2 px-2">
             <p class="text-sm">{% trans "Badge ID" %}</p>
-            <p class="font-semibold">{{ employee.badge_id }}</p>
+            <p class="font-semibold">{{ employee.badge_id|default:"—" }}</p>
         </div>
         <div class="grid sm:flex text-sm justify-between mb-2 px-2">
             <p class="text-sm">{% trans "Payment Date" %}</p>
-            <p class="font-semibold">{{ instance.payment_date|date:"d M Y" }}</p>
+            <p class="font-semibold">{{ instance.payment_date|date:"j M Y"|default:"—" }}</p>
         </div>
         <div class="grid sm:flex text-sm justify-between mb-2 px-2">
             <p class="text-sm">{% trans "Salary Period" %}</p>
-            <p class="font-semibold">{{ start_date }} {% trans "to" %} {{ end_date }}</p>
+            <p class="font-semibold"><span class="dateformat_changer">{{ start_date }}</span> {% trans "to" %} <span class="dateformat_changer">{{ end_date }}</span></p>
         </div>
         <div class="grid sm:flex text-sm justify-between mb-2 px-2">
             <p class="text-sm">{% trans "Employee Name" %}</p>
@@ -109,7 +109,7 @@
                 >
             </p>
             <p class="flex-1 font-medium">
-                {{ basic_pay|floatformat:2|currency_symbol_position }}
+                {{ basic_pay|floatformat:"2g"|currency_symbol_position }}
             </p>
         </div>{% endif %}
 
@@ -117,7 +117,7 @@
             <div class="flex gap-3 text-sm justify-between mb-2 px-2">
                 <p class="w-1/2 text-sm">{{ allowance.title }}</p>
                 <p class="flex-1 font-medium">
-                    {{ allowance.amount|floatformat:2|currency_symbol_position }}
+                    {{ allowance.amount|floatformat:"2g"|currency_symbol_position }}
                 </p>
             </div>
         {% endfor %}
@@ -133,7 +133,7 @@
                 >
             </p>
             <p class="flex-1 font-semibold">
-                {{ gross_pay|floatformat:2|currency_symbol_position }}
+                {{ gross_pay|floatformat:"2g"|currency_symbol_position }}
             </p>
         </div>
     </div>
@@ -162,7 +162,7 @@
         {% if loss_of_pay %}<div class="flex gap-3 text-sm justify-between mb-2 px-2">
             <p class="w-1/2 text-sm">{% trans "Loss of Pay" %}</p>
             <p class="flex-1 font-medium">
-                {{ loss_of_pay|floatformat:2|currency_symbol_position }}
+                {{ loss_of_pay|floatformat:"2g"|currency_symbol_position }}
             </p>
         </div>{% endif %}
         {% if custom_leave_deduction %}
@@ -173,7 +173,7 @@
                             day(s) on a partially paid leave type{% endblocktrans %}</span>
                 </p>
                 <p class="flex-1 font-medium">
-                    {{ custom_leave_deduction|floatformat:2|currency_symbol_position }}
+                    {{ custom_leave_deduction|floatformat:"2g"|currency_symbol_position }}
                 </p>
             </div>
         {% endif %}
@@ -189,7 +189,7 @@
                     >
                 </p>
                 <p class="flex-1 font-medium">
-                    {{ deduction.amount|floatformat:2|currency_symbol_position }}
+                    {{ deduction.amount|floatformat:"2g"|currency_symbol_position }}
                 </p>
             </div>
         {% endfor %}
@@ -205,7 +205,7 @@
                     >
                 </p>
                 <p class="flex-1 font-medium">
-                    {{ deduction.amount|floatformat:2|currency_symbol_position }}
+                    {{ deduction.amount|floatformat:"2g"|currency_symbol_position }}
                 </p>
             </div>
         {% endfor %}
@@ -213,7 +213,7 @@
             <div class="flex gap-3 text-sm justify-between mb-2 px-2">
                 <p class="w-1/2 text-sm">{{ deduction.title }}</p>
                 <p class="flex-1 font-medium">
-                    {{ deduction.amount|floatformat:2|currency_symbol_position }}
+                    {{ deduction.amount|floatformat:"2g"|currency_symbol_position }}
                 </p>
             </div>
         {% endfor %}
@@ -221,21 +221,21 @@
             <div class="flex gap-3 text-sm justify-between mb-2 px-2">
                 <p class="w-1/2 text-sm">{{ deduction.title }}</p>
                 <p class="flex-1 font-medium">
-                    {{ deduction.amount|floatformat:2|currency_symbol_position }}
+                    {{ deduction.amount|floatformat:"2g"|currency_symbol_position }}
                 </p>
             </div>
         {% endfor %}
         {% if federal_tax %}<div class="flex gap-3 text-sm justify-between mb-2 px-2">
             <p class="w-1/2 text-sm">{% trans "Income Tax" %}</p>
             <p class="flex-1 font-medium">
-                {{ federal_tax|floatformat:2|currency_symbol_position }}
+                {{ federal_tax|floatformat:"2g"|currency_symbol_position }}
             </p>
         </div>{% endif %}
         {% for deduction in tax_deductions %}
             <div class="flex gap-3 text-sm justify-between mb-2 px-2">
                 <p class="w-1/2 text-sm">{{ deduction.title }}</p>
                 <p class="flex-1 font-medium">
-                    {{ deduction.amount|floatformat:2|currency_symbol_position }}
+                    {{ deduction.amount|floatformat:"2g"|currency_symbol_position }}
                 </p>
             </div>
         {% endfor %}
@@ -251,16 +251,10 @@
                     >
                 </p>
                 <p class="flex-1 font-medium">
-                    {{ deduction.amount|floatformat:2|currency_symbol_position }}
+                    {{ deduction.amount|floatformat:"2g"|currency_symbol_position }}
                 </p>
             </div>
         {% endfor %}
-        {% if employer_contributions or instance.sdl_display %}<div class="mt-4 p-3 rounded-md border border-blue-200 bg-blue-50 text-sm">
-            <div class="flex justify-between items-center font-semibold p-2 rounded-md bg-blue-100 mb-2"><span>{% trans "Employer Contributions" %}</span><span class="text-xs font-normal text-gray-600">{% trans "Not deducted from net pay" %}</span></div>
-            {% for contribution in employer_contributions %}<div class="flex justify-between py-2 px-2 border-b border-blue-100"><span>{% trans "Employer" %} {{ contribution.title }}</span><span class="font-medium">{{ contribution.employer_contribution_amount|floatformat:2|currency_symbol_position }}</span></div>{% endfor %}
-            {% if instance.sdl_display %}<div class="flex justify-between py-2 px-2 border-b border-blue-100"><span>{% trans "SDL" %}</span><span class="font-medium">{{ instance.sdl_display|floatformat:2|currency_symbol_position }}</span></div>{% endif %}
-            <div class="flex justify-between py-2 px-2 font-semibold"><span>{% trans "Total Employer Contributions" %}</span><span>{{ employer_contributions_total|floatformat:2|currency_symbol_position }}</span></div>
-        </div>{% endif %}
 
         <div class="flex gap-3 text-sm justify-between px-2">
             <p class="w-1/2 text-sm flex items-center gap-3 font-semibold">
@@ -274,9 +268,16 @@
                 </button>
             </p>
             <p class="flex-1 font-semibold">
-                {{ instance.deduction|floatformat:2|currency_symbol_position }}
+                {{ instance.deduction|floatformat:"2g"|currency_symbol_position }}
             </p>
         </div>
+
+        {% if employer_contributions or instance.sdl_display %}<div class="neutron-employer-contributions">
+            <div class="flex justify-between items-center font-semibold p-2 rounded-md  mb-2"><span>{% trans "Employer Contributions" %}</span><span class="text-xs font-normal text-gray-600">{% trans "Not deducted from net pay" %}</span></div>
+            {% for contribution in employer_contributions %}<div class="flex justify-between py-2 px-2 border-b "><span>{% trans "Employer" %} {{ contribution.title }}</span><span class="font-medium">{{ contribution.employer_contribution_amount|floatformat:"2g"|currency_symbol_position }}</span></div>{% endfor %}
+            {% if instance.sdl_display %}<div class="flex justify-between py-2 px-2 border-b "><span>{% trans "SDL" %}</span><span class="font-medium">{{ instance.sdl_display|floatformat:"2g"|currency_symbol_position }}</span></div>{% endif %}
+            <div class="flex justify-between py-2 px-2 font-semibold"><span>{% trans "Total Employer Contributions" %}</span><span>{{ employer_contributions_total|floatformat:"2g"|currency_symbol_position }}</span></div>
+        </div>{% endif %}
     </div>
     {% if custom_leave_breakdown %}
         <div class="neutron-pay-section">
@@ -295,7 +296,7 @@
                     <p class="w-1/4">{{ entry.days }}</p>
                     <p class="w-1/4">{{ entry.percentage|floatformat:0 }}%</p>
                     <p class="w-1/4 text-right font-medium">
-                        {{ entry.deduction_amount|floatformat:2|currency_symbol_position }}
+                        {{ entry.deduction_amount|floatformat:"2g"|currency_symbol_position }}
                     </p>
                 </div>
             {% endfor %}

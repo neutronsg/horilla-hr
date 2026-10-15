@@ -44,9 +44,9 @@
 
 
 <div class="neutron-pay-summary">
-        <div class="neutron-pay-summary-primary"><span>{% trans "Net pay" %}</span><strong>{{ net_pay|floatformat:2|currency_symbol_position }}</strong><small>{% trans "Gross earnings less total deductions" %}</small></div>
-        <div><span>{% trans "Gross earnings" %}</span><strong>{{ gross_pay|floatformat:2|currency_symbol_position }}</strong></div>
-        <div><span>{% trans "Total deductions" %}</span><strong>{{ instance.deduction|floatformat:2|currency_symbol_position }}</strong></div>
+        <div class="neutron-pay-summary-primary"><span>{% trans "Net pay" %}</span><strong>{{ net_pay|floatformat:"2g"|currency_symbol_position }}</strong><small>{% trans "Gross earnings less total deductions" %}</small></div>
+        <div><span>{% trans "Gross earnings" %}</span><strong>{{ gross_pay|floatformat:"2g"|currency_symbol_position }}</strong></div>
+        <div><span>{% trans "Total deductions" %}</span><strong>{{ instance.deduction|floatformat:"2g"|currency_symbol_position }}</strong></div>
     </div>
     <div class="neutron-payslip-breakdown" id="payslipBody">
         <!--Start of Payslip Summary -->
@@ -62,7 +62,7 @@
             </div>
         </div>
         <div>
-            <p class="text-lg font-semibold text-primary-600">{{ net_pay|floatformat:2|currency_symbol_position }}</p>
+            <p class="text-lg font-semibold text-primary-600">{{ net_pay|floatformat:"2g"|currency_symbol_position }}</p>
         </div>
     </div>
 </div>

@@ -61,9 +61,20 @@
                 <div class="col-12 js-non-field-errors" style="padding-right: 0">
                     {{ form.non_field_errors }}
                 </div>
+                {% if form.errors %}
+                    <div class="col-12">
+                        <div class="neutron-error-summary" role="alert">
+                            <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+                            <div>
+                                <strong>{% trans "Some fields need attention." %}</strong>
+                                <span class="neutron-error-links">{% for field in form.visible_fields %}{% if field.errors %}<a href="#id_{{ field.name }}">{% if field.label %}{% trans field.label %}{% else %}{{ field.name }}{% endif %}</a>{% endif %}{% endfor %}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
                 {% for field in form.visible_fields %}
                     <div
-                        class="col-12 col-md-{{field|col}}"
+                        class="col-12 col-md-{{field|col}}{% if field.errors %} neutron-field-error{% endif %}"
                         id="id_{{ field.name }}_parent_div"
                     >
                         {% if field.label %}
@@ -109,7 +120,7 @@
                 {{ field }}
             {% endfor %}
 
-            <div class="d-flex flex gap-1 justify-end pt-3 mt-3">
+            <div class="neutron-form-actions d-flex flex gap-1 justify-end pt-3 mt-3">
                 {% if not form.instance.pk %}
                     <button
                         type="submit"
@@ -131,7 +142,7 @@
                         "
                         {{form.submit_button_attrs|safe}}
                     >
-                        {% trans 'Save And Add Another' %}
+                        {% trans 'Save and add another' %}
                     </button>
                 {% endif %}
                 <button

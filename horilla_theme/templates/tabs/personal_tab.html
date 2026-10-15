@@ -20,34 +20,34 @@
                         <div class="flex items-baseline justify-between gap-3 py-2">
                             <dt class="text-xs font-medium text-color-600">{% trans "Date of birth" %}</dt>
                             <dd class="text-right text-sm {% if employee.get_employee_dob %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                {{ employee.get_employee_dob|default:_("Not set") }}
+                                {{ employee.get_employee_dob|default:"—" }}
                             </dd>
                         </div>
                         <div class="flex items-baseline justify-between gap-3 py-2">
                             <dt class="text-xs font-medium text-color-600">{% trans "Gender" %}</dt>
                             <dd class="text-right text-sm {% if employee.gender %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                {{ employee.get_gender_display|default:_("Not set") }}
+                                {{ employee.get_gender_display|default:"—" }}
                             </dd>
                         </div>
                         {% if can_view_singapore_details %}
                         <div class="flex items-baseline justify-between gap-3 py-2">
                             <dt class="text-xs font-medium text-color-600">{% trans "Personal email" %}</dt>
                             <dd class="text-right text-sm {% if singapore_details.personal_email %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                {{ singapore_details.personal_email|default:_("Not set") }}
+                                {{ singapore_details.personal_email|default:"—" }}
                             </dd>
                         </div>
                         {% endif %}
                         <div class="flex items-baseline justify-between gap-3 py-2">
                             <dt class="text-xs font-medium text-color-600">{% trans "Qualification" %}</dt>
                             <dd class="text-right text-sm {% if employee.qualification %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                {{ employee.qualification|default:_("Not set") }}
+                                {{ employee.qualification|default:"—" }}
                             </dd>
                         </div>
                         <div class="flex items-baseline justify-between gap-3 py-2">
                             <dt class="text-xs font-medium text-color-600">{% trans "Experience" %}</dt>
                             <dd class="text-right text-sm {% if employee.experience %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
                                 {% if employee.experience %}{{ employee.experience }}
-                                    {% trans "years" %}{% else %}{% trans "Not set" %}{% endif %}
+                                    {% trans "years" %}{% else %}—{% endif %}
                             </dd>
                         </div>
                     </dl>
@@ -62,25 +62,25 @@
                             <div class="flex items-baseline justify-between gap-3 py-2">
                                 <dt class="text-xs font-medium text-color-600">{% trans "Address" %}</dt>
                                 <dd class="text-right text-sm {% if employee.address %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                    {{ employee.address|default:_("Not set") }}
+                                    {{ employee.address|default:"—" }}
                                 </dd>
                             </div>
                             <div class="flex items-baseline justify-between gap-3 py-2">
                                 <dt class="text-xs font-medium text-color-600">{% trans "City" %}</dt>
                                 <dd class="text-right text-sm {% if employee.city %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                    {{ employee.city|default:_("Not set") }}
+                                    {{ employee.city|default:"—" }}
                                 </dd>
                             </div>
                             <div class="flex items-baseline justify-between gap-3 py-2">
                                 <dt class="text-xs font-medium text-color-600">{% trans "State" %}</dt>
                                 <dd class="text-right text-sm {% if employee.state %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                    {{ employee.state|default:_("Not set") }}
+                                    {{ employee.state|default:"—" }}
                                 </dd>
                             </div>
                             <div class="flex items-baseline justify-between gap-3 py-2">
                                 <dt class="text-xs font-medium text-color-600">{% trans "Country" %}</dt>
                                 <dd class="text-right text-sm {% if employee.country %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                    {{ employee.country|default:_("Not set") }}
+                                    {{ employee.country|default:"—" }}
                                 </dd>
                             </div>
                         </dl>
@@ -95,19 +95,19 @@
                         <div class="flex items-baseline justify-between gap-3 py-2">
                             <dt class="text-xs font-medium text-color-600">{% trans "Contact number" %}</dt>
                             <dd class="text-right text-sm {% if employee.emergency_contact %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                {{ employee.emergency_contact|default:_("Not set") }}
+                                {{ employee.emergency_contact|default:"—" }}
                             </dd>
                         </div>
                         <div class="flex items-baseline justify-between gap-3 py-2">
                             <dt class="text-xs font-medium text-color-600">{% trans "Contact name" %}</dt>
                             <dd class="text-right text-sm {% if employee.emergency_contact_name %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                {{ employee.emergency_contact_name|default:_("Not set") }}
+                                {{ employee.emergency_contact_name|default:"—" }}
                             </dd>
                         </div>
                         <div class="flex items-baseline justify-between gap-3 py-2">
                             <dt class="text-xs font-medium text-color-600">{% trans "Relation" %}</dt>
                             <dd class="text-right text-sm {% if employee.emergency_contact_relation %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                {{ employee.emergency_contact_relation|default:_("Not set") }}
+                                {{ employee.emergency_contact_relation|default:"—" }}
                             </dd>
                         </div>
                     </dl>
@@ -157,7 +157,7 @@
                                             {{ work_info.department_id }}
                                         {% endif %}
                                     {% else %}
-                                        {% trans "Not set" %}
+                                        —
                                     {% endif %}
                                 </dd>
                             </div>
@@ -191,7 +191,7 @@
                                             {{ work_info.shift_id }}
                                         {% endif %}
                                     {% else %}
-                                        {% trans "Not set" %}
+                                        —
                                     {% endif %}
                                 </dd>
                             </div>
@@ -225,7 +225,7 @@
                                             {{ work_info.employee_type_id }}
                                         {% endif %}
                                     {% else %}
-                                        {% trans "Not set" %}
+                                        —
                                     {% endif %}
                                 </dd>
                             </div>
@@ -269,20 +269,20 @@
                                             </a>
                                         {% endwith %}
                                     {% else %}
-                                        {% trans "Not set" %}
+                                        —
                                     {% endif %}
                                 </dd>
                             </div>
                             <div class="flex items-baseline justify-between gap-3 py-2">
                                 <dt class="text-xs font-medium text-color-600">{% trans "Work Location" %}</dt>
                                 <dd class="text-right text-sm {% if work_info.location %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                    {{ work_info.location|default:_("Not set") }}
+                                    {{ work_info.location|default:"—" }}
                                 </dd>
                             </div>
                             <div class="flex items-baseline justify-between gap-3 py-2">
                                 <dt class="text-xs font-medium text-color-600">{% trans "End Date" %}</dt>
                                 <dd class="text-right text-sm dateformat_changer {% if work_info.contract_end_date %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                    {{ work_info.contract_end_date|default:_("Not set") }}
+                                    {{ work_info.contract_end_date|default:"—" }}
                                 </dd>
                             </div>
                         </dl>
@@ -317,7 +317,7 @@
                                             {{ work_info.job_position_id }}
                                         {% endif %}
                                     {% else %}
-                                        {% trans "Not set" %}
+                                        —
                                     {% endif %}
                                 </dd>
                             </div>
@@ -351,7 +351,7 @@
                                             {{ work_info.work_type_id }}
                                         {% endif %}
                                     {% else %}
-                                        {% trans "Not set" %}
+                                        —
                                     {% endif %}
                                 </dd>
                             </div>
@@ -365,7 +365,7 @@
                                             **********
                                         {% endif %}
                                     {% else %}
-                                        {% trans "Not set" %}
+                                        —
                                     {% endif %}
                                 </dd>
                             </div>
@@ -413,14 +413,14 @@
                                             {% endif %}
                                         {% endwith %}
                                     {% else %}
-                                        {% trans "Not set" %}
+                                        —
                                     {% endif %}
                                 </dd>
                             </div>
                             <div class="flex items-baseline justify-between gap-3 py-2">
                                 <dt class="text-xs font-medium text-color-600">{% trans "Joining Date" %}</dt>
                                 <dd class="text-right text-sm dateformat_changer {% if work_info.date_joining %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                    {{ work_info.date_joining|default:_("Not set") }}
+                                    {{ work_info.date_joining|default:"—" }}
                                 </dd>
                             </div>
                             <div class="flex items-start justify-between gap-3 py-2">
@@ -436,7 +436,7 @@
                                             </span>
                                         {% endfor %}
                                     {% else %}
-                                        <span class="text-sm italic text-dark-100">{% trans "Not set" %}</span>
+                                        <span class="text-sm italic text-dark-100">—</span>
                                     {% endif %}
                                 </dd>
                             </div>
@@ -452,7 +452,7 @@
                 <div class="neutron-detail-section-heading">
                     <h3 class="neutron-detail-section-title">{% trans "Singapore Employment" %}</h3>
                     {% if can_edit_singapore_details %}
-                    <a class="oh-btn oh-btn--secondary" href="{% url 'singapore-employee-details' employee.pk %}?edit=1">{% trans "Edit details" %}</a>
+                    <a class="neutron-section-action" href="{% url 'singapore-employee-details' employee.pk %}?edit=1"><ion-icon name="create-outline" aria-hidden="true"></ion-icon>{% trans "Edit" %}</a>
                     {% endif %}
                 </div>
                 <div class="bg-white px-3 py-3">
@@ -487,25 +487,25 @@
                                 <div class="flex items-baseline justify-between gap-3 py-2">
                                     <dt class="text-xs font-medium text-color-600">{% trans "Bank Name" %}</dt>
                                     <dd class="text-right text-sm {% if bank_details.bank_name %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                        {{ bank_details.bank_name|default:_("Not set") }}
+                                        {{ bank_details.bank_name|default:"—" }}
                                     </dd>
                                 </div>
                                 <div class="flex items-baseline justify-between gap-3 py-2">
                                     <dt class="text-xs font-medium text-color-600">{% trans "Branch" %}</dt>
                                     <dd class="text-right text-sm {% if bank_details.branch %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                        {{ bank_details.branch|default:_("Not set") }}
+                                        {{ bank_details.branch|default:"—" }}
                                     </dd>
                                 </div>
                                 <div class="flex items-baseline justify-between gap-3 py-2">
                                     <dt class="text-xs font-medium text-color-600">{% trans "Bank Address" %}</dt>
                                     <dd class="text-right text-sm {% if bank_details.address %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                        {{ bank_details.address|default:_("Not set") }}
+                                        {{ bank_details.address|default:"—" }}
                                     </dd>
                                 </div>
                                 <div class="flex items-baseline justify-between gap-3 py-2">
                                     <dt class="text-xs font-medium text-color-600">{% trans "Bank Code" %} #2</dt>
                                     <dd class="text-right text-sm {% if bank_details.any_other_code2 %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                        {{ bank_details.any_other_code2|default:_("Not set") }}
+                                        {{ bank_details.any_other_code2|default:"—" }}
                                     </dd>
                                 </div>
                             </dl>
@@ -513,31 +513,31 @@
                                 <div class="flex items-baseline justify-between gap-3 py-2">
                                     <dt class="text-xs font-medium text-color-600">{% trans "Account Number" %}</dt>
                                     <dd class="text-right text-sm {% if bank_details.account_number %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                        {{ bank_details.account_number|default:_("Not set") }}
+                                        {{ bank_details.account_number|default:"—" }}
                                     </dd>
                                 </div>
                                 <div class="flex items-baseline justify-between gap-3 py-2">
                                     <dt class="text-xs font-medium text-color-600">{% trans "Bank Code" %} #1</dt>
                                     <dd class="text-right text-sm {% if bank_details.any_other_code1 %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                        {{ bank_details.any_other_code1|default:_("Not set") }}
+                                        {{ bank_details.any_other_code1|default:"—" }}
                                     </dd>
                                 </div>
                                 <div class="flex items-baseline justify-between gap-3 py-2">
                                     <dt class="text-xs font-medium text-color-600">{% trans "Country" %}</dt>
                                     <dd class="text-right text-sm {% if bank_details.country %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                        {{ bank_details.country|default:_("Not set") }}
+                                        {{ bank_details.country|default:"—" }}
                                     </dd>
                                 </div>
                                 <div class="flex items-baseline justify-between gap-3 py-2">
                                     <dt class="text-xs font-medium text-color-600">{% trans "State" %}</dt>
                                     <dd class="text-right text-sm {% if bank_details.state %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                        {{ bank_details.state|default:_("Not set") }}
+                                        {{ bank_details.state|default:"—" }}
                                     </dd>
                                 </div>
                                 <div class="flex items-baseline justify-between gap-3 py-2">
                                     <dt class="text-xs font-medium text-color-600">{% trans "City" %}</dt>
                                     <dd class="text-right text-sm {% if bank_details.city %}font-medium text-dark-500{% else %}italic text-dark-100{% endif %}">
-                                        {{ bank_details.city|default:_("Not set") }}
+                                        {{ bank_details.city|default:"—" }}
                                     </dd>
                                 </div>
                             </dl>

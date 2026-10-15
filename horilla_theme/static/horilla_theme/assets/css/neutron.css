@@ -232,9 +232,6 @@ html.dark .neutron-when-light,body.dark .neutron-when-light {display:none;}
 .neutron-app :is(.oh-modal__dialog-header,.oh-modal__dialog-footer) {padding:20px 24px;}
 .neutron-app .oh-modal__dialog-body {padding:20px 24px;}
 .neutron-app .oh-alert {border-radius:6px;box-shadow:0 4px 16px #1018280a;}
-.neutron-app .swal2-popup {border-radius:10px;border:1px solid var(--neutron-border);box-shadow:0 24px 64px #10182833;}
-.neutron-app .swal2-styled.swal2-confirm {background:var(--primary-600)!important;border-radius:6px;}
-.neutron-app .swal2-styled.swal2-cancel {background:#f2f4f7!important;color:#344054!important;border-radius:6px;}
 .neutron-app .btn.btn-danger {background:#b42318!important;color:white!important;}
 .neutron-app .btn.btn-success {background:#027a48!important;color:white!important;}
 .neutron-app [aria-busy=true] {cursor:progress;}
@@ -431,3 +428,141 @@ body.dark .neutron-status-label[data-status=confirmed] {color:var(--neutron-ink)
 .neutron-bulk-bar .quick-bulk-action[data-target^="#bulkUpdateModal"] {background:var(--primary-600)!important;border-color:#04167a!important;color:#fff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3)!important;}
 .neutron-bulk-bar .oh-checkpoint-badge {color:var(--neutron-warn)!important;}
 .ui-tooltip {border:0!important;border-radius:6px!important;background:#101218!important;color:#fff!important;font:500 12px/1.4 var(--neutron-font)!important;padding:5px 8px!important;box-shadow:0 6px 16px -6px rgba(15,23,42,.35)!important;}
+
+/* ── Profile (employee and other HorillaProfileView pages) ───────────────────── */
+.neutron-app .neutron-profile-header {padding:4px 0 18px;border:0;box-shadow:none;background:transparent;}
+.neutron-app .neutron-profile-header .emp-avatar-ring {width:56px;height:56px;border-radius:50%;box-shadow:0 0 0 3px var(--neutron-surface),0 0 0 4px rgba(15,23,42,.06),0 6px 14px -6px rgba(15,23,42,.3);}
+.neutron-app .neutron-profile-header .emp-avatar-ring+span {width:16px;height:16px;right:-2px;bottom:-2px;box-shadow:none;}
+.neutron-app .neutron-profile-header .emp-avatar-ring+span>span {width:8px;height:8px;background:var(--neutron-ok)!important;}
+.neutron-app .neutron-profile-header h2 {font-size:24px!important;line-height:30px;font-weight:700!important;letter-spacing:-.02em;color:var(--neutron-ink)!important;}
+.neutron-app .neutron-profile-header .emp-profile-meta-chip {font-size:14px;color:var(--neutron-text);gap:6px;}
+.neutron-app .neutron-profile-header .emp-profile-meta-chip+.emp-profile-meta-chip::before {content:"·";color:var(--neutron-faint);margin-right:4px;}
+.neutron-app .neutron-profile-header .emp-profile-meta-chip i {display:none;}
+.neutron-app .neutron-profile-header .mt-2.flex.flex-wrap.gap-2 {margin-top:2px;gap:4px;}
+.neutron-app .neutron-profile-header dl.mt-3 {margin-top:8px;display:flex;flex-wrap:wrap;gap:4px 20px;}
+.neutron-app .neutron-profile-header dl .rounded-lg.bg-primary-100 {width:auto;height:auto;background:transparent!important;color:var(--neutron-muted)!important;}
+.neutron-app .neutron-profile-header dl a {font-size:13.5px;color:var(--neutron-text-2)!important;}
+.neutron-app .neutron-profile-header dl a:hover {color:var(--primary-600)!important;}
+.neutron-app .neutron-profile-header :is(a,button).rounded-xl,.neutron-app .neutron-profile-header .rounded-xl.border {border-radius:6px!important;box-shadow:var(--neutron-xs)!important;border-color:#d3d8e0!important;font-size:13.5px;}
+.neutron-app .neutron-profile-header .rounded-xl.border.overflow-hidden button {height:32px;}
+.neutron-primary-button {display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:6px;background:var(--primary-600);color:#fff!important;font-size:13.5px;font-weight:600;border:1px solid #04167a;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3),0 4px 10px -4px rgba(5,28,151,.45);cursor:pointer;white-space:nowrap;}
+.neutron-primary-button:hover {background:#0820a8;}
+.neutron-primary-button ion-icon {font-size:15px;}
+.neutron-icon-button--bordered {width:32px;height:32px;border:1px solid #d3d8e0!important;background:var(--neutron-surface)!important;box-shadow:var(--neutron-xs);color:var(--neutron-text-2)!important;}
+.neutron-icon-button--bordered.is-open {background:var(--neutron-hover)!important;}
+/* z3 overlay menu (Alpine-driven) */
+.neutron-overlay-menu {padding:5px;border-radius:10px;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);box-shadow:var(--neutron-edge),var(--neutron-e3);}
+.neutron-menu-item {display:flex;align-items:center;gap:9px;width:100%;min-height:32px;padding:6px 9px;border-radius:6px;font-size:13.5px;color:var(--neutron-ink);cursor:pointer;}
+.neutron-menu-item:hover {background:rgba(15,23,42,.06);}
+.neutron-menu-item.neutron-danger {color:var(--neutron-bad);}
+.neutron-menu-item.neutron-success {color:var(--neutron-ok);}
+.neutron-menu-item-icon {width:14px;height:14px;opacity:.6;filter:grayscale(1);}
+.neutron-menu-divider {margin:4px -5px;border-top:1px solid var(--neutron-border);}
+/* Tabs float as z2 chrome while the profile scrolls */
+.neutron-app .emp-profile-page>nav {position:sticky;top:48px;z-index:20;margin:0 -28px;padding:0 28px;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);border-bottom:1px solid var(--neutron-border);}
+.emp-profile-page .usertablist {gap:22px;}
+.emp-profile-page .usertablist button {padding:10px 0 11px;font-size:14px;font-weight:500;color:var(--neutron-muted);}
+.neutron-app .emp-profile-page .usertablist li button.active,.neutron-app .emp-profile-page .usertablist li button:hover {border-bottom:2px solid var(--primary-600)!important;color:var(--neutron-ink)!important;}
+.neutron-app .emp-profile-page .usertablist li button:hover:not(.active) {border-bottom-color:transparent!important;}
+.neutron-profile-overflow>summary {min-height:0;padding:10px 0 11px;font-size:14px;font-weight:500;color:var(--neutron-muted);}
+.neutron-app .emp-profile-page>nav .oh-dropdown>button {border:0!important;box-shadow:none!important;background:transparent!important;color:var(--neutron-muted);}
+/* About: no card; sections stack, labels sit beside values */
+.neutron-profile-content {padding:20px 0 0;background:transparent;border:0;border-radius:0;}
+.neutron-profile-panel>.grid.lg\:grid-cols-12,.neutron-profile-panel .grid.lg\:grid-cols-12 {display:flex!important;flex-direction:column;gap:0!important;}
+.neutron-profile-panel .grid.lg\:grid-cols-12>.lg\:col-span-8 {order:-1;}
+.neutron-profile-panel .grid.lg\:grid-cols-12>* {width:100%;}
+.neutron-app .neutron-detail-section {padding:0 0 22px;margin:0 0 22px;border-bottom:1px solid var(--neutron-border);}
+.neutron-app .neutron-detail-section-heading {padding:0 0 10px;}
+.neutron-app .neutron-detail-section-title {font-size:16px!important;font-weight:700!important;letter-spacing:-.01em;}
+.neutron-app .neutron-detail-section .bg-white {background:transparent!important;padding-left:0!important;padding-right:0!important;}
+.neutron-app .neutron-detail-section .divide-y>* {border:0!important;padding-left:0!important;padding-right:0!important;}
+.neutron-app .neutron-detail-section .text-xxs.uppercase {font-size:12.5px!important;text-transform:none;letter-spacing:0;font-weight:600;color:var(--neutron-text-2)!important;margin:6px 0 2px;}
+.neutron-app .neutron-detail-section dl {display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px;}
+.neutron-app .neutron-detail-section .grid.sm\:grid-cols-2 {column-gap:32px;}
+.neutron-app .neutron-detail-section dl>div,.neutron-app .neutron-detail-section .grid>div.flex {display:grid!important;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:baseline;justify-content:start;padding:6px 0!important;}
+.neutron-app .neutron-detail-section dt {font-size:13px!important;font-weight:400!important;color:var(--neutron-muted)!important;}
+.neutron-app .neutron-detail-section dd {text-align:left!important;justify-self:start;font-size:14px!important;font-weight:500;color:var(--neutron-ink);font-style:normal!important;overflow-wrap:break-word;min-width:0;}
+.neutron-app .neutron-detail-section dd.italic {color:var(--neutron-faint)!important;font-weight:400;}
+.neutron-app .neutron-detail-section dd a.rounded-full {border:0!important;padding:0!important;background:transparent!important;}
+.neutron-app .neutron-detail-section dd a.rounded-full span {font-size:14px!important;color:var(--primary-600)!important;font-weight:500;}
+.neutron-section-action {display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 9px;border-radius:6px;font-size:13px;font-weight:500;color:var(--neutron-text-2);}
+.neutron-section-action:hover {background:rgba(15,23,42,.05);color:var(--neutron-ink);}
+@media(max-width:1279px) {.neutron-app .neutron-detail-section dl {grid-template-columns:1fr;}.neutron-app .neutron-detail-section .grid.sm\:grid-cols-2 {grid-template-columns:1fr;}}
+/* Sections that already lay out two columns keep one label/value column inside each half */
+.neutron-app .neutron-detail-section .grid dl,.neutron-app .neutron-detail-section .grid>dl {grid-template-columns:minmax(0,1fr)!important;}
+.neutron-app .neutron-detail-section .grid {column-gap:40px!important;}
+.neutron-profile-overflow>summary {display:flex!important;align-items:center;gap:4px;line-height:1.5;}
+.emp-profile-page .usertablist>li {display:flex;align-items:stretch;}
+.neutron-profile-overflow>summary {height:auto!important;width:auto!important;border-radius:0!important;background:transparent!important;}
+
+/* ── Confirmation dialogs (SweetAlert): compact z3 sheet, left-aligned, actions on the right ── */
+.neutron-app .swal2-container.swal2-backdrop-show {background:rgba(15,23,42,.32)!important;}
+.neutron-app .swal2-popup:not(.swal2-toast) {width:440px;max-width:calc(100vw - 32px);padding:22px 24px 18px;border:0;border-radius:12px;background:var(--neutron-surface);box-shadow:var(--neutron-e3);text-align:left;}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-icon:is(.swal2-question,.swal2-info) {display:none!important;}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-icon {width:40px;height:40px;margin:0 0 12px;border-width:2px;font-size:10px;}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-icon .swal2-icon-content {font-size:24px;}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-title {padding:0;margin:0;text-align:left;font-size:17px;font-weight:650;color:var(--neutron-ink);}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-html-container {margin:8px 0 0;padding:0;text-align:left;font-size:14px;line-height:1.55;color:var(--neutron-text-2);}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-actions {width:100%;margin:20px 0 0;padding:0;gap:8px;flex-direction:row-reverse;justify-content:flex-start;}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-styled {margin:0;height:34px;padding:0 14px;font-size:13.5px;font-weight:600;border-radius:6px;box-shadow:none;}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-styled.swal2-confirm {background-color:var(--primary-600);border:1px solid #04167a;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3);}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-styled.swal2-cancel {background-color:var(--neutron-surface);color:var(--neutron-ink);border:1px solid #d3d8e0;box-shadow:var(--neutron-xs);}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-styled:focus-visible {box-shadow:0 0 0 3px rgba(5,28,151,.2);}
+.neutron-app .swal2-popup:not(.swal2-toast) .swal2-input,.neutron-app .swal2-popup:not(.swal2-toast) .swal2-textarea {margin:12px 0 0;width:100%;font-size:14px;border-radius:6px;border:1px solid #d3d8e0;box-shadow:var(--neutron-well);}
+.neutron-app .swal2-toast {border-radius:10px!important;box-shadow:var(--neutron-e3)!important;font-family:var(--neutron-font);}
+
+/* ── Modal forms: z3 sheet, recessed inputs, sticky material action bar ───────── */
+.neutron-app .oh-modal.oh-modal--show {background:rgba(15,23,42,.32);}
+.neutron-app .oh-modal__dialog {border:0!important;border-radius:12px;box-shadow:var(--neutron-e3);}
+.neutron-app .oh-modal__dialog-header {padding:20px 24px 8px;align-items:flex-start;}
+.neutron-app .oh-modal__dialog-header :is(h2,.oh-modal__dialog-title) {font-size:18px!important;font-weight:650!important;letter-spacing:-.01em;color:var(--neutron-ink);}
+.neutron-app .oh-modal__dialog-body {padding:12px 24px 0;}
+.neutron-form-intro {font-size:13.5px;color:var(--neutron-muted);margin-top:4px;}
+.neutron-modal-form .row {row-gap:4px;}
+.neutron-modal-form .oh-label,.neutron-modal-form .oh-label label {font-size:13.5px!important;font-weight:600!important;color:var(--neutron-ink);margin-bottom:6px;}
+.neutron-modal-form .required-star::after {color:var(--neutron-bad);}
+.neutron-app .neutron-modal-form :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=submit]),select,textarea,.select2-selection--single) {min-height:36px!important;height:36px;border-radius:6px!important;border:1px solid #d3d8e0!important;background-color:var(--neutron-surface);box-shadow:var(--neutron-well);font-size:14px;color:var(--neutron-ink);}
+.neutron-app .neutron-modal-form .select2-selection--multiple {border-radius:6px!important;border:1px solid #d3d8e0!important;box-shadow:var(--neutron-well);}
+.neutron-app .neutron-modal-form .select2-selection--single .select2-selection__rendered {line-height:34px!important;}
+.neutron-app .neutron-modal-form .select2-selection--single .select2-selection__arrow {height:34px!important;}
+.neutron-app .neutron-modal-form textarea {height:auto!important;min-height:96px!important;padding:8px 10px;line-height:1.55;resize:vertical;}
+.neutron-app .neutron-modal-form :is(input,select,textarea):focus {border-color:var(--primary-600)!important;box-shadow:var(--neutron-well),0 0 0 3px rgba(5,28,151,.14)!important;outline:0;}
+.neutron-app .neutron-modal-form .neutron-field-error :is(input:not([type=checkbox]):not([type=radio]),select,textarea,.select2-selection,input[type=file]) {border-color:var(--neutron-bad)!important;box-shadow:var(--neutron-well),0 0 0 3px rgba(180,35,24,.1)!important;}
+.neutron-app .neutron-modal-form .errorlist {margin:6px 0 2px;padding:0;list-style:none;color:var(--neutron-bad);font-size:12.5px;font-weight:500;}
+.neutron-error-summary {display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:10px 12px 10px 14px;border-radius:8px;background:#fef3f2;color:#7a1a12;font-size:13.5px;box-shadow:0 0 0 1px #f3c4bf;}
+.neutron-error-summary ion-icon {font-size:18px;color:var(--neutron-bad);flex:none;margin-top:1px;}
+.neutron-error-summary strong {font-weight:600;margin-right:6px;}
+.neutron-error-links a {color:var(--neutron-bad);text-decoration:underline;text-underline-offset:2px;margin-right:10px;}
+.neutron-form-actions {position:sticky;bottom:0;z-index:3;margin:16px -24px 0!important;padding:12px 24px!important;gap:8px!important;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);border-top:1px solid var(--neutron-border);border-radius:0 0 12px 12px;}
+.neutron-form-actions .oh-btn {margin:0!important;min-height:34px!important;height:34px;padding:0 14px!important;font-size:13.5px!important;font-weight:600;border-radius:6px;}
+.neutron-app .neutron-form-actions .oh-btn--add-another {background:var(--neutron-surface)!important;border:1px solid #d3d8e0!important;color:var(--neutron-ink)!important;box-shadow:var(--neutron-xs);}
+.neutron-app .neutron-form-actions .oh-btn--secondary {box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3),0 4px 10px -4px rgba(5,28,151,.45);border:1px solid #04167a!important;}
+/* Receipts: a recessed drop well */
+.neutron-claim-form input[type=file] {min-height:64px;padding:14px;border:1.5px dashed #c9d0db;border-radius:8px;background:var(--neutron-head);box-shadow:var(--neutron-well);font-size:13px;color:var(--neutron-muted);}
+.neutron-claim-form input[type=file]::file-selector-button {background:var(--neutron-surface);border:1px solid #d3d8e0;border-radius:6px;color:var(--neutron-ink);padding:6px 10px;margin-right:12px;font:600 13px var(--neutron-font);box-shadow:var(--neutron-xs);cursor:pointer;}
+
+/* ── Payslip document ─────────────────────────────────────────────────────────── */
+.neutron-payslip-document {border:0;border-radius:12px;box-shadow:var(--neutron-e2);padding:32px 36px;}
+.neutron-payslip-document img[src*="info.svg"] {filter:grayscale(1) brightness(.55);opacity:.55;width:14px;height:14px;}
+.neutron-pay-summary strong {font-size:22px;font-weight:650;letter-spacing:-.01em;}
+.neutron-pay-summary .neutron-pay-summary-primary strong {font-size:32px;font-weight:700;color:var(--neutron-ink);letter-spacing:-.02em;}
+.neutron-pay-summary span {font-size:12.5px;font-weight:600;color:var(--neutron-muted);}
+.neutron-pay-section-title {font-size:14px;font-weight:650;}
+.neutron-employer-contributions {margin:16px 0 0;padding:12px 14px;border-radius:8px;background:var(--neutron-head);box-shadow:var(--neutron-well);font-size:13.5px;}
+.neutron-employer-contributions>div {padding:6px 0!important;border:0!important;background:transparent!important;}
+.neutron-employer-contributions>div:first-child {padding-top:0!important;margin-bottom:2px;}
+.neutron-employer-contributions>div:last-child {border-top:1px solid var(--neutron-border)!important;margin-top:4px;padding-top:8px!important;}
+
+/* ── Employee editor: flush sections, recessed inputs, floating action bar ─────── */
+.neutron-editor-body {border:0;border-radius:0;padding:4px 0 0;background:transparent;}
+.neutron-app #employee-update-form-root label {font-size:13.5px;font-weight:600;color:var(--neutron-ink);}
+.neutron-app #employee-update-form-root :is(.emp-input,.select2-selection--single,input[type=text],input[type=email],input[type=number],input[type=date],select) {height:36px;min-height:36px;border:1px solid #d3d8e0;border-radius:6px;box-shadow:var(--neutron-well);font-size:14px;}
+.neutron-app #employee-update-form-root textarea.emp-input {height:auto;min-height:84px;}
+.neutron-app #employee-update-form-root :is(.emp-input,input,select,textarea):focus {border-color:var(--primary-600);box-shadow:var(--neutron-well),0 0 0 3px rgba(5,28,151,.14);outline:0;}
+.neutron-form-section-title {font-size:16px!important;font-weight:700;}
+.neutron-editor-actions {position:sticky;bottom:16px;z-index:5;width:max-content;margin:24px 0 0 auto!important;padding:7px 7px 7px 7px!important;gap:8px!important;border:0!important;border-radius:14px;background:var(--neutron-material);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);box-shadow:var(--neutron-edge),var(--neutron-e3);}
+.neutron-editor-actions :is(a,button) {height:34px;display:inline-flex;align-items:center;padding:0 14px!important;border-radius:7px!important;font-size:13.5px!important;font-weight:600!important;}
+.neutron-editor-actions a {background:var(--neutron-surface);border:1px solid #d3d8e0!important;color:var(--neutron-ink)!important;box-shadow:var(--neutron-xs);}
+.neutron-editor-actions button[type=submit] {background:var(--primary-600)!important;border:1px solid #04167a;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px rgba(5,28,151,.3)!important;}
+.neutron-app .neutron-section-tabs .emp-step-btn {font-size:14px;color:var(--neutron-muted)!important;}
+.neutron-app .neutron-section-tabs .emp-step-btn--active {color:var(--neutron-ink)!important;border-bottom-color:var(--primary-600);}
