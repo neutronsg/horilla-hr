@@ -1,4 +1,4 @@
-{% load static i18n %}
+{% load static i18n neutron_ui %}
 {% comment %}
     Inline nav bar.
 
@@ -14,7 +14,7 @@
         actions, create_attrs, apply_first_filter
 {% endcomment %}
 <div class="text-sm font-semibold bg-[#f3f3f3] px-3 py-3 text-[#333] flex items-center justify-between gap-2 flex-wrap">
-    <span>{{ nav_title }}</span>
+    <span>{{ nav_title|workspace_label }}</span>
 
     <div class="flex flex-wrap items-center gap-1">
         {% if search_url %}

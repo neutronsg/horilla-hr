@@ -1,4 +1,4 @@
-{% load static i18n %}
+{% load static i18n neutron_ui %}
 <style>
     /* .dropdown-content is only ever revealed via :hover/:focus-within
        (see global.css) -- it's shown/hidden with opacity+visibility, not
@@ -108,7 +108,7 @@
     });
 </script>
 <div class="neutron-page-heading">
-    <div class="neutron-page-heading-copy"><span class="neutron-eyebrow">{% trans "Workspace" %}</span><h1>{{ nav_title }}</h1></div>
+    <div class="neutron-page-heading-copy"><span class="neutron-eyebrow">{% trans "Workspace" %}</span><h1>{{ nav_title|workspace_label }}</h1></div>
     <div class="neutron-page-controls">
         {% if search_url %}
             <form
