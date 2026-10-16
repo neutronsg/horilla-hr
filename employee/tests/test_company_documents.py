@@ -155,6 +155,9 @@ class CompanyDocumentTests(TestCase):
 
     def test_sidebar_htmx_navigation_receives_the_full_content_selector(self):
         self.sign_in(self.employee)
+        response = self.client.get(reverse("company-documents"))
+        self.assertContains(response, 'data-menu="Company documents"', count=1)
+        self.assertContains(response, 'aria-label="Company documents"')
         response = self.client.get(reverse("company-documents"), HTTP_HX_REQUEST="true")
         self.assertContains(response, 'id="ohMainContent"')
         response = self.client.get(reverse("search-policies"), HTTP_HX_REQUEST="true")

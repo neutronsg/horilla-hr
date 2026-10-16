@@ -12,7 +12,7 @@ Work remains isolated on `codex/employee-insurance-documents`, based on `codex/n
 
 ### Company documents library
 
-Add a **Company documents** navigation entry for employees and HR. It opens a dedicated library rather than the combined Policies and discipline screen. Existing policy links continue to resolve to the same records; disciplinary workflows remain separate.
+Add a top-level **Company documents** navigation entry beside Dashboard for employees and HR. Shared company resources do not belong inside the Employees module. It opens a dedicated library rather than the combined Policies and discipline screen. Existing policy links continue to resolve to the same records; disciplinary workflows remain separate.
 
 Use four initial categories: **Insurance and benefits**, **Handbooks and policies**, **Forms and guides**, and **Other**. Employees can search titles and descriptions and filter by category. Show the title, short description, last published update and named attachments with file type and size. Order pinned documents first, then most recently published updates.
 
@@ -96,6 +96,8 @@ Centralise visibility and authorization for lists, searches, detail pages, attac
 
 Require POST and CSRF protection for mutations, verify each attachment belongs to its authorised parent, and validate every file in a multiple upload. Reuse configured private storage. Serve files through authenticated application endpoints that recheck publication and company access on every request, including stale links after unpublishing. Stream responses with private cache controls, safe filenames and content disposition.
 
+The browser sees an authenticated application file URL, not an object-storage URL or a temporary bearer link. The deployment configuration defaults to signed storage URLs with a 900-second expiry, but the Company documents endpoint opens the private object server-side. Production uses HTTPS. The local preview uses ordinary filesystem storage and HTTP with synthetic files only. This feature adds no application-level encryption. Repository configuration does not establish whether the OSS bucket has server-side encryption enabled; a read-only metadata check on 16 October 2026 was rejected with `InvalidAccessKeyId`. Encryption at rest therefore remains unverified, and no bucket settings were changed.
+
 Proposed upload defaults are **20 MB per file**, accepting PDF, JPEG, PNG, DOCX, XLSX and PPTX. These are product defaults. Check content, final extension and size; reject empty files, mismatches, HTML, executables and macro-enabled documents. Preview only supported PDFs/images with safe response headers; Office files download as attachments. Validate representative insurer manuals before release.
 
 ## Delivery sequence
@@ -121,8 +123,25 @@ Run focused model, permission, migration and view tests plus the relevant existi
 
 ## Local use and validation
 
-Apply the included employee migration before running the feature branch. Employees open **Employees → Company documents** or the **Company documents** card on **My dashboard**. HR uses **Add document**, selects **Insurance and benefits**, uploads the employee-facing manual, pins it if needed, and chooses **Publish**. Drafts and archived documents are available through the HR status filter. Only administrators can map legacy records that have no company audience; these are held as drafts until assigned explicitly.
+Apply the included employee migration before running the feature branch. Employees open the top-level **Company documents** link beside Dashboard or the **Company documents** card on **My dashboard**. HR uses **Add document**, selects **Insurance and benefits**, uploads the employee-facing manual, pins it if needed, and chooses **Publish**. Drafts and archived documents are available through the HR status filter. Only administrators can map legacy records that have no company audience; these are held as drafts until assigned explicitly.
 
-The employee and base regression suites passed 194 tests. The final Company documents suite passed 21 tests, including JWT downloads and failed-upload retries. Browser checks cover employees, HR and administrators at 390, 1024 and 1440 px in light and dark mode, keyboard access to filters, sidebar HTMX navigation and the publish/replace/unpublish/archive lifecycle. PDF preview was inspected in Chrome. Migration drift, Django system checks, UI compilation and line-ending checks also passed.
+The employee and base regression suites passed 196 tests after the navigation refinement. The Company documents suite includes JWT downloads and failed-upload retries. Browser checks cover employees, HR and administrators at 390, 1024 and 1440 px in light and dark mode, keyboard access to filters, sidebar HTMX navigation and the publish/replace/unpublish/archive lifecycle. PDF preview was inspected in Chrome. Migration drift, Django system checks, UI compilation and line-ending checks also passed.
+
+### Navigation and select audit, 16 October 2026
+
+The shared select audit visited all 130 sidebar destinations available across administrator (60), HR (51) and employee (19) roles in both themes: 260 page measurements, plus 20 expanded-filter measurements and five create-dialog measurements. No JavaScript errors were recorded. `tools/interface/choice-audit.cjs` reproduces the audit against the synthetic preview; results and screenshots stay outside the repository.
+
+| Component | Before | After |
+| --- | --- | --- |
+| Company documents navigation | Inside Employees | Direct link beside Dashboard; personal-dashboard shortcut retained |
+| Category and Status | Native operating-system menus | Existing Select2 component, readable labels, keyboard selection and short menus without an unnecessary search field |
+| Select2 fields across modules | 13.5/14 px text; modal and multi-select variants | 13.5 px text, 36 px single-select wells, multi-selects grow with their contents |
+| Select2 menus | Legacy 4 px corners, opaque light/dark backgrounds and old shadow | 10 px Ledger material, shared elevation, readable selected/hover/search states in both themes |
+| Native quick-status/list selects | Operating-system arrow | Shared chevron and input styling; native selection behavior retained |
+| Collapsed sidebar to submenu | Width dipped to 93.875 px and labels disappeared crossing the 6 px gap | Rail remains 232 px with labels visible throughout the crossing and a 250 ms pause in the gap |
+
+`tools/interface/navigation-selects.cjs` verifies slow pointer crossings at 768/991/1440 px, keyboard navigation and dismissal, document filters at 390/1440 px in both themes, and option selection inside employee, leave and payroll filter panels. The document browser suite covers 54 layout combinations plus direct HTMX navigation and the complete publish/replace/unpublish/archive flow.
+
+A follow-up check in the live in-app browser reproduced another close path: a focusout event can schedule a new close timer after mouseenter has cancelled the previous one. The timer now checks whether the pointer is still over the flyout or its owning row before hiding it. Recruitment was verified with the pointer over both a middle row and the last row, including focus moving outside the menu; pointer exit still collapses the rail, and keyboard opening/Escape still work. The browser regression harness now covers that focusout sequence for Employees, Recruitment and Reports at all three sidebar widths.
 
 Reproduce the browser checks with the repository's synthetic preview. Set `HR_UI_COMPANY_DOCUMENT_FIXTURES=1`, `HR_UI_DB=/private/tmp/hr-interface/company-documents.sqlite3`, `HR_UI_PORT=8791` and `HR_UI_STATE=/private/tmp/hr-interface/company-documents-state.json` when running `tools/interface/preview.py`. Then run `tools/interface/company-documents.cjs` with Playwright available. The preview uses local synthetic files and an in-memory email backend.

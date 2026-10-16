@@ -65,8 +65,10 @@ async function layout(page, role, view, width, dark) {
       assert.equal(await page.locator('#cd-state').count(), role === 'employee' ? 0 : 1);
       await page.locator('#cd-search').focus();
       await page.keyboard.press('Tab');
-      assert.equal(await page.evaluate(() => document.activeElement.id), 'cd-category');
-      await page.locator('#cd-category').selectOption('insurance');
+      assert.ok(await page.getByRole('combobox', {name: /Category/}).evaluate(element => element === document.activeElement));
+      await page.keyboard.press('Enter');
+      await page.getByRole('option', {name: 'Insurance and benefits', exact: true}).click();
+      assert.equal(await page.locator('#cd-category').inputValue(), 'insurance');
       await page.getByRole('button', {name: 'Apply', exact: true}).click();
       await page.waitForURL('**/company-documents/?**');
       assert.equal(await page.locator('.cd-card h2').filter({hasText: 'Your insurance guide'}).count(), 1);
@@ -80,14 +82,17 @@ async function layout(page, role, view, width, dark) {
     const hr = contexts.hr.pages()[0], employee = contexts.employee.pages()[0];
     await load(employee, '/my/');
     await employee.setViewportSize({width: 1440, height: 950});
-    await employee.locator('.sideboxmain[data-menu="Employee"]').hover();
-    const sidebarLink = employee.locator('#sidebarFlyoutList a').filter({hasText: 'Company documents'});
-    await sidebarLink.waitFor({state: 'visible'});
+    const sidebarLink = employee.locator('#sidebar a.sideboxmain[data-menu="Company documents"]');
+    assert.equal(await employee.locator('.sidebar-subnav a[href="/employee/company-documents/"]').count(), 0);
+    let libraryRequests = 0;
+    employee.on('request', request => {if (request.url() === base + '/employee/company-documents/') libraryRequests++;});
     await sidebarLink.click();
     await employee.waitForURL(base + '/employee/company-documents/');
     await employee.locator('.cd-page h1').filter({hasText: 'Company documents'}).waitFor();
     assert.equal(await employee.locator('#ohMainContent').count(), 1);
-    checks.push({name: 'employee sidebar navigates to complete Company documents library through HTMX'});
+    assert.equal(libraryRequests, 1);
+    assert.ok(await sidebarLink.evaluate(element => element.classList.contains('sidebox-current')));
+    checks.push({name: 'direct Company documents sidebar link sends one HTMX request and highlights correctly'});
 
     await load(hr, `/employee/company-documents/${state.document}/`);
     const seededFileURL = await hr.locator('.cd-files a').filter({hasText: 'Download'}).first().getAttribute('href');
@@ -138,6 +143,10 @@ async function layout(page, role, view, width, dark) {
     throw error;
   } finally {
     fs.writeFileSync(path.join(output, 'checks.json'), JSON.stringify({checks, errors}, null, 2));
+    for (const context of Object.values(contexts)) {
+      await context.request.dispose();
+      await context.close();
+    }
     await browser.close();
   }
 })().catch(error => {console.error(error); process.exitCode = 1;});
