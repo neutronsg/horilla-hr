@@ -84,7 +84,7 @@ class ManagerHRWorkflowTests(TestCase):
         )
 
     def context(self, person):
-        r = RequestFactory().get("/", secure=True, HTTP_HOST="hr.neutron.sg")
+        r = RequestFactory().get("/", secure=True, HTTP_HOST="testserver")
         r.user = person.employee_user_id
         r.session = SessionStore()
         r.session["selected_company"] = str(self.company.pk)

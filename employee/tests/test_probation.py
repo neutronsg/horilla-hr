@@ -64,7 +64,7 @@ class EmployeeProbationTests(TestCase):
     def request(self, person=None, data=None):
         person = person or self.hr
         r = RequestFactory().post(
-            "/", data or {}, secure=True, HTTP_HOST="hr.neutron.sg"
+            "/", data or {}, secure=True, HTTP_HOST="testserver"
         )
         r.user = person.employee_user_id
         r.session = SessionStore()
