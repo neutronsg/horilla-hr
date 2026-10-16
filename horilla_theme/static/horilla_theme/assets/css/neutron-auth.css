@@ -8,13 +8,13 @@
 .neutron-auth {
   --a-brand:var(--primary-600,#051c97);--a-brand-hover:var(--primary-700,#041778);
   --a-ink:#0b0d12;--a-text:#22262e;--a-muted:#5a606b;--a-faint:#868c97;
-  --a-line:#e3e6ea;--a-line-strong:#cdd2da;--a-canvas:#eceef2;--a-surface:#fff;--a-well:#fbfbfc;
+  --a-line:#e3e6ea;--a-line-strong:#cdd2da;--a-canvas:#eceef2;--a-surface:#fff;--a-well:#fff;--a-head:#f8f9fb;
   --a-bad:#b42318;--a-bad-bg:#fef3f2;--a-ok:#17794a;--a-ok-bg:#ecfdf3;--a-warn:#a15c00;--a-warn-bg:#fffaeb;--a-info-bg:#eef1fb;
   --a-e2:0 0 0 1px rgba(15,23,42,.07),0 2px 4px rgba(15,23,42,.04),0 16px 40px -14px rgba(15,23,42,.22);
-  --a-well-shadow:inset 0 1px 2px rgba(15,23,42,.07);
+  --a-well-shadow:0 1px 2px rgba(15,23,42,.04);
+  --a-e1:0 0 0 1px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.05),0 8px 24px -12px rgba(15,23,42,.18);
   box-sizing:border-box;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
   padding:48px 16px;background:var(--a-canvas);
-  background-image:radial-gradient(1200px 600px at 50% -10%,rgba(255,255,255,.9),rgba(255,255,255,0) 70%);
   color:var(--a-ink);font:14px/1.5 "Geist",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   -webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1;
 }
@@ -24,53 +24,73 @@ body.neutron-auth-body {margin:0;background:#eceef2;}
 .neutron-auth a:hover {color:var(--a-brand-hover);text-decoration:underline;text-underline-offset:2px;}
 .neutron-auth :focus-visible {outline:2px solid var(--a-brand);outline-offset:2px;}
 
-/* z1 panel */
-.neutron-auth__panel {width:100%;max-width:400px;padding:32px 32px 28px;background:var(--a-surface);border-radius:14px;box-shadow:var(--a-e2);}
-.neutron-auth__mark {display:block;width:40px;height:40px;margin:0 0 20px;object-fit:contain;}
-.neutron-auth h1 {margin:0;font-size:22px;line-height:28px;font-weight:650;letter-spacing:-.02em;color:var(--a-ink);}
-.neutron-auth__lede {margin:6px 0 24px;color:var(--a-muted);font-size:14px;}
-.neutron-auth__foot {color:var(--a-faint);font-size:12.5px;text-align:center;}
-.neutron-auth__foot a {color:var(--a-muted);}
+/* Brand lockup: wordmark + product name */
+.neutron-auth__brand {display:inline-flex;align-items:center;gap:8px;color:var(--a-ink);font-weight:600;font-size:15px;letter-spacing:-.01em;}
+.neutron-auth a.neutron-auth__brand,.neutron-auth a.neutron-auth__brand:hover {color:var(--a-ink);text-decoration:none;}
+.neutron-auth__brand img {display:block;height:28px;width:auto;object-fit:contain;}
+.neutron-auth__brand img.neutron-auth__wordmark {height:18px;}
+.neutron-auth__product {padding-left:8px;border-left:1px solid var(--a-line-strong);color:var(--a-muted);font-weight:550;line-height:16px;}
+
+/* Panel. Split layout: the form sits on the white column. Centred layout (errors): a z1 card on the canvas. */
+.neutron-auth__panel {width:100%;max-width:400px;}
+.neutron-auth h1 {margin:0;text-wrap:balance;font-size:26px;line-height:32px;font-weight:650;letter-spacing:-.025em;color:var(--a-ink);}
+.neutron-auth__lede {margin:8px 0 28px;color:var(--a-muted);font-size:14.5px;line-height:1.55;}
+.neutron-auth__foot {display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;color:var(--a-faint);font-size:12.5px;}
+.neutron-auth__foot a {color:var(--a-muted);font-weight:500;}
+
+.neutron-auth--split {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);align-items:stretch;gap:0;padding:0;background:var(--a-surface);}
+.neutron-auth--split .neutron-auth__column {display:flex;flex-direction:column;min-height:100vh;padding:32px clamp(24px,5vw,72px);}
+.neutron-auth--split .neutron-auth__panel {margin:auto;padding:48px 0;}
+.neutron-auth--split .neutron-auth__brand {align-self:flex-start;}
+
+.neutron-auth--centered .neutron-auth__column {display:flex;flex-direction:column;align-items:center;gap:24px;width:100%;}
+.neutron-auth--centered .neutron-auth__panel {padding:32px 32px 28px;background:var(--a-surface);border-radius:14px;box-shadow:var(--a-e2);}
+.neutron-auth--centered .neutron-auth__foot {justify-content:center;}
 
 /* Fields */
-.neutron-auth__field {margin:0 0 16px;}
+.neutron-auth__field {margin:0 0 18px;}
 .neutron-auth__label-row {display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 6px;}
 .neutron-auth label {display:block;font-size:13px;font-weight:550;color:var(--a-text);}
 .neutron-auth__field > label {margin:0 0 6px;}
 .neutron-auth__label-row label {margin:0;}
 .neutron-auth__label-row a {font-size:13px;}
 .neutron-auth input[type=text],.neutron-auth input[type=email],.neutron-auth input[type=password] {
-  display:block;width:100%;height:40px;padding:0 12px;border:1px solid var(--a-line-strong);border-radius:8px;
-  background:var(--a-well);box-shadow:var(--a-well-shadow);color:var(--a-ink);font:inherit;font-size:14px;
-  transition:border-color .12s,box-shadow .12s,background-color .12s;
+  display:block;width:100%;height:44px;padding:0 14px;border:1px solid var(--a-line-strong);border-radius:8px;
+  background:var(--a-well);box-shadow:var(--a-well-shadow);color:var(--a-ink);font:inherit;font-size:15px;
+  transition:border-color .12s,box-shadow .12s;
 }
 .neutron-auth input::placeholder {color:var(--a-faint);opacity:1;}
 .neutron-auth input:hover {border-color:#b9c0ca;}
-.neutron-auth input:focus {outline:0;border-color:var(--a-brand);background:#fff;box-shadow:var(--a-well-shadow),0 0 0 3px color-mix(in srgb,var(--a-brand) 14%,transparent);}
+.neutron-auth input:focus {outline:0;border-color:var(--a-brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--a-brand) 14%,transparent);}
 .neutron-auth input[aria-invalid=true] {border-color:var(--a-bad);}
 .neutron-auth__password {position:relative;}
-.neutron-auth__password input {padding-right:42px;}
-.neutron-auth__reveal {position:absolute;top:4px;right:4px;display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:6px;background:transparent;color:var(--a-muted);cursor:pointer;}
+.neutron-auth__password input {padding-right:46px;}
+.neutron-auth__reveal {position:absolute;top:6px;right:6px;display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:6px;background:transparent;color:var(--a-muted);cursor:pointer;}
 .neutron-auth__reveal:hover {background:rgba(15,23,42,.05);color:var(--a-ink);}
 .neutron-auth__reveal svg {width:16px;height:16px;}
 .neutron-auth__reveal .when-shown,.neutron-auth__reveal[aria-pressed=true] .when-hidden {display:none;}
 .neutron-auth__reveal[aria-pressed=true] .when-shown {display:block;}
 .neutron-auth .errorlist {margin:6px 0 0;padding:0;list-style:none;color:var(--a-bad);font-size:13px;font-weight:500;}
 .neutron-auth__hint {margin:6px 0 0;color:var(--a-muted);font-size:12.5px;}
+.neutron-auth__caps {margin:6px 0 0;color:var(--a-warn);font-size:12.5px;font-weight:500;}
+.neutron-auth__caps[hidden] {display:none;}
 
-/* Buttons */
-.neutron-auth__button {display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;height:40px;margin-top:8px;padding:0 16px;
-  border:1px solid var(--a-brand-hover);border-radius:8px;background:var(--a-brand);color:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px color-mix(in srgb,var(--a-brand) 30%,transparent),0 4px 10px -4px color-mix(in srgb,var(--a-brand) 45%,transparent);
-  transition:background-color .12s,transform .06s;}
+/* Buttons: flat, one elevation step, no gloss */
+.neutron-auth__button {display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;margin-top:6px;padding:0 16px;
+  border:1px solid transparent;border-radius:8px;background:var(--a-brand);color:#fff;font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;text-decoration:none;
+  box-shadow:0 1px 2px color-mix(in srgb,var(--a-brand) 28%,transparent);transition:background-color .12s,box-shadow .12s;}
 .neutron-auth a.neutron-auth__button,.neutron-auth a.neutron-auth__button:hover {color:#fff;text-decoration:none;}
 .neutron-auth__button:hover {background:var(--a-brand-hover);}
-.neutron-auth__button:active {transform:translateY(.5px);box-shadow:none;}
-.neutron-auth__button--quiet {background:#fff;color:var(--a-ink);border-color:var(--a-line-strong);box-shadow:0 1px 2px rgba(15,23,42,.07);font-weight:550;}
+.neutron-auth__button:active {box-shadow:none;}
+.neutron-auth__button:disabled {cursor:default;}
+.neutron-auth__button[aria-busy=true] {background:var(--a-brand-hover);}
+.neutron-auth__button[aria-busy=true]::before {content:"";width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:neutron-auth-spin .7s linear infinite;}
+@keyframes neutron-auth-spin {to {transform:rotate(360deg);}}
+.neutron-auth__button--quiet {background:#fff;color:var(--a-ink);border-color:var(--a-line-strong);box-shadow:0 1px 2px rgba(15,23,42,.05);font-weight:550;}
 .neutron-auth a.neutron-auth__button--quiet,.neutron-auth a.neutron-auth__button--quiet:hover {color:var(--a-ink);}
 .neutron-auth__button--quiet:hover {background:#f6f8fb;}
 .neutron-auth__actions {display:grid;gap:8px;margin-top:20px;}
-.neutron-auth__alt {margin:20px 0 0;padding-top:16px;border-top:1px solid var(--a-line);text-align:center;color:var(--a-muted);font-size:13.5px;}
+.neutron-auth__alt {margin:24px 0 0;padding-top:18px;border-top:1px solid var(--a-line);text-align:center;color:var(--a-muted);font-size:13.5px;}
 
 /* Messages */
 .neutron-auth__messages {display:grid;gap:8px;margin:0 0 20px;}
@@ -88,11 +108,44 @@ body.neutron-auth-body {margin:0;background:#eceef2;}
 /* Setup-only actions on a fresh database */
 .neutron-auth__setup {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--a-line);}
 
-@media (max-width:480px) {
-  .neutron-auth {justify-content:flex-start;padding-top:40px;}
-  .neutron-auth__panel {padding:24px 20px 22px;}
+/* Product glimpse beside the form: the canvas plane with z1 cards on it. Decorative. */
+.neutron-auth__aside {display:flex;align-items:center;justify-content:center;min-height:100vh;padding:48px clamp(32px,5vw,80px);background:var(--a-canvas);box-shadow:inset 1px 0 0 var(--a-line);overflow:hidden;}
+.neutron-glimpse {width:100%;max-width:440px;}
+.neutron-glimpse__eyebrow {margin:0 0 10px;color:var(--a-brand);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
+.neutron-glimpse__title {margin:0;text-wrap:balance;color:var(--a-ink);font-size:28px;line-height:34px;font-weight:650;letter-spacing:-.025em;}
+.neutron-glimpse__lede {margin:10px 0 36px;color:var(--a-muted);font-size:15px;line-height:1.55;}
+.neutron-glimpse__stack {display:grid;gap:12px;}
+.neutron-glimpse__card {display:grid;gap:6px;padding:16px 18px;background:var(--a-surface);border-radius:12px;box-shadow:var(--a-e1);}
+.neutron-glimpse__card--offset {margin-left:28px;margin-right:-28px;box-shadow:var(--a-e2);}
+.neutron-glimpse__card strong {color:var(--a-ink);font-size:15px;font-weight:600;letter-spacing:-.01em;}
+.neutron-glimpse__row {display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.neutron-glimpse__row--end {align-items:flex-end;}
+.neutron-glimpse__row--end > div {display:grid;gap:2px;}
+.neutron-glimpse__label {color:var(--a-muted);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+.neutron-glimpse__meta {color:var(--a-faint);font-size:13px;}
+.neutron-glimpse__amount {font-size:18px!important;font-variant-numeric:tabular-nums;letter-spacing:.02em!important;}
+.neutron-glimpse__chip {display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600;}
+.neutron-glimpse__chip--ok {background:var(--a-ok-bg);color:var(--a-ok);box-shadow:inset 0 0 0 1px #abefc6;}
+.neutron-glimpse__ghost {display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--a-line-strong);border-radius:7px;color:var(--a-ink);font-size:13px;font-weight:550;}
+.neutron-glimpse__people {display:flex;align-items:center;margin-top:4px;}
+.neutron-glimpse__people i {display:grid;place-items:center;width:32px;height:32px;margin-right:-4px;border-radius:50%;background:var(--a-info-bg);color:var(--a-brand);font-size:11px;font-style:normal;font-weight:600;box-shadow:0 0 0 2px var(--a-surface);}
+.neutron-glimpse__people i:nth-child(2) {background:#e6f7f7;color:#1d7f82;}
+.neutron-glimpse__people i:nth-child(3) {background:#fdf3e1;color:#8a5a00;}
+.neutron-glimpse__people i:nth-child(4) {background:#f1f3f7;color:var(--a-text);}
+.neutron-glimpse__people span {margin-left:14px;color:var(--a-muted);font-size:13px;font-weight:550;}
+
+@media (max-width:1023px) {
+  .neutron-auth--split {display:block;}
+  .neutron-auth--split .neutron-auth__aside {display:none;}
+  .neutron-auth--split .neutron-auth__column {padding:24px 20px;}
+  .neutron-auth--split .neutron-auth__panel {padding:40px 0;}
 }
-@media (prefers-reduced-motion:reduce) {.neutron-auth * {transition:none!important;}}
+@media (max-width:480px) {
+  .neutron-auth--centered {justify-content:flex-start;padding-top:40px;}
+  .neutron-auth--centered .neutron-auth__panel {padding:24px 20px 22px;}
+  .neutron-auth h1 {font-size:24px;line-height:30px;}
+}
+@media (prefers-reduced-motion:reduce) {.neutron-auth * {transition:none!important;animation:none!important;}}
 
 /* Public candidate pages (open roles). Same planes: canvas, a translucent top bar, z1 cards. */
 .neutron-auth.neutron-public {display:block;padding:0;}

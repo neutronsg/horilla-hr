@@ -1,6 +1,8 @@
 {% extends "neutron/auth_base.html" %}
 {% load i18n %}
 {% block title %}{{ error_title }}{% endblock %}
+{% block layout %}neutron-auth--centered{% endblock %}
+{% block aside %}{% endblock %}
 {% block panel %}
     <p class="neutron-auth__code">{% trans "Error" %} {{ error_code }}</p>
     <h1 id="neutronAuthTitle">{{ error_title }}</h1>

@@ -2,9 +2,9 @@
 {% load i18n %}
 {% block title %}{% trans "Sign in" %}{% endblock %}
 {% block panel %}
-    <h1 id="neutronAuthTitle">{% blocktrans with name=white_label_company_name|default:"Neutron HR" %}Sign in to {{ name }}{% endblocktrans %}</h1>
-    <p class="neutron-auth__lede">{% trans "Use your work email and password." %}</p>
-    <form method="post">
+    <h1 id="neutronAuthTitle">{% trans "Welcome back" %}</h1>
+    <p class="neutron-auth__lede">{% blocktrans with name=white_label_company_name|default:"Neutron HR" %}Sign in to {{ name }} with your work email and password.{% endblocktrans %}</p>
+    <form method="post" data-neutron-busy="{% trans 'Signing in…' %}">
         {% csrf_token %}
         <div class="neutron-auth__field">
             <label for="username">{% trans "Email or username" %}</label>
@@ -20,6 +20,7 @@
                 {% if not initialize_database %}<a href="{% url 'forgot-password' %}">{% trans "Forgot password?" %}</a>{% endif %}
             </div>
             {% include "neutron/auth_password_input.html" with input_id="password" input_name="password" autocomplete="current-password" %}
+            <p class="neutron-auth__caps" hidden>{% trans "Caps Lock is on" %}</p>
         </div>
         <button type="submit" class="neutron-auth__button">{% trans "Sign in" %}</button>
     </form>
