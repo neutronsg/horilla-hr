@@ -112,3 +112,11 @@ class BreadcrumbCasingTests(TestCase):
         ])
         self.assertEqual(html.count(">Employees<"), 1)
         self.assertIn('href="/employee/employee-view/">Employees<', html)
+
+    def test_company_document_title_keeps_its_case(self):
+        from types import SimpleNamespace
+
+        from employee.company_documents import document_breadcrumbs
+
+        crumbs = document_breadcrumbs(SimpleNamespace(pk=1, title="Employee Insurance Manual (AIA)"))
+        self.assertIn("Employee Insurance Manual (AIA)", self.render(crumbs))

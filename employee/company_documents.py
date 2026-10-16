@@ -58,6 +58,7 @@ def document_breadcrumbs(document=None, *, editing=False):
                 "url": reverse("company-document-detail", args=[document.pk]),
                 "found": True,
                 "clickable": True,
+                "record": True,  # keep the document title's own casing
             }
         )
     if editing:

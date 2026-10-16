@@ -358,6 +358,26 @@
             if (result.isConfirmed) issueRequest(true);
         }).finally(() => confirming.delete(elt));
     });
+    // Plain POST forms that change what other people see confirm first. The submitter is
+    // passed back so its name/value (e.g. action=archive) still reaches the server.
+    const confirmedForms = new WeakSet();
+    document.addEventListener('submit', event => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement) || !form.dataset.neutronConfirm || typeof Swal === 'undefined') return;
+        if (confirmedForms.has(form)) { confirmedForms.delete(form); return; }
+        event.preventDefault();
+        const submitter = event.submitter;
+        Swal.fire({
+            title: message('Confirm'), text: form.dataset.neutronConfirm, icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: submitter?.textContent.trim() || message('Confirm'), cancelButtonText: message('Cancel'),
+            confirmButtonColor: 'neutronDanger' in form.dataset ? '#d33' : '#051c97', cancelButtonColor: '#494b51',
+        }).then(result => {
+            if (!result.isConfirmed) return;
+            confirmedForms.add(form);
+            form.requestSubmit(submitter || undefined);
+        });
+    });
     for (const name of ['htmx:timeout', 'htmx:sendError', 'htmx:responseError']) {
         document.addEventListener(name, event => {
             finish(event);
