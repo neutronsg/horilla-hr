@@ -27,6 +27,14 @@ django.setup()
 from django.conf import settings
 
 settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+if os.environ.get("HR_UI_COMPANY_DOCUMENT_FIXTURES") == "1":
+    from django.test import override_settings
+
+    document_preview_settings = override_settings(
+        MEDIA_ROOT="/private/tmp/hr-interface/company-documents-media",
+        COMPANY_SCOPED_PERMISSIONS=True,
+    )
+    document_preview_settings.enable()
 # Use production's compiled-template cache in both baseline and final runs.
 settings.TEMPLATES[0]["OPTIONS"]["loaders"] = [
     (
@@ -182,6 +190,12 @@ for actor in Employee.objects.filter(
     actor_session["selected_company"] = str(company.pk)
     actor_session.save()
     qa_sessions[actor.email] = actor_session.session_key
+document_fixture_id = None
+if os.environ.get("HR_UI_COMPANY_DOCUMENT_FIXTURES") == "1":
+    from tools.interface.company_documents_fixtures import seed_company_documents
+
+    document_fixture_id = seed_company_documents(company)
+
 from django.core.wsgi import get_wsgi_application
 from django.contrib.staticfiles.handlers import StaticFilesHandler
 from django.db import connection
@@ -254,8 +268,10 @@ state = {
     .first()
     .pk,
 }
-Path("/private/tmp/hr-interface/state.json").write_text(json.dumps(state))
-print("Synthetic UI QA at http://127.0.0.1:8765", state, flush=True)
+if document_fixture_id is not None:
+    state["document"] = document_fixture_id
+Path(os.environ.get("HR_UI_STATE", "/private/tmp/hr-interface/state.json")).write_text(json.dumps(state))
+print(f"Synthetic UI QA at http://127.0.0.1:{os.environ.get('HR_UI_PORT', '8765')}", state, flush=True)
 make_server(
     "127.0.0.1",
     int(os.environ.get("HR_UI_PORT", "8765")),

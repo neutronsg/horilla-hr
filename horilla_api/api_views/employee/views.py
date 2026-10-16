@@ -625,77 +625,134 @@ class DisciplinaryActionAPIView(APIView):
 
 
 class PolicyAPIView(APIView):
-    """
-    Endpoint for managing policies.
-
-    Permissions:
-        - Requires authentication.
-
-    Methods:
-        get(request, pk=None):
-            - Retrieves a specific policy by `pk` or lists all policies with optional search functionality.
-
-        post(request):
-            - Creates a new policy.
-
-        put(request, pk):
-            - Updates an existing policy by `pk`.
-
-        delete(request, pk):
-            - Deletes a specific policy by `pk`.
-    """
+    """Legacy API uses the same audience, revision and publishing service as web."""
 
     permission_classes = [IsAuthenticated]
 
-    def get_object(self, pk):
-        try:
-            return Policy.objects.get(pk=pk)
-        except Policy.DoesNotExist:
-            raise Http404
-
     def get(self, request, pk=None):
+        from django.shortcuts import get_object_or_404
+        from employee.company_document_access import visible_documents
+
+        policies = visible_documents(request.user)
         if pk:
-            policy = self.get_object(pk)
-            serializer = PolicySerializer(policy)
-            return Response(serializer.data)
-        else:
-            search = request.GET.get("search", None)
-            if search:
-                policies = Policy.objects.filter(title__icontains=search)
+            return Response(
+                PolicySerializer(
+                    get_object_or_404(policies, pk=pk), context={"request": request}
+                ).data
+            )
+        search = request.GET.get("search", "")[:150]
+        if search:
+            policies = policies.filter(title__icontains=search)
+        paginator = PageNumberPagination()
+        page = paginator.paginate_queryset(policies, request)
+        return paginator.get_paginated_response(
+            PolicySerializer(page, many=True, context={"request": request}).data
+        )
+
+    def _save(self, request, pk=None):
+        from django.db import transaction
+        from django.shortcuts import get_object_or_404
+        from employee.company_document_access import (
+            can_manage_document,
+            manageable_companies,
+            visible_documents,
+        )
+        from employee.company_documents import CompanyDocumentForm, save_document
+
+        with transaction.atomic():
+            if pk:
+                get_object_or_404(visible_documents(request.user), pk=pk)
+                document = Policy.objects.entire().select_for_update().get(pk=pk)
+                if not can_manage_document(request.user, document, "change"):
+                    raise PermissionDenied
             else:
-                policies = Policy.objects.all()
-            serializer = PolicySerializer(policies, many=True)
-            paginator = PageNumberPagination()
-            page = paginator.paginate_queryset(policies, request)
-            serializer = PolicySerializer(page, many=True)
-            return paginator.get_paginated_response(serializer.data)
+                document = Policy()
+                if not manageable_companies(request.user, "add").exists():
+                    raise PermissionDenied
+            data = request.data.copy()
+            # Keep compatibility with the old company_id array, but never accept
+            # attachment IDs or a recipient list through a model serializer.
+            if "attachments" in data or "specific_employees" in data:
+                return Response(
+                    {
+                        "error": _(
+                            "Upload files through the document editor; attachment and recipient IDs are not accepted."
+                        )
+                    },
+                    status=400,
+                )
+            if not data.get("company") and data.get("company_id"):
+                company_ids = (
+                    data.getlist("company_id")
+                    if hasattr(data, "getlist")
+                    else data["company_id"]
+                )
+                if not isinstance(company_ids, (list, tuple)):
+                    company_ids = [company_ids]
+                if len(company_ids) != 1:
+                    return Response({"company": _("Choose one company.")}, status=400)
+                data["company"] = company_ids[0]
+            if "action" not in data:
+                visible = data.get("is_visible_to_all", document.is_visible_to_all)
+                data["action"] = (
+                    "publish" if visible in (True, "true", "True", "1") else "draft"
+                )
+            for field in ("title", "category", "body", "pinned"):
+                if pk and field not in data:
+                    data[field] = getattr(document, field)
+            form = CompanyDocumentForm(
+                data, request.FILES, user=request.user, instance=document
+            )
+            if not form.is_valid():
+                return Response(form.errors, status=400)
+            document = save_document(form, request.user)
+            return Response(
+                PolicySerializer(document, context={"request": request}).data,
+                status=200 if pk else 201,
+            )
 
     def post(self, request):
-        if permission_check(request, "employee.add_policy") is False:
-            return Response({"error": _("No permission")}, status=401)
-
-        serializer = PolicySerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+        return self._save(request)
 
     def put(self, request, pk):
-        if permission_check(request, "employee.change_policy") is False:
-            return Response({"error": _("No permission")}, status=401)
-        policy = self.get_object(pk)
-        serializer = PolicySerializer(policy, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
+        return self._save(request, pk)
 
     def delete(self, request, pk):
-        if permission_check(request, "employee.delete_policy") is False:
-            return Response({"error": _("No permission")}, status=401)
-        policy = self.get_object(pk)
-        policy.delete()
+        from django.db import transaction
+        from django.shortcuts import get_object_or_404
+        from employee.company_document_access import (
+            can_manage_document,
+            visible_documents,
+        )
+        from employee.company_documents import audit_document
+
+        with transaction.atomic():
+            get_object_or_404(visible_documents(request.user), pk=pk)
+            document = Policy.objects.entire().select_for_update().get(pk=pk)
+            if not can_manage_document(request.user, document, "delete"):
+                raise PermissionDenied
+            if request.data.get("revision") != document.updated_at.isoformat():
+                return Response(
+                    {"error": _("This document changed. Reload before continuing.")},
+                    status=409,
+                )
+            document.is_active = False
+            document.is_visible_to_all = False
+            document.modified_by = request.user
+            document.save()
+            audit_document(document, request.user, "archive")
         return Response(status=204)
+
+
+class PolicyFileAPIView(APIView):
+    """JWT/session clients download through the same protected file service."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk, file_id):
+        from employee.company_documents import file_response
+
+        return file_response(request, pk=pk, file_id=file_id)
 
 
 class DocumentRequestAPIView(APIView):

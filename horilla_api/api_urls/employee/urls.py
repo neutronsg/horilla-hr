@@ -71,6 +71,7 @@ urlpatterns = [
         name="api-disciplinary-action-type",
     ),
     path("policies/", views.PolicyAPIView.as_view(), name="api-policy-list"),
+    path("policies/<int:pk>/files/<int:file_id>/", views.PolicyFileAPIView.as_view(), name="api-policy-file"),
     path("policies/<int:pk>/", views.PolicyAPIView.as_view(), name="api-policy-detail"),
     path(
         "document-request/",

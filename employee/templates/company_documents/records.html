@@ -1,0 +1,16 @@
+{% load i18n %}
+<div class="cd-grid">
+{% for document in documents %}
+  <article class="cd-card">
+    <div class="cd-card-top"><span class="cd-category">{{ document.get_category_display }}</span>{% if document.pinned %}<span class="cd-pin"><ion-icon name="pin-outline" aria-hidden="true"></ion-icon>{% trans "Pinned" %}</span>{% endif %}</div>
+    <h2><a href="{% url 'company-document-detail' document.pk %}">{{ document.title }}</a></h2>
+    <p class="cd-description">{{ document.body|striptags|truncatechars:180 }}</p>
+    <div class="cd-meta">{% if not document.is_active %}{% trans "Archived" %}{% elif not document.is_visible_to_all %}{% trans "Draft" %}{% else %}{% trans "Updated" %} {{ document.published_at|default:document.created_at|date:"d M Y" }}{% endif %} · {% with count=document.current_files|length %}{% blocktrans count total=count %}{{ total }} file{% plural %}{{ total }} files{% endblocktrans %}{% endwith %}</div>
+    {% if can_manage %}<div class="cd-meta">{% for company in document.company_id.all %}{{ company.company }}{% if not forloop.last %}, {% endif %}{% empty %}{% trans "Company needs review" %}{% endfor %}</div>{% endif %}
+    <div class="cd-card-actions"><a class="oh-btn neutron-secondary-action" href="{% url 'company-document-detail' document.pk %}">{% trans "View documents" %}</a>{% if document.can_edit %}<a href="{% url 'company-document-edit' document.pk %}">{% trans "Edit" %}</a>{% endif %}</div>
+  </article>
+{% empty %}
+  <div class="cd-empty"><ion-icon name="documents-outline" aria-hidden="true"></ion-icon><h2>{% trans "No documents to show" %}</h2><p>{% if search or category %}{% trans "Try another search or category." %}{% else %}{% trans "Company documents will appear here when HR publishes them." %}{% endif %}</p></div>
+{% endfor %}
+</div>
+{% if documents.paginator.num_pages > 1 %}<nav class="cd-pagination" aria-label="{% trans 'Document pages' %}">{% if documents.has_previous %}<a class="oh-btn neutron-secondary-action" href="?search={{ search|urlencode }}&amp;category={{ category|urlencode }}&amp;state={{ state|urlencode }}&amp;page={{ documents.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}<span>{{ documents.number }} / {{ documents.paginator.num_pages }}</span>{% if documents.has_next %}<a class="oh-btn neutron-secondary-action" href="?search={{ search|urlencode }}&amp;category={{ category|urlencode }}&amp;state={{ state|urlencode }}&amp;page={{ documents.next_page_number }}">{% trans "Next" %}</a>{% endif %}</nav>{% endif %}

@@ -23,14 +23,12 @@ from base.methods import (
     paginator_qry,
 )
 from base.views import paginator_qry
-from employee.filters import DisciplinaryActionFilter, PolicyFilter
-from employee.forms import DisciplinaryActionForm, PolicyForm
+from employee.filters import DisciplinaryActionFilter
+from employee.forms import DisciplinaryActionForm
 from employee.models import (
     Actiontype,
     DisciplinaryAction,
     Employee,
-    Policy,
-    PolicyMultipleFile,
 )
 from horilla.decorators import hx_request_required, login_required, permission_required
 from horilla.http.response import HorillaRedirect
@@ -38,19 +36,17 @@ from horilla_auth.models import HorillaUser
 from notifications.signals import notify
 
 
-@login_required
-def view_policies(request):
-    """
-    Method is used render template to view all the policy records
-    """
-    policies = Policy.objects.all()
-    if not request.user.has_perm("employee.view_policy"):
-        policies = policies.filter(is_visible_to_all=True)
-    return render(
-        request,
-        "policies/view_policies.html",
-        {"policies": paginator_qry(policies, request.GET.get("page"))},
-    )
+# Keep old links on the same audience, publishing and file-access boundary.
+from employee.company_documents import (
+    library as view_policies,
+    library as search_policies,
+    legacy_detail as view_policy,
+    legacy_edit as create_policy,
+    legacy_delete as delete_policies,
+    legacy_file_mutation as add_attachment,
+    legacy_file_mutation as remove_attachment,
+    legacy_attachments as get_attachments,
+)
 
 
 @login_required
@@ -83,149 +79,6 @@ def policies_discipline_action_type_tab(request):
     HTMX tab body for disciplinary action types under policies & discipline.
     """
     return render(request, "policies/policies_discipline_action_type_tab.html")
-
-
-@login_required
-@hx_request_required
-@permission_required("employee.add_policy")
-def create_policy(request):
-    """
-    Method is used to create/update new policy
-    """
-    instance_id = request.GET.get("instance_id")
-    instance = None
-    if isinstance(eval_validate(str(instance_id)), int):
-        instance = Policy.objects.filter(id=instance_id).first()
-    form = PolicyForm(instance=instance)
-    if request.method == "POST":
-        form = PolicyForm(request.POST, request.FILES, instance=instance)
-        if form.is_valid():
-            form.save()
-            messages.success(request, _("Policy saved"))
-            form = PolicyForm()
-            # return HttpResponse("<script>window.location.reload()</script>")
-    return render(request, "policies/form.html", {"form": form})
-
-
-@login_required
-@hx_request_required
-def search_policies(request):
-    """
-    This method is used to search in policies
-    """
-    policies = PolicyFilter(request.GET).qs
-    if not request.user.has_perm("employee.view_policy"):
-        policies = policies.filter(is_visible_to_all=True)
-    return render(
-        request,
-        "policies/records.html",
-        {
-            "policies": paginator_qry(policies, request.GET.get("page")),
-            "pd": request.GET.urlencode(),
-        },
-    )
-
-
-@login_required
-@hx_request_required
-def view_policy(request):
-    """
-    This method is used to view the policy
-    """
-    instance_id = request.GET["instance_id"]
-    policy = Policy.objects.filter(id=instance_id).first()
-    return render(
-        request,
-        "policies/view_policy.html",
-        {
-            "policy": policy,
-        },
-    )
-
-
-@login_required
-@permission_required("employee.delete_policy")
-def delete_policies(request):
-    """
-    This method is to delete policy
-    """
-    try:
-        ids = request.GET.getlist("ids")
-        count, dict = Policy.objects.filter(id__in=ids).delete()
-        if count == 0:
-            messages.error(request, _("Policies Not Found"))
-        else:
-            messages.success(request, _("Policies deleted"))
-    except ValueError:
-        messages.error(request, _("Policies Not Found"))
-    if request.META.get("HTTP_HX_REQUEST"):
-        policies_qs = Policy.objects.all()
-        if not request.user.has_perm("employee.view_policy"):
-            policies_qs = policies_qs.filter(is_visible_to_all=True)
-        return render(
-            request,
-            "policies/records.html",
-            {
-                "policies": paginator_qry(policies_qs, request.GET.get("page")),
-                "pd": request.GET.urlencode(),
-            },
-        )
-    return redirect(view_policies)
-
-
-@login_required
-@permission_required("employee.add_policymultiplefile")
-def add_attachment(request):
-    """
-    This method is used to add attachment to policy
-    """
-    policy = Policy.find(request.GET.get("policy_id"))
-    if not policy:
-        return HorillaRedirect(
-            request, message=_("No Policy found matching the query.")
-        )
-
-    files = request.FILES.getlist("files")
-    attachments = []
-    for file in files:
-        attachment = PolicyMultipleFile()
-        attachment.attachment = file
-        attachment.save()
-        attachments.append(attachment)
-    policy.attachments.add(*attachments)
-    messages.success(request, _("Attachments added"))
-    return render(request, "policies/attachments.html", {"policy": policy})
-
-
-@login_required
-@permission_required("employee.delete_policymultiplefile")
-def remove_attachment(request):
-    """
-    This method is used to remove the attachments
-    """
-    policy = Policy.find(request.GET.get("policy_id"))
-    if not policy:
-        return HorillaRedirect(
-            request, message=_("No Policy found matching the query.")
-        )
-
-    ids = request.GET.getlist("ids")
-    PolicyMultipleFile.objects.filter(id__in=ids).delete()
-    return render(request, "policies/attachments.html", {"policy": policy})
-
-
-@login_required
-def get_attachments(request):
-    """
-    This method is used to view all the attachments inside the policy
-    """
-    policy = Policy.find(request.GET.get("policy_id"))
-    if not policy:
-        return HorillaRedirect(
-            request, message=_("No Policy found matching the query.")
-        )
-
-    return render(request, "policies/attachments.html", {"policy": policy})
 
 
 @login_required

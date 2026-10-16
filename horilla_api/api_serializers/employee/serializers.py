@@ -198,9 +198,41 @@ class DisciplinaryActionSerializer(serializers.ModelSerializer):
 
 
 class PolicySerializer(serializers.ModelSerializer):
+    attachments = serializers.SerializerMethodField()
+
     class Meta:
         model = Policy
-        fields = "__all__"
+        fields = (
+            "id",
+            "title",
+            "body",
+            "category",
+            "pinned",
+            "published_at",
+            "updated_at",
+            "is_active",
+            "is_visible_to_all",
+            "company_id",
+            "attachments",
+        )
+        read_only_fields = fields
+
+    def get_attachments(self, document):
+        from django.urls import reverse
+
+        return [
+            {
+                "id": file.pk,
+                "name": file.display_name,
+                "size": file.size,
+                "content_type": file.content_type,
+                "download_url": reverse(
+                    "api-policy-file", args=[document.pk, file.pk]
+                )
+                + "?download=1",
+            }
+            for file in document.current_files
+        ]
 
 
 class DocumentRequestSerializer(serializers.ModelSerializer):

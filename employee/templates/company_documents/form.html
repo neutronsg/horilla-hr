@@ -1,0 +1,25 @@
+{% extends "index.html" %}
+{% load static i18n %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'horilla_theme/assets/css/company-documents.css' %}">
+<div class="cd-page cd-editor">
+  <a class="cd-back" href="{% url 'company-documents' %}"><ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>{% trans "Company documents" %}</a>
+  <header class="cd-heading"><div><h1>{% if document.pk %}{% trans "Edit document" %}{% else %}{% trans "Add document" %}{% endif %}</h1><p>{% trans "Publish guides and forms for everyone in your company." %}</p></div></header>
+  <form class="cd-card cd-form" method="post" enctype="multipart/form-data">
+    {% csrf_token %}{{ form.revision }}{{ form.non_field_errors }}
+    <div class="cd-form-grid">
+    {% for field in form.visible_fields %}
+      {% if field.name != 'replace_file' and field.name != 'remove_files' or document.current_files %}
+      <div class="cd-field {% if field.errors %}neutron-field-error{% endif %} {% if field.name == 'body' or field.name == 'files' or field.name == 'remove_files' %}cd-field-wide{% endif %}">
+        {% if field.name == 'pinned' %}<label class="cd-check">{{ field }} {{ field.label }}</label>{% else %}<label class="oh-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span aria-hidden="true">*</span>{% endif %}</label>{{ field }}{% endif %}
+        {% if field.help_text %}<p class="cd-help">{{ field.help_text }}</p>{% endif %}{{ field.errors }}
+        {% if field.name == 'company' %}<p class="cd-help">{% trans "Published documents are visible to all current employees of this company, including future hires." %}</p>{% if document.pk and document.company_id.count > 1 %}<p class="cd-help">{% trans "This existing document is shared with:" %} {% for company in document.company_id.all %}{{ company.company }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}{% endif %}
+      </div>
+      {% endif %}
+    {% endfor %}
+    </div>
+    {% if document.current_files %}<h2>{% trans "Current files" %}</h2>{% include "company_documents/files.html" %}{% endif %}
+    <div class="cd-form-actions">{% if not document.is_visible_to_all or not document.is_active %}<button class="oh-btn neutron-secondary-action" type="submit" name="action" value="draft">{% trans "Save draft" %}</button>{% endif %}<button class="oh-btn oh-btn--secondary neutron-primary-action" type="submit" name="action" value="publish">{% if document.pk and document.is_visible_to_all and document.is_active %}{% trans "Publish changes" %}{% else %}{% trans "Publish" %}{% endif %}</button><a class="oh-btn neutron-secondary-action" href="{% if document.pk %}{% url 'company-document-detail' document.pk %}{% else %}{% url 'company-documents' %}{% endif %}">{% trans "Cancel" %}</a></div>
+  </form>
+</div>
+{% endblock %}
