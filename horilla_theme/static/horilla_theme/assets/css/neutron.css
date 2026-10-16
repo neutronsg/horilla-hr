@@ -113,6 +113,7 @@ html.dark .neutron-when-light,body.dark .neutron-when-light {display:none;}
 .neutron-clock .check.checkin .con::before {content:"";width:6px;height:6px;border-radius:50%;background:var(--neutron-faint);}
 .neutron-clock .check.checkin:hover .con {color:var(--primary-600);}
 #sidebarFlyout {visibility:hidden;position:fixed;z-index:10060;min-width:210px;max-width:280px;padding:5px;border:0;border-radius:10px;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);box-shadow:var(--neutron-edge),var(--neutron-e3);opacity:0;pointer-events:none;transform:translateX(-4px);transition:opacity .12s,transform .12s;}
+#sidebarFlyout::before {content:"";position:absolute;right:100%;top:0;bottom:0;width:8px;}
 #sidebarFlyout.is-visible {visibility:visible;opacity:1;pointer-events:auto;transform:none;}
 #sidebarFlyout .sidebar-subnav-link {display:block;padding:7px 10px;border-radius:6px;color:var(--neutron-ink);font-size:13.5px;}
 #sidebarFlyout .sidebar-subnav-link:hover {background:rgba(15,23,42,.06);}
@@ -290,10 +291,10 @@ body.dark.neutron-app .neutron-action-menu-content .neutron-danger {color:#fda29
 /* Below 992px the sidebar becomes a 64px icon rail that expands over content on hover. */
 @media(max-width:991px) {
  .neutron-app #sidebar {width:64px!important;transition:width .16s;}
- .neutron-app #sidebar:is(:hover,:focus-within) {width:var(--neutron-sidebar-width)!important;background:var(--neutron-canvas);box-shadow:var(--neutron-e2);}
- .neutron-app #sidebar:not(:hover):not(:focus-within) :is(.oh-sidebar-label,.neutron-nav-group-label,.neutron-workspace,.neutron-sidebar-foot) {display:none;}
- .neutron-app #sidebar:not(:hover):not(:focus-within) .sideboxmain {width:40px;padding:0;justify-content:center;margin:0 auto;}
- .neutron-app #sidebar:not(:hover):not(:focus-within) .neutron-nav-group {margin-top:8px;}
+ .neutron-app #sidebar:is(:hover,:focus-within,.sidebar-flyout-open) {width:var(--neutron-sidebar-width)!important;background:var(--neutron-canvas);box-shadow:var(--neutron-e2);}
+ .neutron-app #sidebar:not(:hover):not(:focus-within):not(.sidebar-flyout-open) :is(.oh-sidebar-label,.neutron-nav-group-label,.neutron-workspace,.neutron-sidebar-foot) {display:none;}
+ .neutron-app #sidebar:not(:hover):not(:focus-within):not(.sidebar-flyout-open) .sideboxmain {width:40px;padding:0;justify-content:center;margin:0 auto;}
+ .neutron-app #sidebar:not(:hover):not(:focus-within):not(.sidebar-flyout-open) .neutron-nav-group {margin-top:8px;}
  .neutron-app .oh-main-content {margin-left:64px!important;}
  .neutron-page-heading {align-items:flex-start;flex-direction:column;gap:14px;}
 }
@@ -903,6 +904,36 @@ body.dark.neutron-app .hcl-circle-active {border-color:var(--primary-400)!import
 .neutron-app #ohMainContent .ngb-crumb-dropdown {background:var(--neutron-material-strong)!important;backdrop-filter:var(--neutron-blur);border:0!important;border-radius:10px!important;box-shadow:var(--neutron-edge),var(--neutron-e3)!important;}
 .neutron-app #ohMainContent .ngb-crumb-option {font-size:13.5px!important;color:var(--neutron-ink)!important;border-radius:6px;}
 .neutron-app #ohMainContent .ngb-crumb-option:hover {background:var(--neutron-hover)!important;}
+
+/* Selects share the input well and the same Ledger menu in every module.
+ * Keep native quick-status/list controls native; .oh-select uses Select2. */
+.neutron-app select:not([multiple]):not([size]):not(.select2-hidden-accessible) {appearance:none;padding-right:32px!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23868c97' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;}
+.neutron-app :is(#ohMainContent,.oh-modal,.oh-activity-sidebar) .select2-container .select2-selection {border:1px solid var(--neutron-border-strong)!important;border-radius:6px!important;background:var(--neutron-surface)!important;box-shadow:var(--neutron-well);color:var(--neutron-ink)!important;font-family:inherit;font-size:13.5px!important;min-height:36px;}
+.neutron-app :is(#ohMainContent,.oh-modal,.oh-activity-sidebar) .select2-container .select2-selection--single {height:36px!important;}
+.neutron-app .select2-container .select2-selection--single .select2-selection__rendered {line-height:34px!important;padding:0 32px 0 10px;color:inherit;}
+.neutron-app .select2-container .select2-selection--single .select2-selection__arrow {height:34px!important;right:10px;width:14px;}
+.neutron-app .select2-container .select2-selection--single .select2-selection__arrow b {border:0;width:7px;height:7px;top:12px;left:3px;margin:0;border-right:1.5px solid var(--neutron-faint);border-bottom:1.5px solid var(--neutron-faint);transform:rotate(45deg);}
+.neutron-app .select2-container--open .select2-selection--single .select2-selection__arrow b {top:16px;transform:rotate(225deg);}
+.neutron-app .select2-container .select2-selection__placeholder {color:var(--neutron-muted);}
+.neutron-app .select2-container .select2-selection--multiple {height:auto;padding:3px 6px;}
+.neutron-app .select2-container .select2-selection--multiple .select2-selection__rendered {display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding:0;}
+.neutron-app .select2-container .select2-selection--multiple .select2-selection__choice {display:inline-flex;align-items:center;gap:5px;float:none;margin:0;padding:1px 6px;border:1px solid var(--neutron-border);border-radius:4px;background:var(--neutron-head);color:var(--neutron-text);font-size:13px;line-height:22px;max-width:100%;white-space:normal;}
+.neutron-app .select2-container .select2-selection__choice__remove {color:var(--neutron-muted);margin:0;}
+.neutron-app .select2-container .select2-search--inline {float:none;margin:0;}
+.neutron-app .select2-container .select2-search--inline .select2-search__field {height:28px;min-height:0;margin:0;background:transparent!important;color:var(--neutron-ink);font:inherit;}
+.neutron-app .select2-container .select2-dropdown {overflow:hidden;border:1px solid var(--neutron-border)!important;border-radius:10px!important;margin-top:6px;background:var(--neutron-material-strong)!important;color:var(--neutron-ink)!important;box-shadow:var(--neutron-edge),var(--neutron-e3);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);font-family:var(--neutron-font);font-size:13.5px;}
+.neutron-app .select2-container .select2-dropdown--above {margin-top:-6px;}
+.neutron-app .select2-dropdown .select2-search--dropdown {padding:8px 8px 3px;}
+.neutron-app .select2-dropdown .select2-search__field {height:32px;min-height:32px;border:1px solid var(--neutron-border-strong)!important;border-radius:6px;background:var(--neutron-surface)!important;color:var(--neutron-ink)!important;font:inherit;padding:5px 8px;box-shadow:var(--neutron-well);}
+.neutron-app .select2-dropdown .select2-results__options {padding:5px;}
+.neutron-app .select2-dropdown .select2-results__options .select2-results__options {padding:0;}
+.neutron-app .select2-dropdown .select2-results__option {min-height:32px;padding:6px 9px;border-radius:6px;line-height:20px;background:transparent;color:var(--neutron-ink);overflow-wrap:anywhere;}
+.neutron-app .select2-dropdown .select2-results__option[aria-selected=true] {background:var(--primary-100);color:var(--primary-600);font-weight:550;}
+.neutron-app .select2-dropdown .select2-results__option--highlighted[aria-selected] {background:var(--neutron-hover)!important;color:var(--neutron-ink)!important;}
+.neutron-app .select2-dropdown .select2-results__option[aria-disabled=true] {color:var(--neutron-faint);}
+.neutron-app .select2-container--disabled .select2-selection {opacity:.6;cursor:not-allowed;}
+.neutron-app .select2-selection:focus-visible {outline:2px solid var(--primary-600);outline-offset:2px;}
+body.dark.neutron-app .select2-dropdown .select2-results__option[aria-selected=true] {color:var(--primary-300);}
 /* Group trees own a padded surface as well as cell borders. Theme both planes. */
 .neutron-app #ohMainContent .oh-nested-accordion {background:var(--neutron-surface)!important;}
 .neutron-app #ohMainContent :is(#ngbToolbarPanel,#ngbToolbarPanel [class*="border"],.oh-nested-accordion,.ngb-leaf-table) {border-color:var(--neutron-border)!important;}

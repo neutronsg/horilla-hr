@@ -4001,7 +4001,15 @@
 (function () {
     function initialize(root) {
         $(root).find('.oh-select').addBack('.oh-select').each(function () {
-            if (!$(this).data('select2')) $(this).select2({width: '100%'});
+            if (!$(this).data('select2')) $(this).select2({width: '100%', minimumResultsForSearch: 10});
+            // Preserve the visible field label in the enhanced combobox name.
+            var picker = $(this).data('select2');
+            var names = (picker.$selection.attr('aria-labelledby') || '').split(' ').filter(Boolean);
+            Array.from(this.labels || []).forEach(function (label, index) {
+                if (!label.id) label.id = 'neutron-select-label-' + picker.id + '-' + index;
+                if (!names.includes(label.id)) names.unshift(label.id);
+            });
+            if (names.length) picker.$selection.attr('aria-labelledby', names.join(' '));
         });
     }
     $(function () { initialize(document); });

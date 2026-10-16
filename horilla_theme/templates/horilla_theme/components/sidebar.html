@@ -321,14 +321,11 @@
           var sidebarRect = sidebarEl.getBoundingClientRect();
           var sidebarRight = sidebarRect.right;
 
-          // getBoundingClientRect() fires at mouseenter while the sidebar's
-          // width transition (64px → 208px, 0.22s) is still mid-flight,
-          // so `right` can read as 64px even though the sidebar will expand
-          // to 208px. Clamp to the expanded target width whenever the sidebar
-          // is in hover/pinned state so the flyout never lands inside it.
-          if (window.innerWidth >= 992 && (sidebarEl.matches(':hover, :focus-within') || sidebarEl.classList.contains('sidebar-pinned'))) {
-            var rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-            var expandedRight = sidebarRect.left + rootFontSize * 14;
+          // Mouseenter can arrive during the collapsed rail's width transition.
+          // Position against its CSS target, including at narrow viewports.
+          if (sidebarEl.classList.contains('sidebar-flyout-open')) {
+            var expandedWidth = parseFloat(getComputedStyle(sidebarEl).getPropertyValue('--neutron-sidebar-width')) || 232;
+            var expandedRight = sidebarRect.left + expandedWidth;
             if (expandedRight > sidebarRight) sidebarRight = expandedRight;
           }
 
@@ -372,6 +369,8 @@
             if (matches) a.classList.add("oh-sidebar-active-link");
           });
 
+          // Keep the expanded rail stable while crossing the gap to its panel.
+          sidebarEl.classList.add("sidebar-flyout-open");
           positionFlyout(item.getBoundingClientRect());
           flyoutEl.classList.add("is-visible");
           // Hover-only indicator — does NOT touch the persisted 'active' class or localStorage
@@ -386,6 +385,7 @@
 
         function hideFlyout() {
           if (flyoutEl) flyoutEl.classList.remove("is-visible");
+          sidebarEl.classList.remove("sidebar-flyout-open");
           if (currentFlyoutBtn) {
             currentFlyoutBtn.classList.remove("sidebox-active");
             currentFlyoutBtn.setAttribute("aria-expanded", "false");

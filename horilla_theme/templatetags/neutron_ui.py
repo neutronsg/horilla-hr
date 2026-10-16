@@ -114,6 +114,7 @@ def neutron_nav_groups(context, menus):
 
 # 24px outline icons (Lucide-style shapes), inlined so they inherit colour and need no font or CDN.
 ICONS = {
+    "documents": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
     "close": '<path d="m6 6 12 12M6 18 18 6"/>',
     "check_all": '<path d="m2 12 4 4L16 6M12 16l10-10"/>',
     "dashboard": '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',

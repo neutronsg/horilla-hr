@@ -46,11 +46,6 @@ SUBMENUS = [
         "accessibility": "employee.sidebar.work_schedules_accessibility",
     },
     {
-        "menu": _("Company documents"),
-        "redirect": reverse_lazy("company-documents"),
-        "match_prefixes": ["/employee/company-documents/"],
-    },
-    {
         "menu": _("Disciplinary actions"),
         "redirect": reverse_lazy("policies-discipline-view"),
         "accessibility": "employee.sidebar.discipline_accessibility",

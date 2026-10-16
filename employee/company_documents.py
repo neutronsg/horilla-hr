@@ -144,7 +144,11 @@ class CompanyDocumentForm(forms.ModelForm):
                 field.widget,
                 (forms.CheckboxInput, forms.CheckboxSelectMultiple, forms.HiddenInput),
             ):
-                field.widget.attrs["class"] = "oh-input cd-input"
+                field.widget.attrs["class"] = (
+                    "oh-select cd-input"
+                    if isinstance(field.widget, forms.Select)
+                    else "oh-input cd-input"
+                )
         self.fields["files"].widget.attrs[
             "accept"
         ] = ".pdf,.jpg,.jpeg,.png,.docx,.xlsx,.pptx"
