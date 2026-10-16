@@ -9,6 +9,7 @@ The feature branch is `codex/employee-insurance-documents`, created from `codex/
 ## Recommended first release
 
 - HR uploads one or more files under **Edit employee → Insurance**.
+- Employees get an **Insurance** summary card on their personal dashboard for quick review and access to their e-card or certificate.
 - Employees open **My profile → Insurance** to view and download their own files. The Insurance tab should be directly visible beside Documents, using the existing profile extension mechanism.
 - A record can contain a certificate, e-card and benefits or claims guide for that employee. HR may attach an employee-safe policy booklet as supporting material.
 - Each record shows the insurer, insurance type, policy or membership reference, recorded coverage dates and files. Policy references can be shared across employees; they are not unique employee identifiers.
@@ -49,13 +50,14 @@ The repository already has:
 
 - An employee editor with independently saved sections, rendered through `horilla_theme/templates/employee/update_form/form_view_fragment.html` and `employee/views.py::employee_view_update`.
 - Profile extensions through `EmployeeProfileView.add_tab` in `employee/cbv/employee_profile.py`, shared with employee self-service through `UserProfileView`.
+- A personal dashboard at `/my/`, backed by `base/ess_dashboard.py` and `base/templates/base/ess_dashboard.html`, with My HR shortcuts and shared Ledger card styling.
 - Generic `Document` and `DocumentRequest` models in `horilla_documents/models.py`, including employee ownership, dates and an employee-upload approval workflow.
 - Private media storage through `horilla/horilla_backends.py::PrivateMediaStorage`. Deployment configuration in `neutron-infra` enables private OSS storage and expiring signed URLs.
 - A company-specific HR/Admin access pattern in `employee/singapore.py`, encrypted HR text fields, and restricted-model/audit patterns in `employee/singapore_models.py`.
 
 **Recommended integration:** use small insurance-specific models and views, while reusing the existing employee editor, profile tabs, private storage and company-role helpers. The generic document workflow includes employee uploads and approval states; its `can_access_document` helper also admits reporting managers. Direct reuse would require changing those semantics and could unintentionally expose insurance files or affect existing document requests.
 
-An independent Insurance tab also avoids changing the existing Documents tab's permissions. The read tab and editor must use the same records and file service; there must be no second copy of an employee's insurance data.
+An independent Insurance tab also avoids changing the existing Documents tab's permissions. The dashboard card, read tab and editor must use the same records, date calculations and protected file service; there must be no second copy of an employee's insurance data.
 
 ## User journeys
 
@@ -71,9 +73,23 @@ Upload failures must preserve entered metadata and existing attachments. Cancell
 
 ### The employee reads their insurance
 
-Open My profile → Insurance. Show current or upcoming recorded coverage first and previous coverage below. Each entry shows the insurer, recorded dates, policy/member reference and named files with View and Download actions. The employee has no upload, edit, replace or delete controls.
+Start with the Insurance card on the personal dashboard, or open My profile → Insurance for the full record. The profile tab shows current or upcoming recorded coverage first and previous coverage below. Each entry shows the insurer, recorded dates, policy/member reference and named files with View and Download actions. The employee has no upload, edit, replace or delete controls.
 
 Use **Within recorded dates**, **Upcoming**, **Expired** and **Dates not provided** to describe the entered dates. These labels do not promise that the insurer has accepted a claim or verified coverage. The empty state should say that HR has not added insurance documents and direct the employee to HR.
+
+### Dashboard quick review
+
+Place a compact Insurance card below the My HR shortcut area and before the large calendar and charts, so employees can reach their documents without scrolling through reports. Use the existing Ledger card and button styles. On mobile, keep the same reading order.
+
+The card should show:
+
+- Insurance title/type, insurer and the recorded coverage dates. Keep full policy/member references in the profile tab.
+- A quiet date-based status, including **Expiring soon** when the recorded end date is within 30 days. This threshold is a proposed product default; it does not schedule notifications or claim that a policy meets MOM requirements.
+- **View e-card** or **View certificate** when HR has identified that file type, plus **All insurance** leading to the full profile tab. Use an explicit file-purpose field rather than guessing from filenames.
+
+Show up to two current or upcoming records, prioritising medical coverage, with an additional-record count when needed. Records with missing dates are also eligible for the summary and remain labelled as missing. If every recorded period has ended and there are no undated records, show the most recent expired period with a clear label. When there are no available files, use a neutral message that HR has not added insurance documents; absence of an upload must not be presented as proof that the employee is uninsured.
+
+The personal dashboard always resolves the employee from the logged-in account, including for HR/Admin users viewing their own dashboard. Its summary is independent of report-month filters and uses the same date and permission rules as the full Insurance tab. HR changes appear on the next dashboard load or refresh. Withdrawal must block direct file access immediately, even if an already-open card has not refreshed.
 
 ## Data and access design
 
@@ -82,7 +98,7 @@ Use **Within recorded dates**, **Upcoming**, **Expired** and **Dates not provide
 | Record | Contents |
 | --- | --- |
 | `EmployeeInsurance` | Employee, issuing company, title, type (medical, WIC, personal accident or other), insurer, optional encrypted policy/member references, optional start/end dates, optional annual limit and currency, employee-safe instructions and claims contact, creator/updater and revision timestamp. |
-| `EmployeeInsuranceFile` | Insurance record, private storage key, display title, original filename, verified type, size, checksum, version/replacement relationship, uploader and upload time. A record supports multiple files. |
+| `EmployeeInsuranceFile` | Insurance record, private storage key, display title, purpose (e-card, certificate, benefits/claims guide or other), original filename, verified type, size, checksum, version/replacement relationship, uploader and upload time. A record supports multiple files. |
 | `EmployeeInsuranceAudit` | Actor, action, record/file identifiers, timestamp and changed field names. Record upload, metadata edit, replacement, withdrawal, preview and download without copying identifiers or file contents into logs. |
 
 The required upload fields should be title, insurance type and at least one accepted file. Missing insurer or dates should be clearly marked for HR completion; they should not prevent HR from making an e-card available. Both dates are needed before showing a recorded coverage period. Reject an end date earlier than a start date. Allow multiple policies and legitimate overlapping periods.
@@ -115,21 +131,22 @@ Renewal and expiry do not delete evidence. Replacing a mistaken file removes the
 
 1. **Models and access service:** add the three restricted records, additive migrations, validation and company/owner access helpers. Add permission and transfer-boundary tests before exposing routes.
 2. **Upload and protected file delivery:** implement private storage handling, preview/download streaming, replacement and withdrawal, failure cleanup and audit records. Keep storage failures from leaving visible records without files.
-3. **HR and employee interfaces:** add the Insurance editor section and read tab using the current Django/HTMX and Ledger components. Preserve section state and validation feedback. Register Insurance in the primary profile-tab labels so it is easy to find, and verify that More still aligns correctly.
+3. **HR and employee interfaces:** add the Insurance editor section, personal-dashboard summary and read tab using the current Django/HTMX and Ledger components. Preserve section state and validation feedback. Register Insurance in the primary profile-tab labels so it is easy to find, and verify that More still aligns correctly.
 4. **Acceptance and rollout:** exercise synthetic policies across admin, HR and employee roles; review the flow with HR; then deploy code and migrations through the existing release process when authorised. No existing generic documents will be reclassified automatically.
 
-Likely change locations are `employee/insurance_models.py`, `employee/insurance.py`, `employee/urls.py`, employee editor/profile integration files, new insurance templates, restricted-model registration and focused tests. The final file split should follow the repository's existing conventions during implementation.
+Likely change locations are `employee/insurance_models.py`, `employee/insurance.py`, `employee/urls.py`, `base/ess_dashboard.py`, the personal-dashboard template/card include, employee editor/profile integration files, new insurance templates, restricted-model registration and focused tests. The final file split should follow the repository's existing conventions during implementation.
 
 ## Acceptance checks
 
 - HR can upload multiple valid files in Edit employee and the insured employee can immediately preview and download them from their own profile.
+- The personal-dashboard card displays the employee's own summary and opens the correct protected e-card/certificate or full Insurance tab. Verify multiple policies, no files, missing dates, expiry and the 30-day boundary. Report filters and HR/Admin roles must not substitute another employee's summary.
 - Employees cannot access another employee's metadata or bytes by changing IDs or guessing endpoints. Logged-out and cross-company requests fail, including under All my companies.
 - Reporting-manager permissions and general employee-directory access do not grant insurance access. Generic document approvals and existing Documents tab access behave as before.
 - Renewals preserve historical coverage. Replacement and withdrawal enforce their access changes on direct endpoints, and retained versions remain restricted.
 - Invalid files, oversized files, failed storage writes and concurrent updates preserve existing data and return useful form errors. Verify rollback/orphan cleanup with the storage backend mocked.
 - Date labels handle missing dates, future periods, expiry boundaries and overlapping coverage without claiming MOM compliance.
 - Restricted data is excluded from generic APIs, exports, logs and shared caches; audit entries identify permitted actions without recording file contents or raw references.
-- At 390, 1024 and 1440 px, in light and dark modes, the editor, read tab, preview, long filenames and More menu remain usable by pointer and keyboard. Check both employee profile routes.
+- At 390, 1024 and 1440 px, in light and dark modes, the dashboard card, editor, read tab, preview, long filenames and More menu remain usable by pointer and keyboard. Check both employee profile routes.
 - Run the relevant Django permission/storage/view tests, the existing employee-document regressions, UI workflow checks and `npm run build:ui`. Check migration drift and per-file line endings before committing implementation.
 
 ## Items for HR to settle during implementation
