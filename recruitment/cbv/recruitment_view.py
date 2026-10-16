@@ -167,7 +167,7 @@ class RecruitmentNav(HorillaNavView):
                             data-toggle="oh-modal-toggle"
                             """
 
-    nav_title = _("Recruitment")
+    nav_title = _("Job openings")
     filter_instance = RecruitmentFilter()
     filter_form_context_name = "form"
     search_swap_target = "#listContainer"

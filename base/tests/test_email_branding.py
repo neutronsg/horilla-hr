@@ -6,7 +6,7 @@ from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.core.mail.backends.smtp import EmailBackend
 from django.core.cache import cache
 from django.template.loader import render_to_string
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
 from base.backends import ConfiguredEmailBackend
 from base.email_branding import BRAND_MARKER, prepare_neutron_email
@@ -213,3 +213,18 @@ class NeutronEmailTests(TestCase):
         )
         self.assertIn("1 reimbursement claim needs your review", approval)
         self.assertIn("QA &lt;Employee&gt;", approval)
+
+
+class PlainTextAlternativeTests(SimpleTestCase):
+    def test_blocks_keep_their_own_lines_and_hidden_preheaders_drop(self):
+        from base.email_branding import html_to_plain
+
+        plain = html_to_plain(
+            '<div style="display:none">Preview text</div>'
+            '<a href="https://neutron.sg/"><img alt="" src="cid:logo"></a>'
+            "<p>Hi <strong>Alex</strong>,</p><p>Your leave was approved.</p>"
+            '<p><a href="https://neutron.sg/">neutron.sg</a></p>'
+        )
+        self.assertEqual(
+            plain, "Hi Alex,\n\nYour leave was approved.\n\nhttps://neutron.sg/"
+        )

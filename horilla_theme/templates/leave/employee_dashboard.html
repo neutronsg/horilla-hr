@@ -9,7 +9,7 @@
         <!-- ── Header ── -->
         <div class="ed-header">
             <div>
-                <h1>{% trans "My Leave Dashboard" %}</h1>
+                <h1>{% trans "My leave dashboard" %}</h1>
                 <div class="ed-header__date" id="ed-date"></div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
@@ -41,6 +41,8 @@
             <div class="ed-skeleton ed-skeleton--kpi"></div>
             <div class="ed-skeleton ed-skeleton--kpi"></div>
         </div>
+
+        {% include "neutron/company_leave_calendar.html" %}
 
         <!-- ── Main layout ── -->
         <div class="ed-layout">
@@ -205,7 +207,7 @@
             var textColor = isDark ? '#e2e8f0' : '#334155';
             var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
             var cardBg    = isDark ? '#242424' : '#ffffff';
-            var COLORS    = ['#E54F38','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#06b6d4','#ec4899','#14b8a6','#f97316'];
+            var COLORS    = ['#051c97','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#06b6d4','#ec4899','#14b8a6','#f97316'];
 
             function emptyHtml(msg) {
                 return '<div class="ed-empty"><img src="/static/images/ui/no_records.svg" alt="">' + msg + '</div>';

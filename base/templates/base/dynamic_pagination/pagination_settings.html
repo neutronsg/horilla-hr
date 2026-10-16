@@ -8,7 +8,7 @@
         hx-on-htmx-after-request="setTimeout(() => { reloadMessage(); }, 100);"
     >
         {% csrf_token %}
-        <input type="hidden" name="setting_id" value="{{ setting.id }}">
+        <input type="hidden" name="setting_id" value="{{ setting.id|default:'' }}">
         <div class="oh-inner-sidebar-content__header mt-4">
             <h2 class="oh-inner-sidebar-content__title">
                 {% trans "Default Records Per Page" %}

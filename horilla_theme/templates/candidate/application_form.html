@@ -6,6 +6,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% if recruitment.title %}{% blocktrans with title=recruitment.title %}Apply for {{ title }}{% endblocktrans %}{% else %}{% trans "Application form" %}{% endif %} · {{ white_label_company_name|default:"Neutron HR" }}</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicons/favicon.svg' %}" />
     <link href="{% static 'horilla_theme/assets/css/tailwind.css' %}" rel="stylesheet">
     <link
         rel="apple-touch-icon"
@@ -14,7 +16,7 @@
     />
     <link
         rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        href="{% static 'cdn/font-awsome/css/all.min.css' %}"
     />
     <link
         rel="icon"
@@ -37,6 +39,7 @@
         rel="stylesheet"
         href="/static/horilla_theme/assets/css/v1_styles.css"
     />
+    <link rel="stylesheet" href="{% static 'horilla_theme/assets/css/neutron-auth.css' %}" />
     <script src="{% static "horilla_theme/assets/js/tailwindcdn.js" %}"></script>
     <style>
         .overflow-y-auto {
@@ -54,13 +57,22 @@
 
 <script src="{% static '/jquery/ajax.js' %}"></script>
 <script src="{% static '/jquery/jquery.min.js' %}"></script>
-<body class="bg-secondary-50 font-[Inter,_sans-serif]">
+<body class="bg-secondary-50 neutron-apply">
+    <div class="neutron-auth neutron-public neutron-apply__chrome">
+        <header class="neutron-public__bar">
+            <a class="neutron-public__brand" href="{% url 'open-recruitments' %}">
+                <img src="{% if white_label_company.icon %}{{ white_label_company.icon.url }}{% else %}{% static 'favicons/favicon.svg' %}{% endif %}" alt="" width="24" height="24">
+                {{ white_label_company_name|default:"Neutron HR" }}
+            </a>
+            <a href="{% url 'open-recruitments' %}">{% trans "All open roles" %}</a>
+        </header>
+    </div>
     <!-- Main Content -->
-        <div class="bg-[{{theme_obj.primary_50}}]">
-            <div class="pb-10 pt-3 pl-20 pr-20">
-                <h3 class="pb-4 pt-2 font-bold text-center text-2xl">{% trans "Application Form" %}</h3>
+        <div class="bg-[{{theme_obj.primary_50}}] neutron-apply__wrap">
+            <div class="pb-10 pt-3 pl-20 pr-20 neutron-apply__inner">
+                <h1 class="neutron-apply__title">{% if recruitment.title %}{% blocktrans with title=recruitment.title %}Apply for {{ title }}{% endblocktrans %}{% else %}{% trans "Application form" %}{% endif %}</h1>
                 <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-12 lg:col-span-4 bg-[{{theme_obj.primary_50}}] rounded-md shadow-card p-5">
+                    <div class="col-span-12 lg:col-span-4 bg-[{{theme_obj.primary_50}}] rounded-md shadow-card p-5 neutron-apply__panel">
                         <div class="lg:h-[calc(100vh_-_160px)] overflow-hidden overflow-y-auto">
                             {% if resume %}
                                 <div class="sticky">
@@ -75,8 +87,8 @@
                                     value="{{ resume.file.url }}"
                                 >
                             {% else %}
-                                <div class="font-semibold text-xl border-b-2 border-black">
-                                    <h3> {% trans "Job Description" %} </h3>
+                                <div class="neutron-apply__section">
+                                    <h2>{% trans "About the role" %}</h2>
                                 </div>
                                 <div class="p-3 leading-relaxed">
                                     <p class="text-sm mb-2">{{recruitment.description|safe}}</p>
@@ -95,7 +107,7 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-                        <form class="col-span-12 lg:col-span-8 bg-[{{theme_obj.primary_50}}] rounded-md shadow-card p-5 myform" method="post" enctype="multipart/form-data">
+                        <form class="col-span-12 lg:col-span-8 bg-[{{theme_obj.primary_50}}] rounded-md shadow-card p-5 myform neutron-apply__panel" method="post" enctype="multipart/form-data">
                             {% csrf_token %}
                             <div class= "lg:h-[calc(100vh_-_160px)] overflow-hidden overflow-y-auto">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 ">
@@ -185,7 +197,7 @@
                                 </div>
 
 
-                                <div class="p-5 rounded-md bg-[#f5f5f5] mb-4">
+                                <div class="p-5 rounded-md bg-[#f5f5f5] mb-4 neutron-apply__uploads">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <!-- Profile Image Upload -->
                                         <div>
@@ -288,8 +300,7 @@
                             </div>
                             <div class="flex justify-end">
                                 <button type="submit"
-                                  class="px-4 py-2 bg-[{{theme_obj.primary_600}}] text-white rounded-md text-sm flex items-center gap-2 hover:bg-[{{theme_obj.primary_800}}] transition duration-300">
-                                  <i class="fa-solid fa-check"></i>
+                                  class="px-4 py-2 bg-[{{theme_obj.primary_600}}] text-white rounded-md text-sm flex items-center gap-2 hover:bg-[{{theme_obj.primary_800}}] transition duration-300 neutron-apply__submit">
                                   {% trans "Submit Application" %}
                                 </button>
                               </div>

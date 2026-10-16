@@ -22,13 +22,13 @@
     body {
       font-family: Helvetica, Arial, sans-serif;
       font-size: 10px;
-      color: #333333;
+      color: #22262e;
       line-height: 1.35;
     }
     #footerContent {
       font-size: 8px;
-      color: #777777;
-      border-top: 1px solid #dddddd;
+      color: #868c97;
+      border-top: 1px solid #e3e6ea;
       padding-top: 3px;
       text-align: center;
     }
@@ -46,7 +46,7 @@
     .chart-title {
       font-size: 10px;
       font-weight: bold;
-      color: #333333;
+      color: #0b0d12;
       margin-bottom: 4px;
       text-align: left;
       page-break-after: avoid;
@@ -70,16 +70,16 @@
       width: 84mm;
     }
     .chart-empty {
-      color: #888888;
+      color: #868c97;
       font-size: 9px;
       font-style: italic;
       text-align: left;
       padding: 10px 0 14px;
     }
     .truncation-note {
-      background: #FFF4CE;
-      border: 1px solid #E8B84B;
-      color: #7A5B12;
+      background: #f8f9fb;
+      border: 1px solid #e3e6ea;
+      color: #a15c00;
       padding: 6px 10px;
       margin: 6px 0 10px;
       font-size: 9px;
@@ -87,9 +87,9 @@
 
     /* ---- Letterhead ---- */
     .letterhead {
-      border-bottom: 2px solid #E54F38;
+      border-bottom: 1px solid #cdd2da;
       padding-bottom: 8px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     .letterhead-table { width: 100%; border-collapse: collapse; }
     .letterhead-table td { vertical-align: top; }
@@ -103,9 +103,9 @@
       /* Nudged to sit on the same optical baseline as .report-title
          opposite it, which starts with a smaller uppercase eyebrow. */
       margin: 8px 0 3px;
-      color: #222222;
+      color: #0b0d12;
     }
-    .company-line { margin: 0 0 1px; color: #555555; font-size: 9px; }
+    .company-line { margin: 0 0 1px; color: #5a606b; font-size: 9px; }
     .report-meta { text-align: right; }
     /* No background here: xhtml2pdf treats inline-block as a full-width
        block, so a tinted badge rendered as an empty bar spanning the whole
@@ -113,7 +113,7 @@
        text on the same right edge as the title reads as an eyebrow and
        actually aligns with it. */
     .badge {
-      color: #E54F38;
+      color: #051c97;
       font-size: 8px;
       font-weight: bold;
       letter-spacing: 0.5px;
@@ -123,11 +123,11 @@
     .report-title {
       font-size: 16px;
       font-weight: bold;
-      color: #E54F38;
+      color: #0b0d12;
       margin: 0 0 3px;
       line-height: 1.2;
     }
-    .period { color: #555555; font-size: 9px; margin: 0; }
+    .period { color: #5a606b; font-size: 9px; margin: 0; }
 
     /* ---- Document control strip ---- */
     .doc-control {
@@ -136,31 +136,32 @@
       margin: 0 0 12px;
     }
     .doc-control td {
-      border: 1px solid #E7E7E7;
-      background: #FAFAFA;
+      border: 1px solid #e3e6ea;
+      background: #f8f9fb;
       padding: 4px 8px;
       font-size: 8.5px;
-      color: #444444;
+      color: #3a3f49;
     }
     .doc-control .dc-label {
       font-size: 7.5px;
       font-weight: bold;
-      color: #888888;
+      color: #868c97;
       text-transform: uppercase;
     }
 
     h2 {
       font-size: 12px;
-      color: #E54F38;
+      color: #0b0d12;
       margin: 14px 0 6px;
-      border-bottom: 1px solid #F7C8C1;
+      border-bottom: 1px solid #e3e6ea;
       padding-bottom: 3px;
       /* Never strand a section heading at the foot of a page. */
       page-break-after: avoid;
     }
     .narrative {
-      background: #FFF8E8;
-      border: 1px solid #F0D48A;
+      background: #f8f9fb;
+      border: 1px solid #e3e6ea;
+      color: #22262e;
       padding: 8px 10px;
       margin: 8px 0 12px;
       font-size: 10px;
@@ -173,19 +174,18 @@
       margin-top: 4px;
     }
     .filter-table th, .filter-table td {
-      border: 1px solid #EAD9A8;
+      border: 1px solid #e3e6ea;
       padding: 4px 8px;
       font-size: 9px;
       vertical-align: top;
     }
     .filter-table th {
-      background: #F7EBC9;
-      color: #6B5310;
+      background: #f8f9fb;
+      color: #5a606b;
       font-weight: bold;
       text-align: left;
     }
-    .filter-table td { background: #FFFBEF; }
-    .filter-table td.f-label { width: 30%; font-weight: bold; color: #555555; }
+        .filter-table td.f-label { width: 30%; font-weight: bold; color: #3a3f49; }
     .filters { margin: 0 0 8px; padding: 0; }
     .filters li { margin: 0 0 2px; }
 
@@ -198,7 +198,7 @@
     }
     .kpi-table th, .kpi-table td,
     .data-table th, .data-table td {
-      border: 1px solid #DDDDDD;
+      border: 1px solid #e3e6ea;
       padding: 4px 6px;
       font-size: 9px;
       vertical-align: top;
@@ -209,18 +209,18 @@
       padding: 3px 4px;
     }
     .kpi-table th, .data-table th {
-      background: #E54F38;
-      color: #FFFFFF;
+      background: #f8f9fb;
+      color: #3a3f49;
       font-weight: bold;
+      border-bottom: 1px solid #cdd2da;
     }
-    tr.row-even td { background: #FEF6F5; }
     td.num, th.num { text-align: right; }
     td.txt, th.txt { text-align: left; }
-    .kpi-value { color: #AC3B2A; font-weight: bold; }
-    .delta-up { color: #1B7A45; font-weight: bold; }
-    .delta-down { color: #B42318; font-weight: bold; }
-    .delta-flat { color: #666666; }
-    .muted { color: #777777; }
+    .kpi-value { color: #0b0d12; font-weight: bold; }
+    .delta-up { color: #17794a; font-weight: bold; }
+    .delta-down { color: #b42318; font-weight: bold; }
+    .delta-flat { color: #5a606b; }
+    .muted { color: #5a606b; }
   </style>
 </head>
 <body>

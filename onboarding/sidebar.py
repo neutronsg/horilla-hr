@@ -20,7 +20,7 @@ SUBMENUS = [
         "redirect": reverse("onboarding-dashboard"),
     },
     {
-        "menu": _("Candidates"),
+        "menu": _("Hired candidates"),
         "redirect": reverse("candidates-view"),
         "accessibility": "onboarding.sidebar.candidates_view_accessibility",
         # The "Create" button on this page links to recruitment's standalone

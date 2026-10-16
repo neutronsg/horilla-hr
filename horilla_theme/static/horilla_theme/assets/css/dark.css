@@ -9,7 +9,7 @@ body.dark {
    Use the theme's own 300 (light tint) shade instead so it's still the
    theme color, just a shade that stays legible on dark backgrounds. */
 body.dark .text-primary-600 {
-  color: var(--primary-300, #fcedeb) !important;
+  color: var(--primary-300, #eef1fb) !important;
 }
 /* Label/body text that stays dark-gray in light mode needs a light
    equivalent on dark panels (e.g. profile meta chips, About field labels). */
@@ -23,13 +23,13 @@ body.dark .bg-secondary-50 {
    overrides — reassert theme primary on hover for related-object chips. */
 body.dark .group:hover .group-hover\:text-primary-600,
 body.dark .group:hover .group-hover\:text-primary-700 {
-  color: var(--primary-600, #e54f38) !important;
+  color: var(--primary-600, #051c97) !important;
 }
 /* .accordion-panel ul li a below is more specific than .text-primary-600
    above, so it wins the cascade and flattens the active Settings sub-menu
    item to gray. Re-assert the theme color with matching specificity. */
 body.dark .accordion-panel ul li a.text-primary-600 {
-  color: var(--primary-300, #fcedeb) !important;
+  color: var(--primary-300, #eef1fb) !important;
 }
 body.dark .bg-white,
 body.dark .bg-primary-200,
@@ -90,7 +90,7 @@ body.dark .fixed-table td,
 body.dark input,
 body.dark .border-primary-500,
 body.dark .oh-btn-group > *,
-body.dark .usertablist li button,
+body.dark .usertablist > li > button,
 body.dark .oh-dropdown__menu,
 body.dark .border-\[\#eee6e6b9\],
 body.dark .oh-user-panel,
@@ -171,8 +171,8 @@ body.dark .dropdown-wrapper .flex.items-center.gap-2 .rounded-full img {
 }
 body.dark .sideboxmain svg,
 body.dark .oh-btn--light-bkg,
-body.dark .usertablist li button.active,
-body.dark .usertablist li button:hover,
+body.dark .usertablist > li > button.active,
+body.dark .usertablist > li > button:hover,
 body.dark .nav-view-btn,
 body.dark .icon-inner .ionicon.s-ion-icon,
 body.dark .swal2-title,
@@ -244,7 +244,7 @@ body.dark .breadcrumb,
 body.dark .breadcrumb li a,
 body.dark .breadcrumb li:not(:last-child):before,
 body.dark .fixed-table td,
-body.dark .usertablist li button,
+body.dark .usertablist > li > button,
 body.dark .oh-sticy-dropdown-item,
 body.dark .oh-btn--primary-outline,
 body.dark #dateDisplay,
@@ -458,7 +458,7 @@ body.dark .oh-profile-settings__icon {
   background-color: rgba(255, 255, 255, 0.08);
 }
 body.dark .oh-profile-settings__link:hover {
-  color: var(--primary-300, #fcedeb) !important;
+  color: var(--primary-300, #eef1fb) !important;
 }
 
 /* Gear settings dropdown in the newer Tailwind-based profile card
@@ -543,6 +543,6 @@ body.dark .oh-column-config__item.ui-sortable-helper {
 
 body.dark .oh-sticky-dropdown_btn.is-column-config-trigger:hover,
 body.dark .oh-sticky-dropdown_btn.is-column-config-trigger[aria-expanded="true"] {
-  background: rgba(229, 79, 56, 0.12);
-  border-color: rgba(229, 79, 56, 0.35);
+  background: rgba(5, 28, 151, 0.12);
+  border-color: rgba(5, 28, 151, 0.35);
 }

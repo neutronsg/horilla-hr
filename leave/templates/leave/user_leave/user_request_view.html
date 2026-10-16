@@ -25,7 +25,7 @@
             overflow: hidden; /* Hides any overflowed content */
             transform: translateX(5%);
             border-radius: 6px;
-            background-color: {{ theme_obj.primary_600|default:'hsl(8,77%,56%)' }};
+            background-color: {{ theme_obj.primary_600|default:'#051c97' }};
             color: white;
             font-size: 15px;
             text-align: center;
@@ -43,7 +43,7 @@
     <section class="oh-wrapper oh-main__topbar" x-data="{searchShow: false}">
         <div class="oh-main__titlebar oh-main__titlebar--left">
             <h1 class="oh-main__titlebar-title fw-bold">
-                {% trans "My Leave Requests" %}
+                {% trans "My leave requests" %}
             </h1>
             <a
                 class="oh-main__titlebar-search-toggle"
@@ -288,7 +288,7 @@
                         class="oh-404__image"
                         alt="{% trans 'Page not found. 404.' %}"
                     >
-                    <h1 class="oh-empty__title">{% trans "No Records found." %}</h1>
+                    <h1 class="oh-empty__title">{% trans "No records found." %}</h1>
                     <p class="oh-empty__subtitle">{% trans "There are no leave requests at the moment." %}</p>
                 </div>
             </div>

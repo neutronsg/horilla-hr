@@ -9,8 +9,10 @@ Functions:
 """
 
 from base.models import BiometricAttendance, Company
+from horilla.request_cache import per_request
 
 
+@per_request
 def biometric_is_installed(request):
     """
     Check if the biometric system is installed for the selected company.

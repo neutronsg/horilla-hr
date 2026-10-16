@@ -40,7 +40,7 @@
             <main class="oh-auth">
                 <div class="oh-auth-card mb-4">
                     <h1 class="oh-onboarding-card__title oh-onboarding-card__title--h2 text-center my-3">
-                        {% trans "Sign In" %}
+                        {% trans "Sign in" %}
                     </h1>
                     <p class="text-muted text-center">
                         {% trans "Please login to access the dashboard." %}
@@ -54,7 +54,7 @@
                                 id="username"
                                 name="username"
                                 class="oh-input w-100"
-                                placeholder="{% trans 'e.g. adam.luis@horilla.com' %}"
+                                placeholder="{% trans 'name@company.com' %}"
                             >
                         </div>
                         <div class="oh-input-group">
@@ -107,7 +107,7 @@
                                     href="{% url 'initialize-database' %}"
                                     class="oh-btn oh-onboarding-card__button mt-4 oh-btn--secondary oh-btn--shadow w-100 mb-4"
                                     role="button"
-                                    style="background-color: rgba(229, 79, 56, 0.1); color: hsl(8, 77%, 56%)"
+                                    style="background-color: rgba(5, 28, 151, 0.1); color: #051c97"
                                 >
                                     {% trans "Initialize Database" %}
                                     <ion-icon class="ms-2" name="arrow-forward-outline"></ion-icon>

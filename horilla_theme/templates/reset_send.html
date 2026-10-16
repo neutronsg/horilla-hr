@@ -1,0 +1,11 @@
+{% extends "neutron/auth_base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Check your email" %}{% endblock %}
+{% block panel %}
+    <div class="neutron-auth__status" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+    </div>
+    <h1 id="neutronAuthTitle">{% trans "Check your email" %}</h1>
+    <p class="neutron-auth__lede">{% trans "If the account exists, a password reset link is on its way. It can take a few minutes; check your spam folder if it doesn't arrive." %}</p>
+    <a class="neutron-auth__button neutron-auth__button--quiet" href="{% url 'login' %}">{% trans "Back to sign in" %}</a>
+{% endblock %}

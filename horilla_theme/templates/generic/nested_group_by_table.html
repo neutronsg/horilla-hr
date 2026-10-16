@@ -35,7 +35,7 @@
        0), job-position header (level > 0), and the actual data rows. Two
        near-white tints of the same hue (the previous approach) don't
        separate enough — using a different HUE per level (warm accent for
-       department, neutral stone for job position) means telling them apart
+       department, neutral stone for job position — now two cool neutrals in the Neutron palette) means telling them apart
        doesn't depend on noticing a subtle brightness difference. Data rows
        stay plain white so the table itself — the reason anyone opened this
        view — is the one thing that isn't tinted. */
@@ -46,22 +46,22 @@
         display: none !important;
     }
     #{{ view_id|safe }} .oh-nested-accordion > .oh-accordion > .oh-accordion-header {
-        background: #FCEEEA !important;
+        background: #f4f6f9 !important;
     }
     #{{ view_id|safe }} .oh-nested-accordion > .oh-accordion > .oh-accordion-header:hover {
-        background: #FAE2DB !important;
+        background: #eef1f5 !important;
     }
     #{{ view_id|safe }} .oh-nested-accordion > .oh-accordion.oh-accordion--show > .oh-accordion-header {
-        border-bottom: 2px solid #F0C9BC;
+        border-bottom: 1px solid #dfe3e9;
     }
     #{{ view_id|safe }} .oh-nested-accordion .oh-accordion-body .oh-accordion-header {
-        background: #F1EFEA !important;
+        background: #fafbfc !important;
     }
     #{{ view_id|safe }} .oh-nested-accordion .oh-accordion-body .oh-accordion-header:hover {
-        background: #E9E6DE !important;
+        background: #f3f5f8 !important;
     }
     #{{ view_id|safe }} .oh-nested-accordion .oh-accordion-body .oh-accordion.oh-accordion--show > .oh-accordion-header {
-        border-bottom: 1px solid #DEDBD4;
+        border-bottom: 1px solid #e3e6ea;
     }
     /* The data-row table itself needs to read as "the table", not a
        continuation of the tinted header tree above it -- a plain top
@@ -145,11 +145,9 @@
         }
     }
     #{{ view_id|safe }} thead th {
-        color: #45443E;
-        font-weight: 600 !important;
-        font-size: 11px !important;
-        text-transform: uppercase;
-        letter-spacing: 0.02em;
+        color: var(--neutron-muted, #5a606b);
+        font-weight: 500 !important;
+        font-size: 12.5px !important;
     }
     #{{ view_id|safe }} thead th ion-icon {
         font-size: 11px !important;
@@ -213,7 +211,7 @@
     }
     #{{ view_id|safe }} .ngb-crumb-option:not(:disabled):hover {
         background: #F7F6F3;
-        color: #DB6D62;
+        color: var(--primary-600, #051c97);
     }
     #{{ view_id|safe }} #ngbToolbarPanel.ngb-dropdown-open {
         /* This panel clips overflow so the table's rounded top corners

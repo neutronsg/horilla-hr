@@ -1226,7 +1226,7 @@ class Allowance(HorillaModel):
         """
         sanitized_title = re.sub(r"[^a-zA-Z0-9\s]", "", self.title)
         sanitized_title = sanitized_title.replace(" ", "+")
-        url = f"https://ui-avatars.com/api/?name={sanitized_title}&background=random"
+        url = f"/avatar/initials.svg?name={sanitized_title}&background=random"
         return url
 
     def one_time_date_display(self):
@@ -1722,7 +1722,7 @@ class Deduction(HorillaModel):
         """
         sanitized_title = re.sub(r"[^a-zA-Z0-9\s]", "", self.title)
         sanitized_title = sanitized_title.replace(" ", "+")
-        url = f"https://ui-avatars.com/api/?name={sanitized_title}&background=random"
+        url = f"/avatar/initials.svg?name={sanitized_title}&background=random"
         return url
 
     def deduction_detail_view(self):

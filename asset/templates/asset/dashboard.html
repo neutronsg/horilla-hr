@@ -2,10 +2,9 @@
 {% load static i18n %}
 
 {% block content %}
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
         :root {
-            --as-indigo: #E54F38;
+            --as-indigo: #051c97;
             --as-green: #22c55e;
             --as-amber: #f59e0b;
             --as-red: #ef4444;
@@ -672,7 +671,7 @@
     <div class="as-dashboard">
         <div class="as-header">
             <div>
-                <h1>{% trans "Asset Dashboard" %}</h1>
+                <h1>{% trans "Asset dashboard" %}</h1>
                 <div class="as-header__date" id="as-date"></div>
                 <div class="as-refresh">
                     <span class="as-refresh__dot" id="as-refresh-dot"></span><span
@@ -696,7 +695,7 @@
                     <input type="date" id="as-to-date" title="{% trans 'To' %}">
                 </div>
                 <button class="as-btn-customize" id="as-open-customize" title="{% trans 'Customize' %}">
-                    ⚙ {% trans "Customize" %}
+                    {% trans "Customize" %}
                 </button>
             </div>
         </div>
@@ -836,7 +835,7 @@
             const textColor = isDark ? '#e2e8f0' : '#334155';
             const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
             const cardBg = isDark ? '#242424' : '#ffffff';
-            const COLORS = ['#E54F38','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#06b6d4','#ec4899','#14b8a6','#f97316'];
+            const COLORS = ['#051c97','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#06b6d4','#ec4899','#14b8a6','#f97316'];
             const emptyHtml = (msg) => `<div class="as-empty"><img src="/static/images/ui/no_records.svg" alt="">${msg}</div>`;
             const fmt = v => Number(v).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 

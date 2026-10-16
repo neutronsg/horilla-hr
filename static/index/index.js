@@ -356,7 +356,7 @@ function getAssignedLeave(employeeElement) {
     var employeeId = employeeElement.val();
     $.ajax({
         type: "get",
-        url: "/payroll/get-assigned-leaves",
+        url: "/payroll/get-assigned-leaves/",
         data: { employeeId: employeeId },
         dataType: "json",
         success: function (response) {

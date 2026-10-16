@@ -1,0 +1,95 @@
+{% load static i18n neutron_ui horillafilters %}{% get_current_language as LANGUAGE_CODE %}{% get_def_theme as theme_obj %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="noindex">
+        <meta name="theme-color" content="#ffffff">
+        <title>{% block title %}{% endblock %} · {{ white_label_company_name|default:"Neutron HR" }}</title>
+        {% if white_label_company.icon %}
+            <link rel="icon" href="{{ white_label_company.icon.url }}">
+        {% else %}
+            <link rel="icon" type="image/svg+xml" href="{% static 'favicons/favicon.svg' %}">
+            <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicons/favicon-32x32.png' %}">
+            <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicons/apple-touch-icon.png' %}">
+        {% endif %}
+        <link rel="stylesheet" href="{% static 'horilla_theme/assets/css/neutron-auth.css' %}">
+        {% neutron_theme_vars theme_obj %}
+        {% block head %}{% endblock %}
+    </head>
+    <body class="neutron-auth-body">
+        {# Sign-in and password pages use the split layout; error pages override "layout" to stay a centred panel. #}
+        <main class="neutron-auth {% block layout %}neutron-auth--split{% endblock %}">
+            <div class="neutron-auth__column">
+                <a class="neutron-auth__brand" href="/" aria-label="{{ white_label_company_name|default:'Neutron HR' }}">
+                    {% if white_label_company.icon %}
+                        <img src="{{ white_label_company.icon.url }}" width="28" height="28" alt="">
+                        <span>{{ white_label_company_name }}</span>
+                    {% else %}
+                        <img class="neutron-auth__wordmark" src="{% static 'images/brand/neutron-email-logo.png' %}" width="125" height="18" alt="">
+                        <span class="neutron-auth__product">HR</span>
+                    {% endif %}
+                </a>
+                <section class="neutron-auth__panel" aria-labelledby="neutronAuthTitle">
+                    {% if messages %}
+                        <div class="neutron-auth__messages" role="status">
+                            {% for message in messages %}
+                                <div class="oh-alert {{ message.tags }}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% block panel %}{% endblock %}
+                </section>
+                <footer class="neutron-auth__foot">
+                    {% block foot %}
+                        <span>© {% now "Y" %} Neutron Pte. Ltd.</span>
+                        <a href="https://neutron.sg/" rel="noopener">neutron.sg</a>
+                    {% endblock %}
+                </footer>
+            </div>
+            {% block aside %}
+                {% include "neutron/auth_aside.html" %}
+            {% endblock %}
+        </main>
+        <script>
+            document.querySelectorAll('.neutron-auth__reveal').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var input = button.parentNode.querySelector('input');
+                    var show = input.type === 'password';
+                    input.type = show ? 'text' : 'password';
+                    button.setAttribute('aria-pressed', String(show));
+                    button.setAttribute('aria-label', show ? button.dataset.hide : button.dataset.show);
+                    input.focus();
+                });
+            });
+            // Caps Lock hint under password fields.
+            document.querySelectorAll('.neutron-auth__password input').forEach(function (input) {
+                var hint = input.closest('.neutron-auth__field') && input.closest('.neutron-auth__field').querySelector('.neutron-auth__caps');
+                if (!hint) return;
+                function update(event) { hint.hidden = !(event.getModifierState && event.getModifierState('CapsLock')); }
+                input.addEventListener('keydown', update);
+                input.addEventListener('keyup', update);
+                input.addEventListener('blur', function () { hint.hidden = true; });
+            });
+            // Busy state: one submit per click, and the button says what is happening.
+            document.querySelectorAll('form[data-neutron-busy]').forEach(function (form) {
+                form.addEventListener('submit', function () {
+                    var button = form.querySelector('.neutron-auth__button[type=submit]');
+                    if (!button) return;
+                    button.dataset.label = button.textContent;
+                    button.textContent = form.dataset.neutronBusy;
+                    button.setAttribute('aria-busy', 'true');
+                    button.disabled = true;
+                });
+            });
+            window.addEventListener('pageshow', function () {
+                document.querySelectorAll('.neutron-auth__button[aria-busy=true]').forEach(function (button) {
+                    button.textContent = button.dataset.label;
+                    button.removeAttribute('aria-busy');
+                    button.disabled = false;
+                });
+            });
+        </script>
+        {% block scripts %}{% endblock %}
+    </body>
+</html>

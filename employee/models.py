@@ -1168,7 +1168,34 @@ class PolicyMultipleFile(HorillaModel):
     PoliciesMultipleFile model
     """
 
+    restricted_hr_model = True
     attachment = models.FileField(upload_to=upload_path)
+    original_name = models.CharField(max_length=255, blank=True)
+    content_type = models.CharField(max_length=100, blank=True)
+    size = models.PositiveBigIntegerField(default=0)
+    replaces = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="replacement_files",
+    )
+
+    @property
+    def display_name(self):
+        return self.original_name or self.attachment.name.rsplit("/", 1)[-1]
+
+    @property
+    def file_type(self):
+        return (
+            self.display_name.rsplit(".", 1)[-1].upper()
+            if "." in self.display_name
+            else ""
+        )
+
+    @property
+    def can_preview(self):
+        return self.content_type in ("application/pdf", "image/jpeg", "image/png")
 
 
 class Policy(HorillaModel):
@@ -1176,9 +1203,23 @@ class Policy(HorillaModel):
     Policies model
     """
 
-    title = models.CharField(max_length=50)
-    body = models.TextField()
-    is_visible_to_all = models.BooleanField(default=True)
+    restricted_hr_model = True
+    reuse_existing_permissions = True
+    CATEGORY_CHOICES = [
+        ("insurance", _("Insurance and benefits")),
+        ("policies", _("Handbooks and policies")),
+        ("guides", _("Forms and guides")),
+        ("other", _("Other")),
+    ]
+    title = models.CharField(max_length=150)
+    body = models.TextField(blank=True)
+    category = models.CharField(
+        max_length=20, choices=CATEGORY_CHOICES, default="policies"
+    )
+    pinned = models.BooleanField(default=False)
+    published_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_visible_to_all = models.BooleanField(default=False)
     specific_employees = models.ManyToManyField(Employee, blank=True, editable=False)
     attachments = models.ManyToManyField(PolicyMultipleFile, blank=True)
     company_id = models.ManyToManyField(Company, blank=True, verbose_name=_("Company"))
@@ -1189,9 +1230,20 @@ class Policy(HorillaModel):
         verbose_name = _("Policy")
         verbose_name_plural = _("Policies")
 
-    def delete(self, *args, **kwargs):
-        super().delete(*args, **kwargs)
-        self.attachments.all().delete()
+    @property
+    def publication_status(self):
+        if not self.is_active:
+            return _("Archived")
+        return _("Published") if self.is_visible_to_all else _("Draft")
+
+    @property
+    def current_files(self):
+        if not self.pk:
+            return []
+        return [file for file in self.attachments.all() if file.is_active]
+
+    def __str__(self):
+        return self.title
 
 
 class BonusPoint(HorillaModel):
@@ -1390,7 +1442,7 @@ class DisciplinaryAction(HorillaModel):
         """
         Method will retun the api to the avatar or path to the profile image
         """
-        url = f"https://ui-avatars.com/api/?name={self.action}&background=random"
+        url = f"/avatar/initials.svg?name={self.action}&background=random"
         return url
 
     def attachments_col(self):

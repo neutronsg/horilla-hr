@@ -2,7 +2,6 @@ import re
 import uuid
 from urllib.parse import urlparse
 
-from django.apps import apps
 from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import Resolver404, path, resolve, reverse
@@ -10,7 +9,6 @@ from django.utils.translation import gettext as _trans
 from django.utils.translation import gettext_lazy as _
 
 from base.context_processors import white_labelling_company
-from employee.models import Employee
 from horilla.urls import urlpatterns
 
 # Final path segment that looks like a file, e.g. "logo.png", "app.min.js.map".
@@ -93,9 +91,25 @@ def _resolve_menu_section(path, menus):
     return None
 
 
+def _sidebar_destination(path, menus):
+    """
+    (section_label, submenu_label) when the path is exactly a sidebar
+    destination, else None. Such a page starts a fresh trail and its last
+    crumb uses the sidebar's own label rather than the URL slug.
+    """
+    target = path.rstrip("/")
+    for menu in menus or []:
+        for submenu in menu.get("submenu", []):
+            redirect = urlparse(submenu.get("redirect") or "").path.rstrip("/")
+            if redirect and redirect == target:
+                return str(menu.get("menu", "")), str(submenu.get("menu", ""))
+    return None
+
+
 BREADCRUMB_URL_NAMES = {
     "monthly-summary": _("Monthly Summary"),
     "ess": "Employee",
+    "my": "My dashboard",
     "offboarding": "Offboarding",
     "helpdesk": "Helpdesk",
     "policies-discipline": "Policies & Discipline",
@@ -114,6 +128,7 @@ BREADCRUMB_URL_NAMES = {
 sidebar_urls = [
     "dashboard",
     "ess",
+    "my",
     "pipeline",
     "recruitment-survey-question-template-view",
     "candidate-view",
@@ -375,44 +390,8 @@ def breadcrumbs(request):
             if referer_path.rstrip("/") == dashboard_path.rstrip("/"):
                 section_override = {"name": _trans("Dashboard"), "url": dashboard_path}
 
-        if apps.is_installed("recruitment"):
-            from recruitment.models import Candidate
-
-            candidates = Candidate.objects.filter(is_active=True)
-
-        else:
-            candidates = None
-
-        employees = Employee.objects.all()
-
-        if len(parts) > 1:
-
-            if "recruitment" in parts:
-                if "search-candidate" in parts:
-                    pass
-                elif "candidate-view" in parts:
-                    pass
-                elif "get-mail-log-rec" in parts:
-                    pass
-                else:
-                    # Store the candidates in the session
-                    request.session["filtered_candidates"] = [
-                        candidate.id for candidate in candidates
-                    ]
-
-            if "employee-filter-view" in parts:
-                pass
-            elif "employee-view" in parts:
-                pass
-            elif "view-penalties" in parts:
-                pass
-            elif parts[0] == "employee" and parts[-1].isdigit():
-                pass
-            else:
-                # Store the employees in the session
-                request.session["filtered_employees"] = [
-                    employee.id for employee in employees
-                ]
+        # Previous/next id lists ("filtered_employees" / "filtered_candidates") are
+        # stored by the list views that render them, not here on every request.
 
         if len(parts) == 0:
             request.session["breadcrumbs"].clear()
@@ -434,6 +413,26 @@ def breadcrumbs(request):
                 first_path = breadcrumbs[0]
                 request.session["breadcrumbs"].clear()
                 request.session["breadcrumbs"].append(first_path)
+
+        destination = _sidebar_destination(request.path, menus) if parts else None
+        is_navigation = (
+            "HTTP_HX_REQUEST" not in request.META
+            or request.META.get("HTTP_HX_SIDEBAR_NAV") == "true"
+        )
+        # A trail only continues within one module: moving to another module, or
+        # to a page outside every module (account, settings), starts a fresh one.
+        trail_section = breadcrumbs[1].get("name") if len(breadcrumbs) > 1 else None
+        expected_section = (
+            section_override["name"] if section_override
+            else current_section[0] if current_section else None
+        )
+        left_module = parts and trail_section is not None and (
+            expected_section is None or str(trail_section) != str(expected_section)
+        )
+        if (destination or left_module) and is_navigation:
+            first_path = breadcrumbs[0]
+            request.session["breadcrumbs"].clear()
+            request.session["breadcrumbs"].append(first_path)
 
         for i, item in enumerate(parts):
             path = path + item + "/"
@@ -482,6 +481,9 @@ def breadcrumbs(request):
                 elif current_section:
                     new_dict["name"] = current_section[0]
 
+            if destination and i == len(parts) - 1 and destination[1]:
+                new_dict["name"] = destination[1]
+
             if item == "attendance":
                 from base.templatetags.basefilters import is_reportingmanager
 
@@ -501,6 +503,8 @@ def breadcrumbs(request):
                     try:
                         obj = model_value.objects.get(id=item)  # completed
                         new_dict["name"] = str(obj)
+                        # A record's own name (an employee, a payslip): shown as written.
+                        new_dict["record"] = True
                     except:
                         pass
 

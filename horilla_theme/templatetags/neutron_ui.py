@@ -21,20 +21,56 @@ def primary_profile_tab(value):
 
 
 @register.filter
-def workspace_label(value):
+def workspace_label(value, keep_case=False):
+    """
+    Navigation label for display. ``keep_case`` is for names that are data, not
+    labels (a record shown in the breadcrumb, the company): they are mapped but
+    never re-cased, so "Alex Morgan" stays "Alex Morgan".
+    """
     labels = {
-        "Horilla": "Neutron HR", "employee-view": "Directory",
+        "Horilla": "Neutron HR", "employee-view": "Employees",
         "employee-view-update": "Edit employee", "employee-profile": "Employee profile",
         "view-payslip": "Payslip", "payslip-view": "Payslips",
         "view-reimbursement": "Claims", "reimbursement-view": "Claims",
         "request-view": "Leave requests", "leave-request-view": "Leave requests",
         "dashboard-view": "Overview", "dashboard": "Overview",
+        "Feedbacks": "Feedback", "360 Feedback": "Feedback",
+        "Attendances": "Attendance", "My Leave requests": "My leave requests",
+        "My Leave Requests": "My leave requests", "Employee Bonus Point": "Bonus points",
+        "Employee Bonus Points": "Bonus points", "Bonus Points": "Bonus points",
+        "Leave Allocation Request": "Leave allocation requests", "Leave Allocation Requests": "Leave allocation requests",
+        "Requests & Allocation": "Asset requests and allocations",
+        "Encashments & Reimbursements": "Claims", "Timesheet": "Timesheets",
+        "employee-bonus-point": "Bonus points", "feedback-view": "Feedback",
+        "leave-allocation-request-view": "Leave allocation requests",
+        "asset-request-allocation-view": "Asset requests and allocations",
+        "user-request-view": "My leave requests", "view-time-sheet": "Timesheets",
     }
-    text = str(value)
+    labels.update({
+        "Employee bonus point": "Bonus points", "Asset": "Asset requests and allocations",
+        "Asset Category": "Assets", "Asset batch number": "Asset batches",
+        "Reimbursements": "Claims", "Filing status": "Filing statuses", "Income Tax": "Filing statuses",
+        "All leave balances": "Leave balances", "Scheduled interviews": "Interviews",
+        "Employee": "Employees", "Project": "Projects",
+        "recruitment-view": "Job openings", "filing-status-view": "Filing statuses",
+        "asset-category-view": "Assets", "asset-batch-view": "Asset batches",
+    })
+    text = str(value).strip()
+    for source, target in labels.items():
+        if text.casefold() == str(_(source)).casefold():
+            return _(target)
     if text in labels:
         return _(labels[text])
-    if text == text.lower() and " " not in text and ("-" in text or "_" in text):
-        return text.replace("-", " ").replace("_", " ").capitalize()
+    if text == text.lower() and " " not in text:
+        # A URL slug ("system-preferences-view", "settings"): drop "view" and
+        # sentence-case what is left.
+        words = [w for w in text.replace("_", "-").split("-") if w and w != "view"]
+        return " ".join(words).capitalize() if words else text
+    # Presentation only: labels are already translated, so preserve acronyms and
+    # proper nouns while bringing English title-case navigation into sentence case.
+    if text and text.isascii() and not keep_case:
+        words = text.split()
+        text = " ".join(word if i == 0 or word.isupper() else word.lower() for i, word in enumerate(words))
     return text
 
 
@@ -49,10 +85,26 @@ NAV_GROUPS = (
 )
 
 
-@register.simple_tag
-def neutron_nav_groups(menus):
+# Sidebar sections that only hold check-in data; hidden while check-in is disabled.
+ATTENDANCE_APPS = ("attendance", "biometric")
+
+
+def attendance_tracking(request):
+    """Whether the selected company records attendance (check-in enabled), once per request."""
+    if request is None:
+        return True
+    from base.dashboard import attendance_tracking_enabled
+    from horilla.request_cache import request_value
+
+    return request_value(request, "neutron.attendance_tracking", lambda: attendance_tracking_enabled(request))
+
+
+@register.simple_tag(takes_context=True)
+def neutron_nav_groups(context, menus):
     """Return [(label, [menu, ...]), ...] in a stable order; unknown apps go last."""
     menus = list(menus or [])
+    if not attendance_tracking(context.get("request")):
+        menus = [m for m in menus if m.get("app") not in ATTENDANCE_APPS]
     placed, groups = set(), []
     for _key, label, apps in NAV_GROUPS:
         items = [m for app in apps for m in menus if m.get("app") == app]
@@ -67,6 +119,9 @@ def neutron_nav_groups(menus):
 
 # 24px outline icons (Lucide-style shapes), inlined so they inherit colour and need no font or CDN.
 ICONS = {
+    "documents": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+    "close": '<path d="m6 6 12 12M6 18 18 6"/>',
+    "check_all": '<path d="m2 12 4 4L16 6M12 16l10-10"/>',
     "dashboard": '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
     "employee": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
     "recruitment": '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M2 13h20"/>',
@@ -112,16 +167,104 @@ def neutron_icon(name, size=16):
     )
 
 
-_WIDTH_DECLARATION = re.compile(r"(?:min-|max-)?width\s*:\s*[^;\"']*;?", re.IGNORECASE)
+_STYLE_ATTRIBUTE = re.compile(r"""((?<![\w-])style\s*=\s*)(["'])(.*?)\2""", re.IGNORECASE | re.DOTALL)
+# A whole declaration whose property is exactly width, min-width or max-width.
+_WIDTH_DECLARATION = re.compile(r"(?:(?<=;)|^)\s*(?:min-|max-)?width\s*:[^;]*(?:;|$)", re.IGNORECASE)
 
 
 @register.filter
 def strip_column_widths(attrs):
     """
-    Drop fixed width declarations from a list view's header_attrs. Widths were
-    tuned for the old fixed, truncating table layout; columns now size to their
-    content. Other attributes are kept as written.
+    Drop fixed width declarations from the style attribute of a list view's
+    header_attrs. Widths were tuned for the old fixed, truncating table layout;
+    columns now size to their content. Other declarations and attributes are
+    kept as written.
     """
     if not attrs:
         return attrs
-    return _WIDTH_DECLARATION.sub("", str(attrs))
+
+    def clean(match):
+        declarations = _WIDTH_DECLARATION.sub("", match.group(3)).strip()
+        return f"{match.group(1)}{match.group(2)}{declarations}{match.group(2)}"
+
+    return _STYLE_ATTRIBUTE.sub(clean, str(attrs))
+
+
+_HEX_COLOUR = re.compile(r"^#[0-9A-Fa-f]{6}$")
+_PRIMARY_STEPS = (50, 100, 200, 300, 400, 500, 600, 700, 800, 900)
+
+
+@register.simple_tag
+def neutron_theme_vars(theme):
+    """
+    Emit the company theme's primary scale as CSS variables, after neutron.css.
+    neutron.css carries the Neutron palette as the default; a company theme
+    overrides it here. Values that are not plain hex colours are skipped.
+    """
+    if not theme:
+        return ""
+    declarations = []
+    for step in _PRIMARY_STEPS:
+        value = str(getattr(theme, f"primary_{step}", "") or "")
+        if _HEX_COLOUR.match(value):
+            declarations.append(f"--primary-{step}:{value};")
+    if not declarations:
+        return ""
+    return mark_safe(f"<style id=\"neutron-theme-vars\">:root{{{''.join(declarations)}}}</style>")
+
+
+@register.simple_tag
+def company_calendar_today():
+    """Today's date for the company leave calendar (Singapore time), as ISO text."""
+    from base.company_leave_calendar import _today
+
+    return _today().isoformat()
+
+
+@register.simple_tag(takes_context=True)
+def neutron_home_url(context):
+    """
+    The sidebar's Dashboard link: the analytics overview for HR, managers and
+    leadership, the personal dashboard for everyone else (no redirect hop).
+    """
+    from django.urls import reverse
+
+    from horilla.request_cache import request_value
+
+    request = context.get("request")
+    if request is None or not getattr(request, "user", None) or not request.user.is_authenticated:
+        return reverse("dashboard")
+
+    def compute():
+        try:
+            from base.dashboard_roles import can_see_analytics_home, resolve_home_role
+
+            if not can_see_analytics_home(resolve_home_role(request)):
+                return reverse("ess-dashboard")
+        except Exception:
+            pass
+        return reverse("dashboard")
+
+    return request_value(request, "neutron.home_url", compute)
+
+
+@register.filter
+def breadcrumb_items(breadcrumbs):
+    """
+    Breadcrumbs with their display label. Records (an employee, a payslip) and the
+    company are names shown as written; navigation crumbs use the shared label
+    wording. When a module and its list read the same ("Employees > Employees"),
+    only the later, more specific crumb is kept.
+    """
+    items = []
+    for index, crumb in enumerate(breadcrumbs or []):
+        name = crumb.get("name", "")
+        if crumb.get("record"):
+            label = str(name)
+        else:
+            label = str(workspace_label(name, keep_case=index == 0))
+        items.append({**crumb, "label": label})
+    return [
+        item for index, item in enumerate(items)
+        if index + 1 >= len(items) or item["label"] != items[index + 1]["label"]
+    ]

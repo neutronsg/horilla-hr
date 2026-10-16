@@ -106,7 +106,7 @@
     {% endwith %}
 {% endif %}
 
-{% if request|is_timerunner_enabled %}
+{% if request|is_timerunner_enabled and request|is_check_in_enabled %}
     <script>
         var at_work_seconds = $(".at_work_seconds").data("at-work-seconds");
         var run = $(".at_work_seconds").data("run");
@@ -132,14 +132,13 @@
             clearInterval(window.timeRunnerInterval);
         }
 
+        // The running timer lives on the check-in button only; the tab title stays the page title.
         $(".time-runner").not("title").html(secondsToDuration(at_work_seconds));
-        $("title.time-runner").html(` ${whiteLabelCompany} | ` + secondsToDuration(at_work_seconds));
 
         if (run) {
             window.timeRunnerInterval = setInterval(() => {
                 at_work_seconds = parseInt(at_work_seconds) + 1;
                 $("div.time-runner").html(secondsToDuration(at_work_seconds));
-                $("title").html(` ${whiteLabelCompany} | ` + secondsToDuration(at_work_seconds));
             }, 1000);
         }
     </script>

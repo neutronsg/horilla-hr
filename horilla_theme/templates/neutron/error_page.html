@@ -1,0 +1,14 @@
+{% extends "neutron/auth_base.html" %}
+{% load i18n %}
+{% block title %}{{ error_title }}{% endblock %}
+{% block layout %}neutron-auth--centered{% endblock %}
+{% block aside %}{% endblock %}
+{% block panel %}
+    <p class="neutron-auth__code">{% trans "Error" %} {{ error_code }}</p>
+    <h1 id="neutronAuthTitle">{{ error_title }}</h1>
+    <p class="neutron-auth__lede">{{ error_text }}</p>
+    <div class="neutron-auth__actions">
+        <a class="neutron-auth__button" href="/">{% trans "Go to Neutron HR" %}</a>
+        <button type="button" class="neutron-auth__button neutron-auth__button--quiet" onclick="history.length > 1 ? history.back() : location.assign('/')">{% trans "Go back" %}</button>
+    </div>
+{% endblock %}

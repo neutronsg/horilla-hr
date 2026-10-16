@@ -19,20 +19,20 @@
         }
 
         .oh-tabs__tab--active {
-            background-color: {{ theme_obj.primary_200|default:"#fcedeb" }};
-            color: {{ theme_obj.primary_600|default:"#e54f38" }};
-            border: 1px solid {{ theme_obj.primary_600|default:"#e54f38" }};
+            background-color: {{ theme_obj.primary_200|default:"#eef1fb" }};
+            color: {{ theme_obj.primary_600|default:"#051c97" }};
+            border: 1px solid {{ theme_obj.primary_600|default:"#051c97" }};
         }
 
         .oh-tabs__tab:not(.oh-tabs__tab--active):hover {
-            background-color: {{ theme_obj.primary_100|default:"#FFF5F1" }};
-            border: 1px solid {{ theme_obj.primary_300|default:"#FCEDEB" }};
+            background-color: {{ theme_obj.primary_100|default:"#eef1fb" }};
+            border: 1px solid {{ theme_obj.primary_300|default:"#eef1fb" }};
             cursor: pointer;
         }
     </style>
 
     <div class="flex flex-wrap justify-between items-center mb-3">
-        <h3 class="text-lg font-semibold">{% trans "Policies & Discipline" %}</h3>
+        <h1>{% trans "Policies & discipline" %}</h1>
     </div>
 
     <div class="bg-white p-3 rounded-md shadow-card oh-tabs">

@@ -52,6 +52,7 @@ from horilla.group_by import group_by_queryset
 from horilla.http.response import HorillaRedirect
 from notifications.signals import notify
 from payroll.access import can_view_payslip, visible_payslips
+from payroll.navigation import payslip_navigation
 from payroll.context_processors import get_active_employees
 from payroll.filters import ContractFilter, ContractReGroup, PayslipFilter
 from payroll.forms.component_forms import (
@@ -644,6 +645,7 @@ def view_created_payslip(request, payslip_id, **kwargs):
         data["json_data"]["employee"] = payslip.employee_id.id
         data["json_data"]["payslip"] = payslip.id
         data["instance"] = payslip
+        data.update(payslip_navigation(request, payslip))
         data["payment_date"] = payslip.payment_date
         data["all_deductions"] = []
         for deduction_list in [
@@ -1274,7 +1276,8 @@ def payslip_export(request):
             "font_size": 14,
             "align": "center",
             "valign": "vcenter",
-            "bg_color": "#eb7968",
+            "bg_color": "#F8F9FB",
+            "font_color": "#0B0D12",
             "font_size": 20,
         }
     )
@@ -1294,7 +1297,7 @@ def payslip_export(request):
     )
 
     header_format = workbook.add_format(
-        {"bg_color": "#eb7968", "bold": True, "text_wrap": True}
+        {"bg_color": "#F8F9FB", "bold": True, "text_wrap": True}
     )
 
     for col_num, value in enumerate(df_table1.columns.values):

@@ -1,6 +1,7 @@
 {% load static %}
 {% load i18n %}
 {% load horillafilters %}
+{% load neutron_ui %}
 {% get_company as theme_obj %}
 {% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
@@ -8,13 +9,14 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title class="time-runner stop-runner">Neutron HR{% if white_label_company_name != "Horilla" %} · {{ white_label_company_name }}{% endif %}</title>
+        <title>Neutron HR{% if white_label_company_name != "Horilla" and white_label_company_name != "Neutron HR" %} · {{ white_label_company_name }}{% endif %}</title>
         <link rel="stylesheet" href="{% static 'build/css/sweetalert2.min.css' %}">
         <link rel="stylesheet" href="{% static 'build/css/summernote-lite.min.css' %}">
         {% if 'organisation-chart' in request.path %}<link rel="stylesheet" href="{% static 'build/css/orgChart.css' %}">{% endif %}
-        <link rel="stylesheet" href="{% static 'build/css/driver.min.css' %}">
+        {% if product_tours_enabled %}<link rel="stylesheet" href="{% static 'build/css/driver.min.css' %}">{% endif %}
 
         <link rel="manifest" href="{% static 'build/manifest.json' %}">
+        {% if not white_label_company.icon %}<link rel="icon" type="image/svg+xml" href="{% static 'favicons/favicon.svg' %}">{% endif %}
         <link
             rel="apple-touch-icon"
             sizes="180x180"
@@ -66,6 +68,7 @@
 <!-- Brand tokens are shared by static utilities and legacy components. -->
 
         <link rel="stylesheet" href="{% static 'horilla_theme/assets/css/neutron.css' %}?v=neutron-ui-3">
+        {% neutron_theme_vars theme_obj %}
 
         {% block styles %}
             <!-- Page-specific styles (optional) -->
@@ -80,7 +83,7 @@
         {% get_current_language_bidi as LANGUAGE_BIDI %}
         {% get_current_language as LANGUAGE_CODE %}
         <div hidden id="statiUrl" data-url='{% static "" %}'></div>
-        <span hidden id="whiteLabelCompany" data-company="Neutron HR{% if white_label_company_name != 'Horilla' %} · {{ white_label_company_name }}{% endif %}"></span>
+        <span hidden id="whiteLabelCompany" data-company="Neutron HR{% if white_label_company_name != 'Horilla' and white_label_company_name != 'Neutron HR' %} · {{ white_label_company_name }}{% endif %}"></span>
 
         <div id="reloadMessages">
             {% include "generic/messages.html" %}
@@ -120,6 +123,8 @@
                 </div>
 
                 <div id="ohMainContent" tabindex="-1" role="main" class="p-6 pt-24">
+                    {% comment %}Page heading from the sidebar label, for views that only render section titles; hidden by CSS when the page has its own h1.{% endcomment %}
+                    {% if breadcrumbs|length > 1 %}{% with page_crumb=breadcrumbs|last %}<h1 class="neutron-auto-title">{% if page_crumb.record %}{{ page_crumb.name }}{% else %}{{ page_crumb.name|workspace_label }}{% endif %}</h1>{% endwith %}{% endif %}
                     {% block content %}
                         {% include "horilla_theme/components/dashboard.html" %}
                     {% endblock %}

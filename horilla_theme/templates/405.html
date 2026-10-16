@@ -1,0 +1,1 @@
+{% load i18n %}{% trans "This action isn't allowed" as error_title %}{% trans "The page doesn't accept that kind of request. Go back and try again from the app." as error_text %}{% include "neutron/error_page.html" with error_code="405" %}

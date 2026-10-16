@@ -273,7 +273,7 @@
 }
 
 .oh-switch .oh-switch__checkbox:checked {
-  background-color: hsl(8, 77%, 56%);
+  background-color: #051c97;
 }
 
 .oh-switch .oh-switch__checkbox:checked::after {
@@ -286,7 +286,7 @@
 }
 
 .oh-switch .oh-switch__checkbox:checked:hover {
-  background-color: hsl(8, 77%, 56%);
+  background-color: #051c97;
 }
 
 .oh-input,
@@ -1156,29 +1156,29 @@ input[type="file"] {
 }
 
 .oh-btn--secondary {
-  background-color: hsl(8, 77%, 56%);
+  background-color: #051c97;
   color: hsl(0, 0%, 100%);
 }
 
 .oh-btn--secondary:hover,
 .oh-btn--secondary:focus,
 .oh-btn--secondary:focus-visible {
-  background-color: hsl(8, 77%, 48%);
+  background-color: #041778;
   color: white;
 }
 
 .oh-btn--secondary:disabled {
-  background-color: hsl(8, 77%, 56%);
+  background-color: #051c97;
 }
 
 .oh-btn--secondary-outline {
-  color: hsl(8, 77%, 56%);
+  color: #051c97;
 }
 
 .oh-btn--secondary-outline:hover,
 .oh-btn--secondary-outline:focus,
 .oh-btn--secondary-outline:focus-visible {
-  color: hsl(8, 77%, 48%);
+  color: #041778;
 }
 
 .oh-btn--success {
@@ -1337,14 +1337,14 @@ input[type="file"] {
 }
 
 .oh-btn--secondary-link {
-  color: hsl(8, 77%, 56%);
+  color: #051c97;
   background-color: transparent;
 }
 
 .oh-btn--secondary-link:hover,
 .oh-btn--secondary-link:focus,
 .oh-btn--secondary-link:focus-visible {
-  color: hsl(8, 77%, 48%);
+  color: #041778;
   background-color: transparent;
 }
 
@@ -1362,13 +1362,13 @@ input[type="file"] {
 
 .oh-btn--light {
   background-color: hsl(0, 0%, 97.5%);
-  color: hsl(8, 77%, 56%);
+  color: #051c97;
 }
 
 .oh-btn--light:hover,
 .oh-btn--light:focus,
 .oh-btn--light:focus-visible {
-  color: hsl(8, 77%, 48%);
+  color: #041778;
   background-color: hsl(213, 22%, 93%);
 }
 
@@ -1476,12 +1476,12 @@ table .oh-btn-group a {
   color: hsl(148, 71%, 38%) !important;
 }
 .oh-btn--light-bkg.oh-btn--secondary {
-  color: hsl(8, 77%, 56%) !important;
+  color: #051c97 !important;
 }
 .oh-btn--light-bkg.oh-btn--secondary:hover,
 .oh-btn--light-bkg.oh-btn--secondary:focus,
 .oh-btn--light-bkg.oh-btn--secondary:focus-visible {
-  color: hsl(8, 77%, 48%) !important;
+  color: #041778 !important;
 }
 
 .oh-btn--disabled {
@@ -1558,26 +1558,26 @@ table .oh-btn-group a {
 
 .oh-apply_btn {
   font-weight: 500;
-  border: 1px solid hsl(8, 77%, 56%);
+  border: 1px solid #051c97;
   background-color: hsl(0, 0%, 97.5%);
-  color: hsl(8, 77%, 56%);
+  color: #051c97;
   text-decoration: none;
 }
 
 .oh-apply_btn:active {
-  background-color: hsl(8, 77%, 56%);
+  background-color: #051c97;
   color: hsl(0, 0%, 100%);
 }
 
 .oh-apply_btn:focus {
-  background-color: hsl(8, 77%, 56%);
+  background-color: #051c97;
   color: hsl(0, 0%, 100%);
   border: none;
   outline: none;
 }
 
 .oh-apply_btn:hover {
-  background-color: hsl(8, 77%, 56%);
+  background-color: #051c97;
   color: hsl(0, 0%, 100%);
   text-decoration: none;
 }
@@ -1657,7 +1657,7 @@ table .oh-btn-group a {
 }
 
 .oh-hover-btn__small:hover {
-  background-color: var(--primary-600, hsl(8, 77%, 56%));
+  background-color: var(--primary-600, #051c97);
   border: 1px solid var(--primary-600, hsl(8, 61%, 50%));
   color: hsl(0, 0%, 100%);
   transition: 0.3s;
@@ -1733,8 +1733,8 @@ table .oh-btn-group a {
 }
 
 .oh-view-btn--active {
-  background-color: var(--primary-600, #E54F38) !important;
-  border: 1px solid var(--primary-600, #E54F38) !important;
+  background-color: var(--primary-600, #051c97) !important;
+  border: 1px solid var(--primary-600, #051c97) !important;
   color: #fff !important;
 }
 
@@ -1757,11 +1757,11 @@ table .oh-btn-group a {
 .oh-accordion-header {
   position: relative;
   padding: 8px 10px;
-  background: #fff5f1;
+  background: #eef1fb;
   border: unset;
   border-radius: 5px;
   font-size: 13px;
-  color: #e54f38;
+  color: #051c97;
   font-weight: 600;
   margin-bottom: 10px;
 }
@@ -2462,7 +2462,7 @@ ul.errorlist ul.errorlist li {
   font-family: "Font Awesome 6 Free";
   font-weight: 600;
   font-size: 12px;
-  color: #e54f38;
+  color: #051c97;
   position: absolute;
   left: 0;
 }
@@ -2507,7 +2507,7 @@ ul.errorlist ul.errorlist li {
 }
 
 .sideboxmain:hover:not(.sidebox-current) {
-  background-color: var(--sidebar-accent-soft, #fef6f5);
+  background-color: var(--sidebar-accent-soft, #f5f7fd);
 }
 
 .sideboxmain:hover:not(.sidebox-current) img {
@@ -2562,7 +2562,7 @@ ul.errorlist ul.errorlist li {
 .sidebox ul li a:hover {
   background: rgb(227 78 56 / 10%);
   color: #e34e38;
-  /* border-right: 2px solid #e54f38; */
+  /* border-right: 2px solid #051c97; */
 }
 
 .sidebox ul li a:hover:after,
@@ -2719,7 +2719,7 @@ ul.errorlist ul.errorlist li {
 }
 
 .oh-filter-tag:hover .oh-filter-tag__close {
-  color: hsl(8, 77%, 56%);
+  color: #051c97;
 }
 
 .oh-filter-tag:hover .oh-filter-tag__close::before {
@@ -2783,7 +2783,7 @@ ul.errorlist ul.errorlist li {
 }
 
 .oh-titlebar__tag-close {
-  background-color: hsl(8, 77%, 56%);
+  background-color: #051c97;
   color: hsl(0, 0%, 100%);
   width: 16px;
   height: 16px;
@@ -3051,7 +3051,7 @@ ul.errorlist ul.errorlist li {
 }
 
 .oh-dropdown__link:hover {
-  color: hsl(8, 77%, 56%) !important;
+  color: #051c97 !important;
   text-decoration: none !important;
 }
 
@@ -3197,9 +3197,9 @@ ul.errorlist ul.errorlist li {
 }
 
 .oh-column-config__search:focus-within {
-  border-color: #e54f38;
+  border-color: #051c97;
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(229, 79, 56, 0.12);
+  box-shadow: 0 0 0 3px rgba(5, 28, 151, 0.12);
 }
 
 .oh-column-config__search ion-icon {
@@ -3341,8 +3341,8 @@ ul.errorlist ul.errorlist li {
   height: 34px;
   margin: 0 2px;
   border-radius: 8px;
-  border: 1px dashed #e54f38;
-  background: rgba(229, 79, 56, 0.06);
+  border: 1px dashed #051c97;
+  background: rgba(5, 28, 151, 0.06);
 }
 
 .oh-column-config__empty {
@@ -3381,7 +3381,7 @@ ul.errorlist ul.errorlist li {
 
 .oh-sticky-dropdown_btn.is-column-config-trigger:hover,
 .oh-sticky-dropdown_btn.is-column-config-trigger[aria-expanded="true"] {
-  color: #e54f38;
+  color: #051c97;
   border-color: #f0c4bc;
   background: #fff5f3;
 }
@@ -3707,7 +3707,7 @@ span.oh-activity-sidebar__a img {
 }
 
 .oh-profile-section__sidebar-item--active {
-  border-right: 4px solid hsl(8, 77%, 56%);
+  border-right: 4px solid #051c97;
 }
 
 .oh-profile-section__sidebar-link:hover,
@@ -3874,20 +3874,20 @@ span.oh-activity-sidebar__a img {
 }
 
 .oh-general__tab-link--active {
-  border-bottom: 3px solid hsl(8, 77%, 56%);
+  border-bottom: 3px solid #051c97;
 }
 
 @media (max-width: 575.98px) {
   .oh-general__tab-link--active {
     border-bottom: none;
     background-color: rgba(229.194, 79.4444, 56.406, 0.1);
-    color: hsl(8, 77%, 56%);
+    color: #051c97;
     border-radius: 0.25rem;
   }
 
   .oh-general__tab-link--active:focus,
   .oh-general__tab-link--active:focus-visible {
-    color: hsl(8, 77%, 56%);
+    color: #051c97;
   }
 }
 
@@ -3897,8 +3897,8 @@ span.oh-activity-sidebar__a img {
 }
 
 .oh-modal__dialog--custom .oh-general__tab .oh-general__tab-link--active {
-  background-color: #e54f38;
-  border: 1px solid #e54f38;
+  background-color: #051c97;
+  border: 1px solid #051c97;
   color: #fff;
   padding: 5px 12px;
   border-radius: 23px;
@@ -3937,7 +3937,7 @@ input[type="range"]::-webkit-slider-thumb {
   height: 20px;
   width: 20px;
   border-radius: 50%;
-  background: #e54f38;
+  background: #051c97;
   /* 🔴 Thumb color */
   cursor: pointer;
   margin-top: -7px;
@@ -3957,7 +3957,7 @@ input[type="range"]::-moz-range-thumb {
   height: 20px;
   width: 20px;
   border-radius: 50%;
-  background: #e54f38;
+  background: #051c97;
   cursor: pointer;
   border: none;
 }
@@ -3973,7 +3973,7 @@ input[type="range"]::-ms-thumb {
   height: 20px;
   width: 20px;
   border-radius: 50%;
-  background: #e54f38;
+  background: #051c97;
   cursor: pointer;
   border: none;
 }
@@ -4164,7 +4164,7 @@ input[type="range"]::-ms-fill-upper {
 }
 
 .pvtFilterBox input[type="checkbox"].pvtFilter {
-  accent-color: #e54f38;
+  accent-color: #051c97;
   width: 15px;
   height: 15px;
   cursor: pointer;
@@ -4369,7 +4369,7 @@ input[type="range"]::-ms-fill-upper {
 .pvtFilterBox p :nth-child(1) {
   width: 100%;
   border-radius: 6px !important;
-  background-color: hsl(8, 77%, 56%);
+  background-color: #051c97;
   color: hsl(0, 0%, 100%);
   text-decoration: none;
   font-size: 0.9rem;

@@ -1,5 +1,5 @@
-{% load static i18n i18n %}
-<button>
+{% load static i18n %}
+<button type="button" aria-label="{% trans 'Account menu' %}">
     <div class="flex gap-3">
         <div class="relative flex items-center cursor-pointer w-max">
             <img
@@ -41,8 +41,7 @@
     <ul>
         {% if request.session.selected_company == "all" or request.user.employee_get.employee_work_info.company_id.id == request.session.selected_company|default:"-1"|add:"0" %}
             <li>
-                <button class="py-1.5 hover:text-primary-600 transition duration-300 text-sm gap-4 items-center flex w-full">
-                    <a
+                <a
                         class="text-[13px]"
                         href="{% url 'employee-profile' %}"
                         hx-get="{% url 'employee-profile' %}"
@@ -50,12 +49,10 @@
                         hx-select="#ohMainContent > *"
                         hx-swap="innerHTML show:window:top"
                         hx-push-url="true"
-                    >{% trans "My Profile" %}</a>
-                </button>
+                    >{% trans "My profile" %}</a>
             </li>
             <li>
-                <button class="py-1.5 hover:text-primary-600 transition duration-300 text-sm gap-4 items-center flex w-full">
-                    <a
+                <a
                         class="text-[13px]"
                         href="{% url 'change-username' %}"
                         hx-get="{% url 'change-username' %}"
@@ -63,12 +60,10 @@
                         hx-select="#ohMainContent > *"
                         hx-swap="innerHTML show:window:top"
                         hx-push-url="true"
-                    >{% trans "Change Username" %}</a>
-                </button>
+                    >{% trans "Change username" %}</a>
             </li>
             <li>
-                <button class="py-1.5 hover:text-primary-600 transition duration-300 text-sm gap-4 items-center flex w-full">
-                    <a
+                <a
                         class="text-[13px]"
                         href="{% url 'change-password' %}"
                         hx-get="{% url 'change-password' %}"
@@ -76,16 +71,21 @@
                         hx-select="#ohMainContent > *"
                         hx-swap="innerHTML show:window:top"
                         hx-push-url="true"
-                    >{% trans "Change Password" %}</a>
-                </button>
+                    >{% trans "Change password" %}</a>
             </li>
         {% endif %}
 
+        <li>
+            <button
+                id="themeToggleButton" type="button" role="switch" class="neutron-menu-switch"
+                aria-checked="{% if request.session.theme == 'dark' %}true{% else %}false{% endif %}"
+            >
+                <span>{% trans "Dark mode" %}</span><span class="neutron-switch" aria-hidden="true"></span>
+            </button>
+        </li>
         <hr class="text-[#1c1c1c] my-2">
         <li>
-            <button class="py-1.5 hover:text-primary-600 transition duration-300 text-sm gap-4 items-center flex w-full">
-                <a class="text-[13px]" href="{% url 'logout' %}"> {% trans "Logout" %} </a>
-            </button>
+            <a class="text-[13px]" href="{% url 'logout' %}"> {% trans "Log out" %} </a>
         </li>
     </ul>
 </div>

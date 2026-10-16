@@ -219,7 +219,7 @@ class BiometricDevices(HorillaModel):
         """
         Method will retun the api to the avatar or path to the profile image
         """
-        url = f"https://ui-avatars.com/api/?name={self.name}&background=random"
+        url = f"/avatar/initials.svg?name={self.name}&background=random"
         return url
 
     def clean(self, *args, **kwargs):

@@ -1,4 +1,4 @@
-{% load static i18n generic_template_filters %}
+{% load static i18n generic_template_filters neutron_ui %}
 <div class="relative"{% if show_toggle_form %} x-data="{ open: false }"{% endif %}>
 <div class="max-h-[400px] overflow-hidden overflow-y-auto overflow-x-auto{% if use_shared_colgroup %} ngb-hscroll{% endif %}">
     <table class="fixed-table w-full border-separate{% if use_shared_colgroup %} table-fixed{% endif %}" data-bulk-select-option = "{{bulk_select_option|yesno:'true,false'}}">
@@ -40,7 +40,7 @@
                                 {% if not cell.2 %}
                                     {% with cell_value=instance|getattribute:attribute|selected_format:request.user.employee_get.employee_work_info.company_id %}
                                         <div class="truncate" title="{{ cell_value|striptags }}">
-                                            {{ cell_value|safe }}
+                                            {{ cell_value|display_cell|safe }}
                                         </div>
                                     {% endwith %}
                                 {% else %}

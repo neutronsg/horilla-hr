@@ -75,7 +75,7 @@
                                     <div class="oh-profile oh-profile--md">
                                         <div class="oh-profile__avatar mr-1">
                                             <img
-                                                src="https://ui-avatars.com/api/?name={{asset_assignement.asset_id.asset_name}}&background=random"
+                                                src="/avatar/initials.svg?name={{asset_assignement.asset_id.asset_name}}&background=random"
                                                 class="oh-profile__image"
                                                 alt=""
                                             >
@@ -166,7 +166,7 @@
     <!-- start of empty page -->
     <div class="oh-empty">
         <img src="{% static 'images/ui/search.svg' %}" class="oh-404__image" alt="{% trans 'Page not found. 404.' %}">
-        <h1 class="oh-empty__title">{% trans "No Records found." %}</h1>
+        <h1 class="oh-empty__title">{% trans "No records found." %}</h1>
         <p class="oh-empty__subtitle">{% trans "No asset history available." %}</p>
     </div>
     <!-- end of empty page -->

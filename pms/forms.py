@@ -83,7 +83,7 @@ class ObjectiveForm(BaseForm):
         widget=forms.SelectMultiple(
             attrs={
                 "class": "oh-select oh-select-2 select2-hidden-accessible",
-                "onchange": "keyResultChange($(this))",
+                "onchange": "if (typeof keyResultChange === 'function') keyResultChange($(this))",
             }
         ),
     )
@@ -251,7 +251,7 @@ class EmployeeObjectiveForm(BaseForm):
         widget=forms.Select(
             attrs={
                 "class": "oh-select oh-select-2 select2-hidden-accessible",
-                "onchange": "keyResultChange($(this))",
+                "onchange": "if (typeof keyResultChange === 'function') keyResultChange($(this))",
             }
         ),
     )
@@ -309,7 +309,7 @@ class EmployeeObjectiveCreateForm(BaseForm):
         widget=forms.SelectMultiple(
             attrs={
                 "class": "oh-select oh-select-2 select2-hidden-accessible",
-                "onchange": "keyResultChange($(this))",
+                "onchange": "if (typeof keyResultChange === 'function') keyResultChange($(this))",
             }
         ),
     )
@@ -398,7 +398,7 @@ class EmployeeKeyResultForm(BaseForm):
         widget=forms.Select(
             attrs={
                 "class": "oh-select oh-select-2 select2-hidden-accessible",
-                "onchange": "keyResultChange($(this))",
+                "onchange": "if (typeof keyResultChange === 'function') keyResultChange($(this))",
             }
         ),
     )

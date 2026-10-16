@@ -1,0 +1,31 @@
+{% load static i18n %}<!DOCTYPE html>
+{# Rendered without a request or database access: no context processors, no queries. #}
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="noindex">
+        <title>{% trans "Something went wrong" %} · Neutron HR</title>
+        <link rel="icon" type="image/svg+xml" href="{% static 'favicons/favicon.svg' %}">
+        <link rel="stylesheet" href="{% static 'horilla_theme/assets/css/neutron-auth.css' %}">
+    </head>
+    <body class="neutron-auth-body">
+        <main class="neutron-auth neutron-auth--centered">
+            <div class="neutron-auth__column">
+                <a class="neutron-auth__brand" href="/" aria-label="Neutron HR">
+                    <img class="neutron-auth__wordmark" src="{% static 'images/brand/neutron-email-logo.png' %}" width="125" height="18" alt="">
+                    <span class="neutron-auth__product">HR</span>
+                </a>
+                <section class="neutron-auth__panel" aria-labelledby="neutronAuthTitle">
+                    <p class="neutron-auth__code">{% trans "Error" %} 500</p>
+                    <h1 id="neutronAuthTitle">{% trans "Something went wrong" %}</h1>
+                    <p class="neutron-auth__lede">{% trans "We couldn't complete that request. Try again in a moment; if it keeps happening, tell your HR admin." %}</p>
+                    <div class="neutron-auth__actions">
+                        <a class="neutron-auth__button" href="/">{% trans "Go to Neutron HR" %}</a>
+                        <button type="button" class="neutron-auth__button neutron-auth__button--quiet" onclick="location.reload()">{% trans "Try again" %}</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </body>
+</html>

@@ -87,7 +87,7 @@
 
             background-color: {
                     {
-                    theme_obj.primary_600|default: "#E54F38"
+                    theme_obj.primary_600|default: "#051c97"
                 }
             }
 
@@ -125,7 +125,7 @@
         }
 
         .emp-photo-zone:hover {
-            border-color: {{ theme_obj.primary_500|default:"#F7C8C1" }};
+            border-color: {{ theme_obj.primary_500|default:"#cad5fc" }};
         }
 
         .form-input-items input:focus,
@@ -133,7 +133,7 @@
         .form-input-items textarea:focus {
             border-color: {
                     {
-                    theme_obj.primary_600|default: 'rgba(229, 79, 56, 0.8)'
+                    theme_obj.primary_600|default: 'rgba(5, 28, 151, 0.8)'
                 }
             }
 
@@ -345,8 +345,8 @@
                                 <label for="id_icon" class="emp-photo-zone w-20 h-20 border-2 border-dashed border-secondary-300 rounded-xl flex items-center justify-center bg-secondary-50 overflow-hidden cursor-pointer transition-colors" id="iconDropZone">
                                     <img
                                         id="iconPreview"
-                                        src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}https://ui-avatars.com/api/?name=LT&background=e5e7eb&color=6b7280{% endif %}"
-                                        data-default-src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}https://ui-avatars.com/api/?name=LT&background=e5e7eb&color=6b7280{% endif %}"
+                                        src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}/avatar/initials.svg?name=LT&background=e5e7eb&color=6b7280{% endif %}"
+                                        data-default-src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}/avatar/initials.svg?name=LT&background=e5e7eb&color=6b7280{% endif %}"
                                         alt="{% trans 'Leave type icon' %}"
                                         class="preview w-full h-full object-cover"
                                     >

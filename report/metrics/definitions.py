@@ -488,7 +488,7 @@ def _load():
             name=_("Document Expiry Aging"),
             domain="compliance",
             description=_(
-                "Overdue and upcoming horilla_documents expiry buckets (90-day horizon)."
+                "Overdue and upcoming document expiry buckets (90-day horizon)."
             ),
             permission="employee.view_employee",
             alt_permissions=("horilla_documents.view_document",),

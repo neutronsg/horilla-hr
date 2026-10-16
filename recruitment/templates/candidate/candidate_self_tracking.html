@@ -12,7 +12,7 @@
             rel="stylesheet"
         >
         <link
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+            href="{% static 'cdn/font-awsome/css/all.min.css' %}"
             rel="stylesheet"
         >
         <link rel="stylesheet" href="{% static 'build/css/style.min.css' %}">
@@ -248,7 +248,7 @@
             }
 
             .bg-orange {
-                background-color: {{ theme_obj.primary_600|default:'#e54f38' }};
+                background-color: {{ theme_obj.primary_600|default:'#051c97' }};
             }
 
             @media (max-width: 576px) {

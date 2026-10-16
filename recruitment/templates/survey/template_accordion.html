@@ -127,7 +127,7 @@
                                                 <div class="oh-profile oh-profile--md">
                                                     <div class="oh-profile__avatar mr-1">
                                                         <img
-                                                            src="https://ui-avatars.com/api/?name={{question.question}}&background=random"
+                                                            src="/avatar/initials.svg?name={{question.question}}&background=random"
                                                             class="oh-profile__image"
                                                         >
                                                     </div>
@@ -166,7 +166,7 @@
                                                                 <button
                                                                     type="submit"
                                                                     class="oh-btn oh-btn--light-bkg w-100 tex-danger"
-                                                                    style="color: {{ theme_obj.primary_600|default:'hsl(8, 77%, 56%)' }}"
+                                                                    style="color: {{ theme_obj.primary_600|default:'#051c97' }}"
                                                                     title="{% trans 'delete' %}"
                                                                 >
                                                                     <ion-icon name="trash-outline"></ion-icon>
@@ -313,7 +313,7 @@
 {% else %}
     <div class="oh-empty">
         <img src="{% static 'images/ui/search.svg' %}" class="oh-404__image" alt="{% trans 'Page not found. 404.' %}">
-        <h1 class="oh-empty__title">{% trans "No Records found." %}</h1>
+        <h1 class="oh-empty__title">{% trans "No records found." %}</h1>
         <p class="oh-empty__subtitle">{% trans "No template groups have been established yet." %}</p>
     </div>
 {% endif %}

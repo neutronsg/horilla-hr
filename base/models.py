@@ -992,7 +992,7 @@ class EmployeeShiftSchedule(HorillaModel):
         """
         Method will retun the api to the avatar or path to the profile image
         """
-        url = f"https://ui-avatars.com/api/?name={self.day.day}&background=random"
+        url = f"/avatar/initials.svg?name={self.day.day}&background=random"
         return url
 
     def actions_col(self):
@@ -2260,7 +2260,7 @@ class MultipleApprovalCondition(HorillaModel):
         """
         Method will retun the api to the avatar or path to the profile image
         """
-        url = f"https://ui-avatars.com/api/?name={self.department}&background=random"
+        url = f"/avatar/initials.svg?name={self.department}&background=random"
         return url
 
     def detail_view(self):
@@ -2898,7 +2898,7 @@ class Holidays(HorillaModel):
         """
         Method will retun the api to the avatar or path to the profile image
         """
-        url = f"https://ui-avatars.com/api/?name={self.name}&background=random"
+        url = f"/avatar/initials.svg?name={self.name}&background=random"
         return url
 
     def today_holidays(today=None, employee=None) -> models.QuerySet:
@@ -3011,10 +3011,10 @@ class CompanyLeaves(HorillaModel):
         Method will retun the api to the avatar or path to the profile image
         """
         if self.based_on_week is not None:
-            url = f"https://ui-avatars.com/api/?name={dict(WEEKS).get(self.based_on_week)}&background=random"
+            url = f"/avatar/initials.svg?name={dict(WEEKS).get(self.based_on_week)}&background=random"
         else:
             data = "All"
-            url = f"https://ui-avatars.com/api/?name={data}&background=random"
+            url = f"/avatar/initials.svg?name={data}&background=random"
         return url
 
 

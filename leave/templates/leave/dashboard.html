@@ -2,10 +2,9 @@
 {% load static i18n %}
 
 {% block content %}
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <style>
     :root {
-        --ld-indigo: #E54F38;
+        --ld-indigo: #051c97;
         --ld-green: #22c55e;
         --ld-amber: #f59e0b;
         --ld-red: #ef4444;
@@ -203,7 +202,7 @@
     <!-- Header -->
     <div class="ld-header">
         <div>
-            <h1>{% trans "Leave Dashboard" %}</h1>
+            <h1>{% trans "Leave dashboard" %}</h1>
             <div class="ld-header__date" id="ld-date"></div>
             <div class="ld-refresh"><span class="ld-refresh__dot" id="ld-refresh-dot"></span><span id="ld-refresh-text">{% trans "Just now" %}</span><button class="ld-refresh__toggle" id="ld-refresh-toggle" title="{% trans 'Toggle auto-refresh' %}">⟳</button></div>
         </div>
@@ -216,7 +215,7 @@
                 <span class="ld-period-picker__sep">&rarr;</span>
                 <input type="date" id="ld-to-date" title="{% trans 'To' %}">
             </div>
-            <button class="ld-btn-customize" id="ld-open-customize" title="{% trans 'Customize' %}">⚙ {% trans "Customize" %}</button>
+            <button class="ld-btn-customize" id="ld-open-customize" title="{% trans 'Customize' %}">{% trans "Customize" %}</button>
         </div>
     </div>
 
@@ -229,6 +228,8 @@
     </div>
 
     <!-- Main layout with sidebar -->
+    {% include "neutron/company_leave_calendar.html" %}
+
     <div class="ld-layout">
 
         <!-- Left: Charts -->
@@ -337,7 +338,7 @@
     const textColor = isDark ? '#e2e8f0' : '#334155';
     const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
     const cardBg = isDark ? '#242424' : '#ffffff';
-    const COLORS = ['#E54F38','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#06b6d4','#ec4899','#14b8a6','#f97316'];
+    const COLORS = ['#051c97','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#06b6d4','#ec4899','#14b8a6','#f97316'];
     const emptyHtml = (msg) => `<div class="ld-empty"><img src="/static/images/ui/no_records.svg" alt="">${msg}</div>`;
 
     document.getElementById('ld-date').textContent = new Date().toLocaleDateString('en-US', {
@@ -656,7 +657,7 @@
             renderChart('weekly-pattern', document.querySelector("#chart-weekly-pattern"), {
                 series: [{ name: '{% trans "Leave Days" %}', data: data.counts }],
                 chart: { type: 'radar', height: 300, toolbar: { show: false }, background: 'transparent', fontFamily: 'inherit' },
-                colors: ['#E54F38'],
+                colors: ['#051c97'],
                 fill: { opacity: 0.25 },
                 stroke: { width: 2 },
                 xaxis: { categories: data.days },

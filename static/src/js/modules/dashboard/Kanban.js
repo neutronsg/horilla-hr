@@ -290,7 +290,7 @@ class Kanban {
                 <div class="oh-profile oh-profile--md">
                   <div class="oh-profile__avatar mr-1">
                     <img
-                      src="https://ui-avatars.com/api/?name=${field.value.trim()}&background=random"
+                      src="/avatar/initials.svg?name=${field.value.trim()}&background=random"
                       class="oh-profile__image"
                       alt="${field.value.trim()}"
                     />

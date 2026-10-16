@@ -805,10 +805,12 @@
                enhanceSettingsForms();
            });
     </script>
+    {% if product_tours_enabled %}
     <script src="{% static 'build/js/settingsDriver.js' %}"></script>
     {% if not request.user.driverviewed_set.first or "settings" not in request.user.driverviewed_set.first.user_viewed %}
         <script>
             runDriver()
         </script>
+    {% endif %}
     {% endif %}
 {% endblock content %}

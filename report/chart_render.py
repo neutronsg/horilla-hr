@@ -25,12 +25,12 @@ from reportlab.lib import colors
 # distinct hues for additional series — kept visually consistent with the
 # in-app charts and the rest of the exported document.
 PALETTE = [
-    colors.HexColor("#E54F38"),  # coral — brand primary
-    colors.HexColor("#2563EB"),  # blue
-    colors.HexColor("#15803D"),  # green
-    colors.HexColor("#7C3AED"),  # violet
-    colors.HexColor("#0D9488"),  # teal
-    colors.HexColor("#F59E0B"),  # amber
+    colors.HexColor("#051c97"),  # navy — brand primary
+    colors.HexColor("#617be3"),  # periwinkle
+    colors.HexColor("#2aa9ac"),  # teal
+    colors.HexColor("#d98e04"),  # amber
+    colors.HexColor("#9cacfa"),  # lavender
+    colors.HexColor("#60cfd2"),  # aqua
 ]
 
 # reportlab defaults to Times for all chart text. The exported document is set
@@ -122,7 +122,7 @@ def _bar_drawing(categories, series, width, height) -> Drawing:
         chart.valueAxis.valueMax = max(max(flat) + span * 0.1, 0)
         chart.categoryAxis.labels.dy = -10
         chart.categoryAxis.labelAxisMode = "low"
-        chart.valueAxis.gridStrokeColor = colors.HexColor("#E5E7EB")
+        chart.valueAxis.gridStrokeColor = colors.HexColor("#E3E6EA")
         chart.valueAxis.gridStrokeWidth = 0.5
         chart.valueAxis.visibleGrid = 1
     else:
@@ -138,7 +138,7 @@ def _bar_drawing(categories, series, width, height) -> Drawing:
     if has_negative and len(series) == 1:
         for j, v in enumerate((series[0].get("data") or [])):
             if (v or 0) < 0:
-                chart.bars[(0, j)].fillColor = colors.HexColor("#B91C1C")
+                chart.bars[(0, j)].fillColor = colors.HexColor("#C4322A")
     drawing.add(chart)
 
     if has_legend:

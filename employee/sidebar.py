@@ -18,7 +18,7 @@ IMG_SRC = "images/ui/employees.svg"
 
 SUBMENUS = [
     {
-        "menu": _("My Dashboard"),
+        "menu": _("My dashboard"),
         "redirect": reverse_lazy("ess-dashboard"),
     },
     {
@@ -46,8 +46,9 @@ SUBMENUS = [
         "accessibility": "employee.sidebar.work_schedules_accessibility",
     },
     {
-        "menu": _("Policies & Discipline"),
+        "menu": _("Disciplinary actions"),
         "redirect": reverse_lazy("policies-discipline-view"),
+        "accessibility": "employee.sidebar.discipline_accessibility",
     },
     {
         "menu": _("Configuration"),
@@ -157,3 +158,7 @@ def employee_type_accessibility(request, submenu, user_perms, *args, **kwargs):
 
 def employee_tag_accessibility(request, submenu, user_perms, *args, **kwargs):
     return request.user.has_perm("employee.view_employeetag")
+
+
+def discipline_accessibility(request, submenu, user_perms, *args, **kwargs):
+    return request.user.has_perm("employee.view_disciplinaryaction") or is_reportingmanager(request.user)

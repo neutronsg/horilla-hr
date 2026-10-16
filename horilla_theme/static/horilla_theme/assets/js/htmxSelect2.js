@@ -4001,7 +4001,15 @@
 (function () {
     function initialize(root) {
         $(root).find('.oh-select').addBack('.oh-select').each(function () {
-            if (!$(this).data('select2')) $(this).select2({width: '100%'});
+            if (!$(this).data('select2')) $(this).select2({width: '100%', minimumResultsForSearch: 10});
+            // Preserve the visible field label in the enhanced combobox name.
+            var picker = $(this).data('select2');
+            var names = (picker.$selection.attr('aria-labelledby') || '').split(' ').filter(Boolean);
+            Array.from(this.labels || []).forEach(function (label, index) {
+                if (!label.id) label.id = 'neutron-select-label-' + picker.id + '-' + index;
+                if (!names.includes(label.id)) names.unshift(label.id);
+            });
+            if (names.length) picker.$selection.attr('aria-labelledby', names.join(' '));
         });
     }
     $(function () { initialize(document); });
@@ -4017,15 +4025,24 @@
             $(element).select2('destroy');
         }
     });
-    $(document).on('click.neutronModal', '[data-toggle="oh-modal-toggle"]', function () {
-        var target = this.getAttribute('data-target');
-        if (target) $(target).addClass('oh-modal--show');
-    });
+    // Openers are found in the capture phase and handled on the opener itself, the way a
+    // directly bound listener would be: a button that stops propagation to keep its own
+    // click from opening the row's modal still does, while the button's own handler runs.
+    var armed = new WeakSet();
+    function openFrom(opener) {
+        var target = opener.getAttribute('data-target');
+        if (!target) return;
+        if (opener.matches('.oh-activity-sidebar__open')) $(target).addClass('oh-activity-sidebar--show');
+        else $(target).addClass('oh-modal--show');
+    }
+    document.addEventListener('click', function (event) {
+        var opener = event.target.closest && event.target.closest('[data-toggle="oh-modal-toggle"], .oh-activity-sidebar__open');
+        if (!opener || armed.has(opener)) return;
+        armed.add(opener);
+        opener.addEventListener('click', function () { armed.delete(opener); openFrom(opener); }, {once: true});
+    }, true);
     $(document).on('click.neutronModal', '.oh-modal__close, .oh-modal__cancel', function () {
         $(this).closest('.oh-modal--show').removeClass('oh-modal--show');
-    });
-    $(document).on('click.neutronSidebar', '.oh-activity-sidebar__open', function () {
-        $(this.getAttribute('data-target')).addClass('oh-activity-sidebar--show');
     });
     $(document).on('click.neutronSidebar', '.oh-activity-sidebar__close', function () {
         $(this).closest('.oh-activity-sidebar').removeClass('oh-activity-sidebar--show');

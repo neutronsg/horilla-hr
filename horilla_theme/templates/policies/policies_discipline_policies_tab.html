@@ -1,21 +1,6 @@
 {% load i18n %}
-
-<div class="border border-[#ebebeb] rounded-md mb-5">
-    <div hx-get="{% url 'policy-nav' %}" hx-trigger="load"></div>
-
-    <p class="text-xs text-gray-500 mt-1 ml-2">
-        {% trans "Create and manage company policies shared with employees." %}
-    </p>
-
-    <button
-        type="button"
-        id="policyContainerReload"
-        hidden
-        hx-get="{% url 'search-policies' %}"
-        hx-target="#policyContainer"
-        hx-swap="innerHTML"
-    >
-    </button>
-
-    <div class="oh-wrapper" id="policyContainer"></div>
+<div class="oh-card">
+  <h2>{% trans "Company documents" %}</h2>
+  <p>{% trans "Policies, insurance guides and shared files are available in Company documents." %}</p>
+  <a class="oh-btn" href="{% url 'company-documents' %}">{% trans "Open company documents" %}</a>
 </div>

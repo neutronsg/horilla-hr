@@ -105,6 +105,10 @@
             {% include "base/setup_checklist_banner.html" %}
         {% endif %}
 
+        {% if request.user.employee_get %}
+            {% include "neutron/company_leave_calendar.html" %}
+        {% endif %}
+
         <!-- Main layout -->
         <div class="md-layout">
             <!-- Left: Charts (single flat grid for reordering) -->
@@ -207,7 +211,7 @@
                         </div>
                     {% endif %}
 
-                    {% if perms.attendance.view_attendance or request.user.is_superuser or home_role == "manager" %}
+                    {% if attendance_tracking %}{% if perms.attendance.view_attendance or request.user.is_superuser or home_role == "manager" %}
                         <!-- Attendance Overview -->
                         <div
                             class="md-chart-card md-chart-card--wide"
@@ -263,7 +267,7 @@
                             </div>
                             <div class="md-chart-card__body"><div id="chart-attendance-trend"></div></div>
                         </div>
-                    {% endif %}
+                    {% endif %}{% endif %}
 
                     <!-- Leave Coverage (7 days) -->
                     <div
@@ -409,7 +413,7 @@
                     {% if request.user.is_superuser or perms.payroll.view_payslip and request.user.is_staff or perms.payroll.view_payslip and perms.payroll.change_payslip %}
                         <!-- Payroll Summary — payroll operators only (staff/superuser/change_payslip) -->
                         <div
-                            class="md-chart-card"
+                            class="md-chart-card md-chart-card--wide"
                             data-chart-id="payroll_summary"
                             data-chart-section="overview"
                             data-chart-label="{% trans 'Payroll Summary' %}"
@@ -535,7 +539,7 @@
             // Permission flags — server-rendered; control chart click/drill-down behaviour
             const PERM = {
                 employee:    {% if perms.employee.view_employee    or request.user.is_superuser %}true{% else %}false{% endif %},
-                attendance:  {% if perms.attendance.view_attendance or request.user.is_superuser %}true{% else %}false{% endif %},
+                attendance:  {% if attendance_tracking %}{% if perms.attendance.view_attendance or request.user.is_superuser %}true{% else %}false{% endif %}{% else %}false{% endif %},
                 leave:       {% if perms.leave.view_leaverequest   or request.user.is_superuser %}true{% else %}false{% endif %},
                 candidate:   {% if perms.recruitment.view_candidate or request.user.is_superuser %}true{% else %}false{% endif %},
                 recruitment: {% if perms.recruitment.view_recruitment or request.user.is_superuser %}true{% else %}false{% endif %},
@@ -1032,7 +1036,7 @@
                         const recruSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
                         document.getElementById('md-kpi-grid').innerHTML =
                             kpiCard("{% url 'employee-view' %}?is_active=True&filter_applied=on",   PERM.employee,    'md-kpi-card__icon--indigo', empSvg,   '{% trans "Total Employees" %}',   data.total_employees,   data.new_joiners > 0 ? '<span class="md-badge md-badge--green">+' + data.new_joiners + ' {% trans "this month" %}</span>' : '<span style="opacity:0.5">{% trans "No new joiners" %}</span>') +
-                            kpiCard("{% url 'attendance-view' %}?attendance_date={% now 'Y-m-d' %}&filter_applied=on",  PERM.attendance,  'md-kpi-card__icon--green',  attSvg,   '{% trans "Present Today" %}',     data.present_today,     '<span class="md-badge ' + (data.attendance_rate >= 80 ? 'md-badge--green' : 'md-badge--amber') + '">' + data.attendance_rate + '% {% trans "of expected" %}</span>' + (data.not_checked_in > 0 ? ' <span class="md-badge md-badge--amber">' + data.not_checked_in + ' {% trans "not checked in" %}</span>' : '')) +
+                            {% if attendance_tracking %}kpiCard("{% url 'attendance-view' %}?attendance_date={% now 'Y-m-d' %}&filter_applied=on",  PERM.attendance,  'md-kpi-card__icon--green',  attSvg,   '{% trans "Present Today" %}',     data.present_today,     '<span class="md-badge ' + (data.attendance_rate >= 80 ? 'md-badge--green' : 'md-badge--amber') + '">' + data.attendance_rate + '% {% trans "of expected" %}</span>' + (data.not_checked_in > 0 ? ' <span class="md-badge md-badge--amber">' + data.not_checked_in + ' {% trans "not checked in" %}</span>' : '')) +{% endif %}
                             kpiCard(`{% url 'request-view' %}?status=approved&today_leave=true&filter_applied=on`,     PERM.leave,       'md-kpi-card__icon--amber',  leaveSvg, '{% trans "On Leave" %}',           data.on_leave,          data.pending_leaves > 0 ? '<a href="{% url "request-view" %}?status=requested&filter_applied=on" class="md-badge md-badge--amber">' + data.pending_leaves + ' {% trans "pending" %}</a>' : '<span style="opacity:0.5">{% trans "No pending" %}</span>') +
                             (PERM.recruitment ? kpiCard("{% url 'recruitment-view' %}?closed=false&filter_applied=on", true, 'md-kpi-card__icon--purple', recruSvg, '{% trans "Open Recruitments" %}', data.open_recruitments, '<span style="opacity:0.5">{% trans "Active hiring" %}</span>') : '');
                     });
@@ -1136,7 +1140,7 @@
             }
             loadTodaysLeave();
 
-            {% if perms.attendance.view_attendance or request.user.is_superuser %}
+            {% if attendance_tracking %}{% if perms.attendance.view_attendance or request.user.is_superuser %}
             // ─── ATTENDANCE TREND ───
             function loadAttendanceTrend() {
                 fetchP("{% url 'dashboard-attendance-trend' %}")
@@ -1164,7 +1168,7 @@
                 });
             }
             loadAttendanceTrend();
-            {% endif %}
+            {% endif %}{% endif %}
 
             // ─── DEPARTMENT HEADCOUNT ───
             function loadDepartmentHeadcount() {
@@ -1302,7 +1306,7 @@
             }
             loadEmployeeStatus();
 
-            {% if perms.attendance.view_attendance or request.user.is_superuser %}
+            {% if attendance_tracking %}{% if perms.attendance.view_attendance or request.user.is_superuser %}
             // ─── ATTENDANCE OVERVIEW ───
             function loadAttendanceOverview() {
                 fetch("{% url 'dashboard-attendance-overview' %}")
@@ -1361,7 +1365,7 @@
                 }).catch(() => { document.querySelector("#chart-overtime").innerHTML = emptyHtml('{% trans "No overtime data" %}'); });
             }
             loadDepartmentOvertime();
-            {% endif %}
+            {% endif %}{% endif %}
 
             {% if perms.leave.view_leaverequest or request.user.is_superuser %}
             // ─── LEAVE OVER PERIOD ───
@@ -1671,10 +1675,10 @@
                         <div class="md-pending-card__count">${p.leave_requests}</div>
                         <div class="md-pending-card__label">{% trans "Leave" %}</div>
                     </a>
-                    <a href="{% url 'request-attendance-view' %}?open_tab=1&is_validate_request_approved=false&filter_applied=1" class="md-pending-card md-pending-card--blue${p.attendance_requests ? '' : ' md-pending-card--empty'}">
+                    {% if attendance_tracking %}<a href="{% url 'request-attendance-view' %}?open_tab=1&is_validate_request_approved=false&filter_applied=1" class="md-pending-card md-pending-card--blue${p.attendance_requests ? '' : ' md-pending-card--empty'}">
                         <div class="md-pending-card__count">${p.attendance_requests}</div>
                         <div class="md-pending-card__label">{% trans "Attendance" %}</div>
-                    </a>
+                    </a>{% endif %}
                     <a href="{% url 'asset-request-allocation-view' %}?open_tab=2&asset_request_status=Requested&filter_applied=1" class="md-pending-card md-pending-card--green${p.asset_requests ? '' : ' md-pending-card--empty'}">
                         <div class="md-pending-card__count">${p.asset_requests}</div>
                         <div class="md-pending-card__label">{% trans "Assets" %}</div>
@@ -1810,31 +1814,27 @@
                     const changeClass = data.change_percent > 0 ? 'md-badge--amber' : data.change_percent < 0 ? 'md-badge--green' : '';
 
                     el.innerHTML = `
-                <div style="padding:10px 4px 4px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding:14px 16px;border-radius:12px;background:linear-gradient(135deg,#051c97 0%,#a855f7 100%);">
-                        <div>
-                            <div style="font-size:10px;color:rgba(255,255,255,0.7);text-transform:uppercase;font-weight:700;letter-spacing:0.06em;margin-bottom:2px;">{% trans "Net Pay" %}</div>
-                            <div style="font-size:28px;font-weight:800;color:#fff;line-height:1;">${fmt(data.current.net)}</div>
-                        </div>
-                        <span style="background:rgba(255,255,255,0.2);color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;">${changeIcon} ${Math.abs(data.change_percent)}%</span>
+                <div class="md-payroll-row">
+                    <div class="md-payroll-figure md-payroll-figure--lead">
+                        <div class="md-payroll-figure__label">{% trans "Net pay" %}</div>
+                        <div class="md-payroll-figure__value">${fmt(data.current.net)}</div>
+                        <span class="md-badge ${changeClass}">${changeIcon} ${Math.abs(data.change_percent)}% {% trans "vs last month" %}</span>
                     </div>
-                    <div class="md-payroll-summary">
-                        <div class="md-payroll-stat" style="background:rgba(34,197,94,0.08);border-radius:10px;padding:10px;">
-                            <div class="md-payroll-stat__value" style="color:var(--md-green)">${fmt(data.current.gross)}</div>
-                            <div class="md-payroll-stat__label">{% trans "Gross" %}</div>
-                        </div>
-                        <div class="md-payroll-stat" style="background:rgba(239,68,68,0.08);border-radius:10px;padding:10px;">
-                            <div class="md-payroll-stat__value" style="color:var(--md-red)">${fmt(data.current.deductions)}</div>
-                            <div class="md-payroll-stat__label">{% trans "Deductions" %}</div>
-                        </div>
-                        <div class="md-payroll-stat" style="background:rgba(99,102,241,0.08);border-radius:10px;padding:10px;">
-                            <div class="md-payroll-stat__value" style="color:var(--md-indigo)">${data.current.count}</div>
-                            <div class="md-payroll-stat__label">{% trans "Payslips" %}</div>
-                        </div>
-                        <div class="md-payroll-stat" style="background:rgba(128,128,128,0.06);border-radius:10px;padding:10px;">
-                            <div class="md-payroll-stat__value" style="opacity:0.55">${fmt(data.previous.net)}</div>
-                            <div class="md-payroll-stat__label">{% trans "Prev Month" %}</div>
-                        </div>
+                    <div class="md-payroll-figure">
+                        <div class="md-payroll-figure__label">{% trans "Gross" %}</div>
+                        <div class="md-payroll-figure__value">${fmt(data.current.gross)}</div>
+                    </div>
+                    <div class="md-payroll-figure">
+                        <div class="md-payroll-figure__label">{% trans "Deductions" %}</div>
+                        <div class="md-payroll-figure__value">${fmt(data.current.deductions)}</div>
+                    </div>
+                    <div class="md-payroll-figure">
+                        <div class="md-payroll-figure__label">{% trans "Payslips" %}</div>
+                        <div class="md-payroll-figure__value">${data.current.count}</div>
+                    </div>
+                    <div class="md-payroll-figure">
+                        <div class="md-payroll-figure__label">{% trans "Last month net" %}</div>
+                        <div class="md-payroll-figure__value md-payroll-figure__value--muted">${fmt(data.previous.net)}</div>
                     </div>
                 </div>`;
                 }).catch(() => { document.querySelector("#chart-payroll").innerHTML = emptyHtml('{% trans "No payroll data" %}'); });

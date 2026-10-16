@@ -31,7 +31,13 @@ from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.core.management import call_command
 from django.core.validators import validate_ipv46_address
 from django.db.models import Count, ProtectedError, Q
-from django.http import FileResponse, Http404, HttpResponse, JsonResponse
+from django.http import (
+    FileResponse,
+    Http404,
+    HttpResponse,
+    HttpResponseBadRequest,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
@@ -5961,8 +5967,14 @@ def _system_preferences_context(request):
     # Default: all companies selected for assignment.
     tracking_assigned_company_ids = [c.id for c in tracking_assign_companies]
 
-    pagination_instance, _created = DynamicPagination.objects.get_or_create(
+    # Viewing settings must not create a preference: an unsaved row shows the
+    # value lists currently use; saving it creates the preference.
+    from base.methods import get_pagination
+
+    pagination_instance = DynamicPagination.objects.filter(
         user_id=request.user, company_id=tracking_company
+    ).first() or DynamicPagination(
+        user_id=request.user, company_id=tracking_company, pagination=get_pagination()
     )
     pagination_settings = [pagination_instance]
     show_pagination_company = len(pagination_settings) > 1
@@ -7600,10 +7612,25 @@ def pagination_settings_view(request):
     """
     if request.method == "POST":
         setting_id = request.POST.get("setting_id")
-        pagination = request.POST.get("pagination")
-        updated = DynamicPagination.objects.filter(
-            id=setting_id, user_id=request.user
-        ).update(pagination=pagination)
+        try:
+            pagination = int(request.POST.get("pagination", ""))
+        except ValueError:
+            pagination = 0
+        if pagination < 1:
+            return HttpResponseBadRequest(_("Records per page must be at least 1."))
+        if setting_id:
+            updated = DynamicPagination.objects.filter(
+                id=setting_id, user_id=request.user
+            ).update(pagination=pagination)
+        else:
+            # First save from the settings page (no preference row yet). The
+            # row belongs to the company selected in this session, as on GET.
+            DynamicPagination.objects.update_or_create(
+                user_id=request.user,
+                company_id=get_session_company(request),
+                defaults={"pagination": pagination},
+            )
+            updated = 1
         if updated:
             messages.success(request, _("Default pagination updated."))
     if request.META.get("HTTP_HX_REQUEST"):

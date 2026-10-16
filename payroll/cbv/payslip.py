@@ -21,6 +21,7 @@ from horilla_views.cbv_methods import (
     hx_request_required,
     login_required,
     permission_required,
+    sortby,
 )
 from horilla_views.generic.cbv.views import (
     HorillaFormView,
@@ -36,6 +37,7 @@ from payroll.forms import component_forms as forms
 from payroll.methods.methods import calculate_employer_contribution, save_payslip
 from payroll.validation_messages import payroll_validation_message
 from payroll.models.models import Contract, Payslip
+from payroll.navigation import remember_payslip_order
 from payroll.views.component_views import payroll_calculation
 
 
@@ -90,7 +92,23 @@ class PayslipList(HorillaListView):
             "employee_id",
             "employee_id__employee_work_info",
             "employee_id__employee_work_info__company_id",
+        ).order_by("-end_date", "-pk")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ids = self.request.session.get(self.ordered_ids_key, [])
+        if not ids:
+            queryset = self.get_queryset()
+            if self._saved_filters.get(self.sortby_key):
+                queryset = sortby(
+                    self._saved_filters, queryset, self.sortby_key, is_first_sort=True
+                )
+            ids = [str(item.pk) for item in queryset]
+        token = remember_payslip_order(self.request, ids)
+        context["row_attrs"] = self.row_attrs.replace(
+            "{get_individual_payslip}", "{get_individual_payslip}?navigation=" + token
         )
+        return context
 
     model = Payslip
     filter_class = PayslipFilter

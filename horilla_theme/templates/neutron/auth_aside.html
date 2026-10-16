@@ -1,0 +1,43 @@
+{% load i18n %}{# Decorative product glimpse beside sign-in. Illustrative only: no real records, amounts masked. #}
+<aside class="neutron-auth__aside" aria-hidden="true">
+    <div class="neutron-glimpse">
+        <p class="neutron-glimpse__eyebrow">{% trans "Neutron HR" %}</p>
+        <p class="neutron-glimpse__title">{% trans "Leave, payslips and reviews in one place." %}</p>
+        <p class="neutron-glimpse__lede">{% trans "Request time off, see who's away and download your payslip from any device." %}</p>
+
+        <div class="neutron-glimpse__stack">
+            <div class="neutron-glimpse__card">
+                <div class="neutron-glimpse__row">
+                    <span class="neutron-glimpse__label">{% trans "Leave request" %}</span>
+                    <span class="neutron-glimpse__chip neutron-glimpse__chip--ok">{% trans "Approved" %}</span>
+                </div>
+                <strong>{% trans "Annual leave" %}</strong>
+                <span class="neutron-glimpse__meta">{% trans "Mon – Tue · 2 days" %}</span>
+            </div>
+
+            <div class="neutron-glimpse__card neutron-glimpse__card--offset">
+                <div class="neutron-glimpse__row">
+                    <span class="neutron-glimpse__label">{% trans "Payslip" %}</span>
+                    <span class="neutron-glimpse__meta">{% now "F Y" %}</span>
+                </div>
+                <div class="neutron-glimpse__row neutron-glimpse__row--end">
+                    <div>
+                        <span class="neutron-glimpse__meta">{% trans "Net pay" %}</span>
+                        <strong class="neutron-glimpse__amount">S$ ••••••</strong>
+                    </div>
+                    <span class="neutron-glimpse__ghost">{% trans "Download" %}</span>
+                </div>
+            </div>
+
+            <div class="neutron-glimpse__card">
+                <div class="neutron-glimpse__row">
+                    <span class="neutron-glimpse__label">{% trans "Away this week" %}</span>
+                    <span class="neutron-glimpse__meta">{% trans "Company calendar" %}</span>
+                </div>
+                <div class="neutron-glimpse__people">
+                    <i>AM</i><i>JL</i><i>RT</i><i>SK</i><span>+2</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</aside>

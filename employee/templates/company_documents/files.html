@@ -1,0 +1,6 @@
+{% load i18n %}
+<ul class="cd-files">
+{% for file in document.current_files %}
+  <li><ion-icon name="document-text-outline" aria-hidden="true"></ion-icon><div class="cd-file-name"><strong>{{ file.display_name }}</strong><span>{{ file.file_type }}{% if file.file_type %} · {% endif %}{% if file.size %}{{ file.size|filesizeformat }}{% else %}{% trans "Document" %}{% endif %}</span></div><div class="cd-file-actions">{% if file.can_preview %}<a class="oh-btn neutron-secondary-action" href="{% url 'company-document-file' document.pk file.pk %}" target="_blank" rel="noopener">{% trans "View" %}<span class="cd-sr-only"> {{ file.display_name }} ({% trans "opens in a new tab" %})</span></a>{% endif %}<a class="oh-btn neutron-secondary-action" href="{% url 'company-document-file' document.pk file.pk %}?download=1">{% trans "Download" %}<span class="cd-sr-only"> {{ file.display_name }}</span></a></div></li>
+{% empty %}<li>{% trans "No files attached." %}</li>{% endfor %}
+</ul>

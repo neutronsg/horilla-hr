@@ -17,7 +17,7 @@
                     {{ forloop.counter }}.
                     {% if notification.unread %}
                         <span
-                            style="width: 10px; height: 10px; border-radius: 100%; background-color: hsl(8deg, 77%, 56%); display: inline-block; right: 5px"
+                            style="width: 10px; height: 10px; border-radius: 100%; background-color: #051c97; display: inline-block; right: 5px"
                         ></span>
                     {% endif %}
                     {% if LANGUAGE_CODE == 'ar' %}
@@ -53,7 +53,7 @@
             </div>
             <span class="oh-activity-sidebar__a">
                 {{ notification.timesince }} {% trans "ago by" %}<img
-                    src="https://ui-avatars.com/api/?name={{notification.actor}}&amp;background=random"
+                    src="/avatar/initials.svg?name={{notification.actor}}&amp;background=random"
                     style="width: 1.5em; border-radius: 100%"
                     alt="{% trans 'User' %}"
                 > {{ notification.actor }}

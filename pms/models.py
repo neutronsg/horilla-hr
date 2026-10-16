@@ -155,7 +155,7 @@ class KeyResult(HorillaModel):
         """
         sanitized_title = re.sub(r"[^a-zA-Z0-9\s]", "", self.title)
         sanitized_title = sanitized_title.replace(" ", "+")
-        url = f"https://ui-avatars.com/api/?name={sanitized_title}&background=random"
+        url = f"/avatar/initials.svg?name={sanitized_title}&background=random"
         return url
 
     def get_delete_url(self):
@@ -944,7 +944,7 @@ class QuestionTemplate(HorillaModel):
         """
         Method will retun the api to the avatar or path to the question template
         """
-        url = f"https://ui-avatars.com/api/?name={self.question_template}&background=random"
+        url = f"/avatar/initials.svg?name={self.question_template}&background=random"
         return url
 
     def get_detail_url(self):
@@ -1597,7 +1597,7 @@ class Meetings(HorillaModel):
         """
         Method will retun the api to the avatar or path to the profile image
         """
-        url = f"https://ui-avatars.com/api/?name={self.title}&background=random"
+        url = f"/avatar/initials.svg?name={self.title}&background=random"
         return url
 
     def save(self, *args, **kwargs):

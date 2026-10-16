@@ -2,10 +2,9 @@
 {% load static i18n %}
 
 {% block content %}
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
         :root {
-            --pm-indigo: #E54F38;
+            --pm-indigo: #051c97;
             --pm-green: #22c55e;
             --pm-amber: #f59e0b;
             --pm-red: #ef4444;
@@ -790,7 +789,7 @@
     <div class="pm-dashboard">
         <div class="pm-header">
             <div>
-                <h1>{% trans "Performance Dashboard" %}</h1>
+                <h1>{% trans "Performance dashboard" %}</h1>
                 <div class="pm-header__date" id="pm-date"></div>
                 <div class="pm-refresh">
                     <span class="pm-refresh__dot" id="pm-refresh-dot"></span><span
@@ -814,7 +813,7 @@
                     <input type="date" id="pm-to-date" title="{% trans 'To' %}">
                 </div>
                 <button class="pm-btn-customize" id="pm-open-customize" title="{% trans 'Customize' %}">
-                    ⚙ {% trans "Customize" %}
+                    {% trans "Customize" %}
                 </button>
             </div>
         </div>
@@ -986,8 +985,8 @@
             const textColor = isDark ? '#e2e8f0' : '#334155';
             const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
             const cardBg = isDark ? '#242424' : '#ffffff';
-            const COLORS = ['#E54F38','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#06b6d4','#ec4899','#14b8a6','#f97316'];
-            const statusColors = { 'Not Started': '#94a3b8', 'On Track': '#22c55e', 'Behind': '#f59e0b', 'At Risk': '#ef4444', 'Closed': '#E54F38' };
+            const COLORS = ['#051c97','#22c55e','#f59e0b','#ef4444','#3b82f6','#a855f7','#06b6d4','#ec4899','#14b8a6','#f97316'];
+            const statusColors = { 'Not Started': '#94a3b8', 'On Track': '#22c55e', 'Behind': '#f59e0b', 'At Risk': '#ef4444', 'Closed': '#051c97' };
             const emptyHtml = (msg) => `<div class="pm-empty"><img src="/static/images/ui/no_records.svg" alt="">${msg}</div>`;
 
             document.getElementById('pm-date').textContent = new Date().toLocaleDateString('en-US', {
@@ -1342,10 +1341,10 @@
                                 }
                             }}
                         },
-                        colors: ['#E54F38'],
+                        colors: ['#051c97'],
                         fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 95, 100] } },
                         stroke: { curve: 'smooth', width: 3 },
-                        dataLabels: { enabled: true, formatter: v => v + '%', style: { fontSize: '11px', colors: ['#E54F38'] }, background: { enabled: false } },
+                        dataLabels: { enabled: true, formatter: v => v + '%', style: { fontSize: '11px', colors: ['#051c97'] }, background: { enabled: false } },
                         xaxis: { categories: data.months.map(m => m.month), labels: { style: { colors: textColor, fontSize: '11px' } }, axisBorder: { show: false }, axisTicks: { show: false } },
                         yaxis: { min: 0, max: 100, labels: { style: { colors: textColor }, formatter: v => v + '%' } },
                         grid: { borderColor: gridColor, strokeDashArray: 4 },

@@ -1,0 +1,9 @@
+{% load i18n %}<div class="ess-chart-card{% if wide %} ess-chart-card--wide{% endif %}" data-section="goals">
+    <div class="ess-chart-card__header">
+        <div>
+            <div class="ess-chart-card__title">{% trans "My Goals" %}</div>
+            <div class="ess-chart-card__subtitle">{% trans "Active objectives and progress" %}</div>
+        </div>
+    </div>
+    <div id="essGoalsContainer" class="ess-empty">{% trans "Loading..." %}</div>
+</div>

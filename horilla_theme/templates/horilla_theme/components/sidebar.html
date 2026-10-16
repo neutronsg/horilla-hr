@@ -84,7 +84,7 @@
                     <button
                         class="sideboxmain group flex items-center gap-3 px-3 py-2.5 rounded-lg w-full transition duration-300"
                         data-menu="{{ menues.menu }}"
-                        aria-label="{{ menues.menu }}"
+                        aria-label="{{ menues.menu|workspace_label }}"
                         aria-expanded="false"
                         aria-haspopup="true"
                         aria-controls="sidebarFlyout"
@@ -99,7 +99,7 @@
                         {% endif %}
                         <span
                             class="oh-sidebar-label text-sm font-medium truncate flex-1 text-left"
-                        >{{ menues.menu }}</span>
+                        >{{ menues.menu|workspace_label }}</span>
                         <svg
                             class="sidebar-chevron w-3.5 h-3.5 flex-shrink-0"
                             fill="none"
@@ -123,7 +123,7 @@
                                     hx-select="#ohMainContent > *"
                                     hx-swap="innerHTML show:window:top"
                                     hx-push-url="true"
-                                >{{ submenu.menu }}</a>
+                                >{{ submenu.menu|workspace_label }}</a>
                             </li>
                         {% endfor %}
                     </ul>
@@ -242,6 +242,17 @@
           }
         }
 
+        // Only page navigation from the sidebar (into #ohMainContent) may fall back to a
+        // full page load. Widgets that live in the sidebar -- the check-in clock, the
+        // company switcher -- swap their own fragments and must be left alone.
+        function isSidebarNavigation(evt) {
+          var detail = evt && evt.detail;
+          var trigger = detail && detail.elt;
+          if (!(sidebarEl && trigger && sidebarEl.contains(trigger))) return false;
+          var target = detail.target;
+          return !!(target && target.id === "ohMainContent");
+        }
+
         function shouldFallbackToFullNav(text) {
           if (!text) return false;
           var hasOurContainer =
@@ -260,6 +271,29 @@
           window.location.href = dest;
         }
 
+        function firstSegment(url) {
+          return ((url || "").split("?")[0].split("/").filter(Boolean)[0]) || "";
+        }
+        function sidebarModuleOwnsPath(btn, path) {
+          var seg = firstSegment(path);
+          var item = btn.closest(".sidebar-item");
+          if (!seg || !item) return false;
+          return Array.prototype.some.call(item.querySelectorAll(".sidebar-subnav-link"), function (link) {
+            return firstSegment(link.getAttribute("href")) === seg;
+          });
+        }
+        // Detail pages inside a module (same first URL segment) keep that module
+        // highlighted; pages outside every module (settings, my profile) clear it.
+        function applyStoredSidebarMenu(path) {
+          var lastMenu = null;
+          try { lastMenu = localStorage.getItem("activeSidebarMenu"); } catch (_) {}
+          var btn = lastMenu && document.querySelector('.sideboxmain[data-menu="' + lastMenu.replace(/"/g, '\\"') + '"]');
+          if (btn && sidebarModuleOwnsPath(btn, path)) setActiveSidebarMenu(btn);
+          else clearActiveSidebarMenu();
+        }
+        function clearActiveSidebarMenu() {
+          document.querySelectorAll(".sideboxmain.sidebox-current").forEach(function (b) { b.classList.remove("sidebox-current"); });
+        }
         function setActiveSidebarMenu(btn) {
           if (!btn) return;
           // Persistent current-page highlight: clear from every module button, then
@@ -287,14 +321,11 @@
           var sidebarRect = sidebarEl.getBoundingClientRect();
           var sidebarRight = sidebarRect.right;
 
-          // getBoundingClientRect() fires at mouseenter while the sidebar's
-          // width transition (64px → 208px, 0.22s) is still mid-flight,
-          // so `right` can read as 64px even though the sidebar will expand
-          // to 208px. Clamp to the expanded target width whenever the sidebar
-          // is in hover/pinned state so the flyout never lands inside it.
-          if (window.innerWidth >= 992 && (sidebarEl.matches(':hover, :focus-within') || sidebarEl.classList.contains('sidebar-pinned'))) {
-            var rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-            var expandedRight = sidebarRect.left + rootFontSize * 14;
+          // Mouseenter can arrive during the collapsed rail's width transition.
+          // Position against its CSS target, including at narrow viewports.
+          if (sidebarEl.classList.contains('sidebar-flyout-open')) {
+            var expandedWidth = parseFloat(getComputedStyle(sidebarEl).getPropertyValue('--neutron-sidebar-width')) || 232;
+            var expandedRight = sidebarRect.left + expandedWidth;
             if (expandedRight > sidebarRight) sidebarRight = expandedRight;
           }
 
@@ -338,6 +369,8 @@
             if (matches) a.classList.add("oh-sidebar-active-link");
           });
 
+          // Keep the expanded rail stable while crossing the gap to its panel.
+          sidebarEl.classList.add("sidebar-flyout-open");
           positionFlyout(item.getBoundingClientRect());
           flyoutEl.classList.add("is-visible");
           // Hover-only indicator — does NOT touch the persisted 'active' class or localStorage
@@ -352,6 +385,7 @@
 
         function hideFlyout() {
           if (flyoutEl) flyoutEl.classList.remove("is-visible");
+          sidebarEl.classList.remove("sidebar-flyout-open");
           if (currentFlyoutBtn) {
             currentFlyoutBtn.classList.remove("sidebox-active");
             currentFlyoutBtn.setAttribute("aria-expanded", "false");
@@ -362,6 +396,10 @@
         function scheduleFlyoutClose() {
           clearTimeout(flyoutCloseTimer);
           flyoutCloseTimer = setTimeout(function () {
+            // Focus can leave a menu after its mouseenter cancels an earlier
+            // close. Recheck pointer ownership when the new timer fires too.
+            var owner = currentFlyoutBtn?.closest(".sidebar-item");
+            if (flyoutEl.matches(":hover") || owner?.matches(":hover")) return;
             if (flyoutEl?.contains(document.activeElement) || currentFlyoutBtn === document.activeElement) return;
             hideFlyout();
           }, 120);
@@ -500,12 +538,7 @@
           if (matchedBtn) {
             setActiveSidebarMenu(matchedBtn);
           } else {
-            var lastMenu = null;
-            try { lastMenu = localStorage.getItem("activeSidebarMenu"); } catch (_) {}
-            if (lastMenu) {
-              var btn = document.querySelector('.sideboxmain[data-menu="' + lastMenu.replace(/"/g, '\\"') + '"]');
-              if (btn) setActiveSidebarMenu(btn);
-            }
+            applyStoredSidebarMenu(path);
           }
         }
 
@@ -568,7 +601,7 @@
             l.classList.remove("oh-sidebar-active-link");
           });
           var path = window.location.pathname;
-          if (path === "/ess/" || path.startsWith("/dashboard")) {
+          if (path === "/my/" || path === "/ess/" || path.startsWith("/dashboard")) {
             var home = document.querySelector('#sidebar a.sideboxmain[data-menu="Dashboard"]');
             if (home) setActiveSidebarMenu(home);
             return;
@@ -594,6 +627,7 @@
             });
           }
           if (matchedBtn) setActiveSidebarMenu(matchedBtn);
+          else applyStoredSidebarMenu(path);
         }
         document.addEventListener("htmx:pushUrl", syncSidebarToUrl);
         document.addEventListener("htmx:afterSettle", syncSidebarToUrl);
@@ -735,8 +769,7 @@
 
         document.addEventListener("htmx:beforeSwap", function (evt) {
           try {
-            var trigger = evt && evt.detail && evt.detail.elt;
-            if (!(sidebarEl && trigger && sidebarEl.contains(trigger))) return;
+            if (!isSidebarNavigation(evt)) return;
             var xhr = evt.detail.xhr;
             if (!xhr || xhr.status < 200 || xhr.status >= 400) return;
             if (!shouldFallbackToFullNav(xhr.responseText)) return;
@@ -748,8 +781,7 @@
 
         function sidebarNavError(evt) {
           try {
-            var trigger = evt && evt.detail && evt.detail.elt;
-            if (!(sidebarEl && trigger && sidebarEl.contains(trigger))) return;
+            if (!isSidebarNavigation(evt)) return;
             fullNavigateFromEvent(evt);
           } catch (_) {}
         }

@@ -15,7 +15,7 @@
         <div class="flex gap-2 pb-3 items-center">
             <div class="flex-1">
                 <select id="dateFormat" name="dateFormat" class="oh-select oh-select-2">
-                    <option value="">--------------</option>
+                    <option value="">{% trans "System default" %}</option>
                     <option value="DD-MM-YYYY">{% trans "Day, Month, Year (e.g., 30-12-2023)" %}</option>
                     <option value="DD.MM.YYYY">{% trans "Day, Month, Year (e.g., 30.12.2023)" %}</option>
                     <option value="DD/MM/YYYY">{% trans "Day, Month, Year (e.g., 30/12/2023)" %}</option>
@@ -59,7 +59,7 @@
         <div class="flex gap-2 pb-3 items-center">
             <div class="flex-1">
                 <select id="timeFormat" name="timeFormat" class="oh-select oh-select-2">
-                    <option value="">--------------</option>
+                    <option value="">{% trans "System default" %}</option>
                     <option value="hh:mm A">{% trans "12 Hr. (e.g., 06:00 AM or 06:00 PM)" %}</option>
                     <option value="HH:mm">{% trans "24 Hr. (e.g., 06:00 or 18:00)" %}</option>
                 </select>

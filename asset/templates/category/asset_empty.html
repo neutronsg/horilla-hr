@@ -1,13 +1,13 @@
 {% extends 'index.html' %}
 {% block content %}
-    {% load static i18n %}
+    {% load static i18n neutron_ui %}
     {% load i18n %}
     {% load widget_tweaks %}
     {% load assets_custom_filter %}
 
     <section class="oh-wrapper oh-main__topbar" x-data="{searchShow: false}">
         <div class="oh-main__titlebar oh-main__titlebar--left">
-            <h1 class="oh-main__titlebar-title fw-bold">{{ model.get_verbose_name }}</h1>
+            <h1 class="oh-main__titlebar-title fw-bold">{{ model.get_verbose_name|workspace_label }}</h1>
         </div>
         <div class="oh-main__titlebar oh-main__titlebar--right">
             <div class="oh-main__titlebar-button-container">
@@ -70,7 +70,7 @@
                 class="oh-404__image"
                 alt="{% trans 'Page not found. 404.' %}"
             >
-            <h1 class="oh-empty__title">{% trans "No Records found." %}</h1>
+            <h1 class="oh-empty__title">{% trans "No records found." %}</h1>
             <p class="oh-empty__subtitle">{% trans "No Asset Categories or Assets have been created." %}</p>
         </div>
     </div>

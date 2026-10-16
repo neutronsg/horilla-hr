@@ -71,6 +71,11 @@ def entitlement_for_assignment(assignment, as_of=None):
     if not joining_date:
         return None
     as_of = as_of or timezone.localdate()
+    # HR-confirmed probation (or "not required") can open annual leave before
+    # the statutory three months; accrual by completed months is unchanged.
+    from employee.probation import annual_leave_eligible_on
+
+    opens_on = annual_leave_eligible_on(assignment.employee_id, work_info=work_info)
     effective_end = (
         min(as_of, work_info.contract_end_date)
         if work_info.contract_end_date
@@ -83,6 +88,7 @@ def entitlement_for_assignment(assignment, as_of=None):
             configured_annual_days=float(assignment.leave_type_id.total_days or 0),
             employment_end_date=work_info.contract_end_date,
             period_basis="calendar_year",
+            opens_on=opens_on,
         )
     calendar_unpaid = {
         year: _unpaid_days(assignment.employee_id, max(joining_date, date(year, 1, 1)),
@@ -104,6 +110,7 @@ def entitlement_for_assignment(assignment, as_of=None):
         period_basis="calendar_year",
         unpaid_by_calendar_year=calendar_unpaid,
         unpaid_by_service_year=service_unpaid,
+        opens_on=opens_on,
     )
 
 

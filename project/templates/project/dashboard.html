@@ -2,10 +2,9 @@
 {% load static i18n %}
 
 {% block content %}
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <style>
     :root {
-        --pr-indigo: #E54F38;
+        --pr-indigo: #051c97;
         --pr-green: #22c55e;
         --pr-amber: #f59e0b;
         --pr-red: #ef4444;
@@ -136,7 +135,7 @@
     <!-- Header -->
     <div class="pr-header">
         <div>
-            <h1>{% trans "Project Dashboard" %}</h1>
+            <h1>{% trans "Project dashboard" %}</h1>
             <div class="pr-header__meta" id="pr-last-updated">{% trans "Loading..." %}</div>
         </div>
         <div class="pr-header__controls">
@@ -434,7 +433,7 @@
                         if (proj && proj.id) window.location.href = PR_URLS.projectDetail.replace('__ID__', proj.id);
                     }},
                 },
-                colors: ["#E54F38"],
+                colors: ["#051c97"],
                 xaxis: { categories: d.projects.map(p => p.title.length > 18 ? p.title.slice(0,18)+"…" : p.title), labels: { style: { colors: textColor, fontSize: "11px" } } },
                 yaxis: { labels: { style: { colors: textColor, fontSize: "11px" } } },
                 plotOptions: { bar: { borderRadius: 4, horizontal: true } },

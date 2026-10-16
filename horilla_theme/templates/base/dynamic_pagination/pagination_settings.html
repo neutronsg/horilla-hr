@@ -8,7 +8,7 @@
             hx-on-htmx-after-request="setTimeout(() => { reloadMessage(); }, 100);"
         >
             {% csrf_token %}
-            <input type="hidden" name="setting_id" value="{{ setting.id }}">
+            <input type="hidden" name="setting_id" value="{{ setting.id|default:'' }}">
             <div class="flex space-x-2 pb-1">
                 <label>
                     {% trans "Default Records Per Page" %}
@@ -28,7 +28,7 @@
                     placeholder="{% trans 'Pagination' %}"
                     value="{{ setting.pagination }}"
                     required=""
-                    id="id_pagination_{{ setting.id }}"
+                    id="id_pagination_{{ setting.id|default:'new' }}"
                 >
 
                 <button class="btn" type="submit">{% trans "Save" %}</button>

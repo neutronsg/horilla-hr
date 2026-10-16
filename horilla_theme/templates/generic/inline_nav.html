@@ -1,4 +1,4 @@
-{% load static i18n %}
+{% load static i18n neutron_ui %}
 {% comment %}
     Inline nav bar.
 
@@ -14,7 +14,7 @@
         actions, create_attrs, apply_first_filter
 {% endcomment %}
 <div class="text-sm font-semibold bg-[#f3f3f3] px-3 py-3 text-[#333] flex items-center justify-between gap-2 flex-wrap">
-    <span>{{ nav_title }}</span>
+    <span>{{ nav_title|workspace_label }}</span>
 
     <div class="flex flex-wrap items-center gap-1">
         {% if search_url %}
@@ -73,7 +73,7 @@
 
                 {% if filter_body_template %}
                     <div class="relative dropdown-wrapper">
-                        <span
+                        <button type="button" aria-expanded="false" data-neutron-filter
                             class="px-5 py-2 h-full bg-[white] rounded-md text-xs flex items-center gap-2 border border-primary-500 hover:border-primary-600 transition duration-300 cursor-pointer"
                         >
                             <img
@@ -83,7 +83,7 @@
                                 class="mt-[-1px]"
                             >
                             {% trans "Filter" %}
-                        </span>
+                        </button>
                         <div class="oh-filter-dropdown dropdown-content absolute z-10 bg-white rounded-lg [box-shadow:0px_0px_20px_0px_rgb(0_0_0_/_8%)] min-w-[400px] p-3 right-0 font-normal">
                             <div class="accordion-wrapper space-y-2">
                                 {% include filter_body_template %}
@@ -153,7 +153,7 @@
 
         {% if actions %}
             <div class="relative dropdown-wrapper">
-                <button class="px-5 py-2 h-full bg-[white] rounded-md text-xs flex items-center gap-2 border border-primary-500 hover:border-primary-600 transition duration-300">
+                <button type="button" class="px-5 py-2 h-full bg-[white] rounded-md text-xs flex items-center gap-2 border border-primary-500 hover:border-primary-600 transition duration-300">
                     <img
                         src="{% static 'horilla_theme/assets/img/icons/setting-line.svg' %}"
                         alt="{% trans 'Actions' %}"

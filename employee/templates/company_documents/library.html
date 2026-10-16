@@ -1,0 +1,19 @@
+{% extends "index.html" %}
+{% load static i18n %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'horilla_theme/assets/css/company-documents.css' %}">
+<div class="cd-page">
+  <header class="cd-heading">
+    <div><h1>{% trans "Company documents" %}</h1><p>{% trans "Your company guides, policies and useful forms, in one place." %}</p></div>
+    {% if can_add %}<a class="oh-btn oh-btn--secondary neutron-primary-action" href="{% url 'company-document-create' %}"><ion-icon name="add-outline" aria-hidden="true"></ion-icon>{% trans "Add document" %}</a>{% endif %}
+  </header>
+  {% if unscoped_count %}<p class="cd-review">{% blocktrans count total=unscoped_count %}{{ total }} existing document needs a company audience before publishing.{% plural %}{{ total }} existing documents need a company audience before publishing.{% endblocktrans %} <a href="?state=draft">{% trans "Review drafts" %}</a></p>{% endif %}
+  <form class="cd-filters" method="get" role="search">
+    <div class="cd-search"><label for="cd-search">{% trans "Search documents" %}</label><input id="cd-search" type="search" name="search" value="{{ search }}" placeholder="{% trans 'Search titles and descriptions' %}"></div>
+    <div><label for="cd-category">{% trans "Category" %}</label><select class="oh-select" name="category" id="cd-category"><option value="">{% trans "All categories" %}</option>{% for value, label in categories %}<option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    {% if can_manage %}<div><label for="cd-state">{% trans "Status" %}</label><select class="oh-select" name="state" id="cd-state"><option value="published" {% if state == 'published' %}selected{% endif %}>{% trans "Published" %}</option><option value="draft" {% if state == 'draft' %}selected{% endif %}>{% trans "Drafts" %}</option><option value="archived" {% if state == 'archived' %}selected{% endif %}>{% trans "Archived" %}</option><option value="all" {% if state == 'all' %}selected{% endif %}>{% trans "All statuses" %}</option></select></div>{% endif %}
+    <button class="oh-btn neutron-secondary-action" type="submit">{% trans "Apply" %}</button><a class="cd-reset" href="{% url 'company-documents' %}">{% trans "Reset" %}</a>
+  </form>
+  {% include "company_documents/records.html" %}
+</div>
+{% endblock %}

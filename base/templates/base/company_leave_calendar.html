@@ -1,10 +1,10 @@
 {% load i18n %}
 <style>
-  .clc, .clc-detail { --clc-ink:#182230; --clc-muted:#667085; --clc-line:#e9ecf1; --clc-surface:#fff; --clc-soft:#f8f9fb; --clc-accent:#e54f38; color:var(--clc-ink); font-family:inherit; }
+  .clc, .clc-detail { --clc-ink:#182230; --clc-muted:#667085; --clc-line:#e9ecf1; --clc-surface:#fff; --clc-soft:#f8f9fb; --clc-accent:#051c97; color:var(--clc-ink); font-family:inherit; }
   .clc { margin-top:24px; border:1px solid var(--clc-line); border-radius:16px; padding:24px; background:var(--clc-surface); box-shadow:0 2px 8px rgba(16,24,40,.025); }
   .clc *, .clc-detail * { box-sizing:border-box; }
   .clc-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
-  .clc-icon { display:grid; place-items:center; width:42px; height:42px; flex-shrink:0; border-radius:12px; background:#fff0ec; color:#c54330; }
+  .clc-icon { display:grid; place-items:center; width:42px; height:42px; flex-shrink:0; border-radius:12px; background:#eef1fb; color:#051c97; }
   .clc-icon svg { width:22px; height:22px; }
   .clc h2 { font-size:18px; line-height:1.4; font-weight:700; margin:0 0 3px; color:inherit; }
   .clc p { margin:0; font-size:12px; line-height:1.6; color:var(--clc-muted); }
@@ -45,7 +45,7 @@
   .clc-day { min-height:116px; padding:8px; background:var(--clc-surface); }
   .clc-day.is-off { background:var(--clc-soft); }
   .clc-day.is-outside .clc-date { opacity:.4; }
-  .clc-day.is-today { background:#fffaf8; }
+  .clc-day.is-today { background:#f5f7fd; }
   .clc-date { display:grid; place-items:center; width:24px; height:24px; font-size:11px; font-weight:600; margin-bottom:6px; }
   .is-today .clc-date { background:var(--clc-accent); color:white; border-radius:50%; }
   .clc-holiday { font-size:10px; color:#ad6b16; margin-bottom:5px; line-height:1.4; }
@@ -107,7 +107,7 @@
   .clc-raw p { font-size:11px; padding:8px; margin-top:6px; border-radius:6px; background:var(--clc-soft); }
   .clc-created { font-size:11px!important; color:var(--clc-muted); margin-top:18px!important; }
   .dark .clc, .dark .clc-detail { --clc-ink:#e8ecf2; --clc-muted:#9ba5b4; --clc-line:#303641; --clc-surface:#171b22; --clc-soft:#20252e; }
-  .dark .clc-icon { background:#382621; color:#f59c89; }
+  .dark .clc-icon { background:#232b45; color:#9fb2ff; }
   .dark .clc-avatar { background:#293447; color:#b9cbea; }
   .dark .clc-day.is-today { background:#30241f; }
   .dark .clc-event { background:#243147; color:#d4e0ff; border-color:#334563; border-left-color:#7897c9; }

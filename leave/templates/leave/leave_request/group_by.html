@@ -164,7 +164,7 @@
                                         {% if leave_request.get_penalties_count %}
                                             <div data-target="#penaltyViewModal" data-toggle="oh-modal-toggle"
                                                 hx-get="{% url "view-penalties" %}?leave_request_id={{leave_request.id}}"
-                                                hx-target="#penaltyViewModalBody" align="center" style="background-color: {{ theme_obj.primary_600|default:'rgba(229, 79, 56, 0.036)' }}; border: 2px solid {{ theme_obj.primary_600|default:'rgb(229, 79, 56)' }}; border-radius: 18px; padding: 10px; font-weight: bold; width: 85%;">
+                                                hx-target="#penaltyViewModalBody" align="center" style="background-color: {{ theme_obj.primary_600|default:'rgba(5, 28, 151, 0.036)' }}; border: 2px solid {{ theme_obj.primary_600|default:'#051c97' }}; border-radius: 18px; padding: 10px; font-weight: bold; width: 85%;">
                                                 {% trans "Penalties" %} :{{leave_request.get_penalties_count}}
                                             </div>
                                         {% endif %}

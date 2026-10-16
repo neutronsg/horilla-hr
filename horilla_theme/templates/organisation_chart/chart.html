@@ -180,7 +180,7 @@
 
     .genealogy-tree li a:hover .expand-toggle {
         border-color: {{ theme_obj.primary_500|default:'#f2b7a6' }};
-        color: {{ theme_obj.primary_600|default:'#e54f38' }};
+        color: {{ theme_obj.primary_600|default:'#051c97' }};
     }
 
     .expand-toggle.upArrow {
@@ -200,7 +200,7 @@
         height: 17px;
         padding: 0 4px;
         border-radius: 999px;
-        background: {{ theme_obj.primary_600|default:'#e54f38' }};
+        background: {{ theme_obj.primary_600|default:'#051c97' }};
         color: #fff;
         font-size: 10px;
         transition: transform 0.15s ease;
@@ -215,7 +215,7 @@
     }
 
     .genealogy-tree li.matched > a .member-view-box {
-        border-color: {{ theme_obj.primary_600|default:'#e54f38' }};
+        border-color: {{ theme_obj.primary_600|default:'#051c97' }};
         box-shadow: 0 0 0 3px {{ theme_obj.primary_400|default:'#fbe0d8' }};
     }
 
@@ -296,18 +296,21 @@
         justify-content: center;
         width: 34px;
         height: 34px;
-        border: 1px solid #2c2c33;
+        border: 0;
         border-radius: 9px;
-        background-color: #26262b;
-        color: #fff;
+        background-color: var(--neutron-material-strong, rgba(255, 255, 255, .88));
+        -webkit-backdrop-filter: var(--neutron-blur, blur(20px));
+        backdrop-filter: var(--neutron-blur, blur(20px));
+        box-shadow: var(--neutron-e2);
+        color: var(--neutron-text, #22262e);
         font-size: 13px;
         transition: background-color 0.15s ease;
     }
 
     .buttons .zoomIn:hover,
     .buttons .zoomOut:hover {
-        background-color: {{ theme_obj.primary_600|default:'#e54f38' }};
-        border-color: {{ theme_obj.primary_600|default:'#e54f38' }};
+        background-color: #fff;
+        color: var(--primary-600, #051c97);
     }
 
     .direction-controls {
@@ -315,9 +318,12 @@
         width: 76px;
         height: 76px;
         overflow: hidden;
-        border: 1px solid #2c2c33;
+        border: 0;
         border-radius: 12px;
-        background: #26262b;
+        background: var(--neutron-material-strong, rgba(255, 255, 255, .88));
+        -webkit-backdrop-filter: var(--neutron-blur, blur(20px));
+        backdrop-filter: var(--neutron-blur, blur(20px));
+        box-shadow: var(--neutron-e2);
     }
 
     .dir-btn {
@@ -327,19 +333,19 @@
         justify-content: center;
         border: none;
         background: transparent;
-        color: #d8d9dc;
+        color: var(--neutron-muted, #5a606b);
         font-size: 15px;
         cursor: pointer;
         transition: background-color 0.15s ease, color 0.15s ease;
     }
 
     .dir-btn:hover {
-        background: {{ theme_obj.primary_600|default:'#e54f38' }};
-        color: #fff;
+        background: rgba(15, 23, 42, .06);
+        color: var(--neutron-ink, #0b0d12);
     }
 
     .dir-btn:active {
-        background: {{ theme_obj.primary_600|default:'#e54f38' }};
+        background: rgba(15, 23, 42, .1);
     }
 
     .dir-btn.up {

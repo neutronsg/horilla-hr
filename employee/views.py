@@ -3130,7 +3130,7 @@ def get_employees_birthday(request):
     Render all upcoming birthday employee details for the dashboard.
     """
     employees = birthday()
-    default_avatar_url = "https://ui-avatars.com/api/?background=random&name="
+    default_avatar_url = "/avatar/initials.svg?background=random&name="
     birthdays = [
         {
             "profile": (

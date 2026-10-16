@@ -291,17 +291,19 @@
         {% trans "Open" %}
     </span>
 </div>
-<script src="{% static 'build/js/pipelineDriver.js' %}"></script>
+{% if product_tours_enabled %}<script src="{% static 'build/js/pipelineDriver.js' %}"></script>{% endif %}
 <script>
     initialAvtiveTab = $(".oh-tabs__content--active").length;
     if (!initialAvtiveTab) {
         $(".oh-tabs__tab:first").click();
     }
 </script>
+{% if product_tours_enabled %}
 {% if not request.user.driverviewed_set.first or "pipeline" not in request.user.driverviewed_set.first.user_viewed %}
     <script>
         runDriver();
     </script>
+{% endif %}
 {% endif %}
 
 <script>

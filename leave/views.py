@@ -5658,8 +5658,13 @@ def employee_view_individual_leave_tab(request, pk, **kwargs):
         else json.dumps([])
     )
     employee_leaves = employee.available_leave.all()
-    filtered_employee_ids = request.session.get("filtered_employees", [])
-    filtered_employees = Employee.objects.filter(id__in=filtered_employee_ids)
+    # Employee list views store the ids they rendered; otherwise step through
+    # every employee, as the breadcrumb processor used to store on each request.
+    filtered_employee_ids = request.session.get("filtered_employees")
+    if filtered_employee_ids is None:
+        filtered_employees = Employee.objects.all()
+    else:
+        filtered_employees = Employee.objects.filter(id__in=filtered_employee_ids)
 
     request_ids_str = json.dumps(
         [

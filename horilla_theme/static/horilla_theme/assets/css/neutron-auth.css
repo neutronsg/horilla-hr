@@ -1,0 +1,216 @@
+/* Neutron auth and error pages (sign in, password reset, 403/404/405/500).
+ * Standalone: these pages do not load the app shell. Same Ledger planes as the app:
+ * canvas (z0) → panel (z1) → inputs pressed in as wells (z-1). Everything is scoped
+ * under .neutron-auth so an error page swapped into the app cannot restyle it. */
+@font-face {font-family:"Geist";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../../fonts/geist/geist-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face {font-family:"Geist";font-style:normal;font-weight:100 900;font-display:swap;src:url("../../../fonts/geist/geist-latin-ext-wght-normal.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+
+.neutron-auth {
+  --a-brand:var(--primary-600,#051c97);--a-brand-hover:var(--primary-700,#041778);
+  --a-ink:#0b0d12;--a-text:#22262e;--a-muted:#5a606b;--a-faint:#868c97;
+  --a-line:#e3e6ea;--a-line-strong:#cdd2da;--a-canvas:#eceef2;--a-surface:#fff;--a-well:#fff;--a-head:#f8f9fb;
+  --a-bad:#b42318;--a-bad-bg:#fef3f2;--a-ok:#17794a;--a-ok-bg:#ecfdf3;--a-warn:#a15c00;--a-warn-bg:#fffaeb;--a-info-bg:#eef1fb;
+  --a-e2:0 0 0 1px rgba(15,23,42,.07),0 2px 4px rgba(15,23,42,.04),0 16px 40px -14px rgba(15,23,42,.22);
+  --a-well-shadow:0 1px 2px rgba(15,23,42,.04);
+  --a-e1:0 0 0 1px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.05),0 8px 24px -12px rgba(15,23,42,.18);
+  box-sizing:border-box;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  padding:48px 16px;background:var(--a-canvas);
+  color:var(--a-ink);font:14px/1.5 "Geist",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1;
+}
+body.neutron-auth-body {margin:0;background:#eceef2;}
+.neutron-auth *,.neutron-auth *::before,.neutron-auth *::after {box-sizing:border-box;}
+.neutron-auth a {color:var(--a-brand);text-decoration:none;font-weight:500;}
+.neutron-auth a:hover {color:var(--a-brand-hover);text-decoration:underline;text-underline-offset:2px;}
+.neutron-auth :focus-visible {outline:2px solid var(--a-brand);outline-offset:2px;}
+
+/* Brand lockup: wordmark + product name */
+.neutron-auth__brand {display:inline-flex;align-items:center;gap:8px;color:var(--a-ink);font-weight:600;font-size:15px;letter-spacing:-.01em;}
+.neutron-auth a.neutron-auth__brand,.neutron-auth a.neutron-auth__brand:hover {color:var(--a-ink);text-decoration:none;}
+.neutron-auth__brand img {display:block;height:28px;width:auto;object-fit:contain;}
+.neutron-auth__brand img.neutron-auth__wordmark {height:18px;}
+.neutron-auth__product {padding-left:8px;border-left:1px solid var(--a-line-strong);color:var(--a-muted);font-weight:550;line-height:16px;}
+
+/* Panel. Split layout: the form sits on the white column. Centred layout (errors): a z1 card on the canvas. */
+.neutron-auth__panel {width:100%;max-width:400px;}
+.neutron-auth h1 {margin:0;text-wrap:balance;font-size:26px;line-height:32px;font-weight:650;letter-spacing:-.025em;color:var(--a-ink);}
+.neutron-auth__lede {margin:8px 0 28px;color:var(--a-muted);font-size:14.5px;line-height:1.55;}
+.neutron-auth__foot {display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;color:var(--a-faint);font-size:12.5px;}
+.neutron-auth__foot a {color:var(--a-muted);font-weight:500;}
+
+.neutron-auth--split {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);align-items:stretch;gap:0;padding:0;background:var(--a-surface);}
+.neutron-auth--split .neutron-auth__column {display:flex;flex-direction:column;min-height:100vh;padding:32px clamp(24px,5vw,72px);}
+.neutron-auth--split .neutron-auth__panel {margin:auto;padding:48px 0;}
+.neutron-auth--split .neutron-auth__brand {align-self:flex-start;}
+
+.neutron-auth--centered .neutron-auth__column {display:flex;flex-direction:column;align-items:center;gap:24px;width:100%;}
+.neutron-auth--centered .neutron-auth__panel {padding:32px 32px 28px;background:var(--a-surface);border-radius:14px;box-shadow:var(--a-e2);}
+.neutron-auth--centered .neutron-auth__foot {justify-content:center;}
+
+/* Fields */
+.neutron-auth__field {margin:0 0 18px;}
+.neutron-auth__label-row {display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 6px;}
+.neutron-auth label {display:block;font-size:13px;font-weight:550;color:var(--a-text);}
+.neutron-auth__field > label {margin:0 0 6px;}
+.neutron-auth__label-row label {margin:0;}
+.neutron-auth__label-row a {font-size:13px;}
+.neutron-auth input[type=text],.neutron-auth input[type=email],.neutron-auth input[type=password] {
+  display:block;width:100%;height:44px;padding:0 14px;border:1px solid var(--a-line-strong);border-radius:8px;
+  background:var(--a-well);box-shadow:var(--a-well-shadow);color:var(--a-ink);font:inherit;font-size:15px;
+  transition:border-color .12s,box-shadow .12s;
+}
+.neutron-auth input::placeholder {color:var(--a-faint);opacity:1;}
+.neutron-auth input:hover {border-color:#b9c0ca;}
+.neutron-auth input:focus {outline:0;border-color:var(--a-brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--a-brand) 14%,transparent);}
+.neutron-auth input[aria-invalid=true] {border-color:var(--a-bad);}
+.neutron-auth__password {position:relative;}
+.neutron-auth__password input {padding-right:46px;}
+.neutron-auth__reveal {position:absolute;top:6px;right:6px;display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:6px;background:transparent;color:var(--a-muted);cursor:pointer;}
+.neutron-auth__reveal:hover {background:rgba(15,23,42,.05);color:var(--a-ink);}
+.neutron-auth__reveal svg {width:16px;height:16px;}
+.neutron-auth__reveal .when-shown,.neutron-auth__reveal[aria-pressed=true] .when-hidden {display:none;}
+.neutron-auth__reveal[aria-pressed=true] .when-shown {display:block;}
+.neutron-auth .errorlist {margin:6px 0 0;padding:0;list-style:none;color:var(--a-bad);font-size:13px;font-weight:500;}
+.neutron-auth__hint {margin:6px 0 0;color:var(--a-muted);font-size:12.5px;}
+.neutron-auth__caps {margin:6px 0 0;color:var(--a-warn);font-size:12.5px;font-weight:500;}
+.neutron-auth__caps[hidden] {display:none;}
+
+/* Buttons: flat, one elevation step, no gloss */
+.neutron-auth__button {display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;margin-top:6px;padding:0 16px;
+  border:1px solid transparent;border-radius:8px;background:var(--a-brand);color:#fff;font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;text-decoration:none;
+  box-shadow:0 1px 2px color-mix(in srgb,var(--a-brand) 28%,transparent);transition:background-color .12s,box-shadow .12s;}
+.neutron-auth a.neutron-auth__button,.neutron-auth a.neutron-auth__button:hover {color:#fff;text-decoration:none;}
+.neutron-auth__button:hover {background:var(--a-brand-hover);}
+.neutron-auth__button:active {box-shadow:none;}
+.neutron-auth__button:disabled {cursor:default;}
+.neutron-auth__button[aria-busy=true] {background:var(--a-brand-hover);}
+.neutron-auth__button[aria-busy=true]::before {content:"";width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:neutron-auth-spin .7s linear infinite;}
+@keyframes neutron-auth-spin {to {transform:rotate(360deg);}}
+.neutron-auth__button--quiet {background:#fff;color:var(--a-ink);border-color:var(--a-line-strong);box-shadow:0 1px 2px rgba(15,23,42,.05);font-weight:550;}
+.neutron-auth a.neutron-auth__button--quiet,.neutron-auth a.neutron-auth__button--quiet:hover {color:var(--a-ink);}
+.neutron-auth__button--quiet:hover {background:#f6f8fb;}
+.neutron-auth__actions {display:grid;gap:8px;margin-top:20px;}
+.neutron-auth__alt {margin:24px 0 0;padding-top:18px;border-top:1px solid var(--a-line);text-align:center;color:var(--a-muted);font-size:13.5px;}
+
+/* Messages */
+.neutron-auth__messages {display:grid;gap:8px;margin:0 0 20px;}
+.neutron-auth__messages .oh-alert {margin:0;padding:10px 12px;border:1px solid var(--a-line);border-radius:8px;background:var(--a-info-bg);color:var(--a-text);font-size:13.5px;line-height:1.45;}
+.neutron-auth__messages .oh-alert--danger {background:var(--a-bad-bg);border-color:#fecdca;color:var(--a-bad);}
+.neutron-auth__messages .oh-alert--success {background:var(--a-ok-bg);border-color:#abefc6;color:var(--a-ok);}
+.neutron-auth__messages .oh-alert--warning {background:var(--a-warn-bg);border-color:#fedf89;color:var(--a-warn);}
+
+/* Status pages (sent, errors) */
+.neutron-auth__status {display:grid;place-items:center;width:40px;height:40px;margin:0 0 20px;border-radius:10px;background:var(--a-info-bg);color:var(--a-brand);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--a-brand) 12%,transparent);}
+.neutron-auth__status svg {width:20px;height:20px;}
+.neutron-auth__status--bad {background:var(--a-bad-bg);color:var(--a-bad);box-shadow:inset 0 0 0 1px #fecdca;}
+.neutron-auth__code {margin:0 0 6px;font-size:12px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--a-faint);font-variant-numeric:tabular-nums;}
+
+/* Setup-only actions on a fresh database */
+.neutron-auth__setup {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--a-line);}
+
+/* Product glimpse beside the form: the canvas plane with z1 cards on it. Decorative. */
+.neutron-auth__aside {display:flex;align-items:center;justify-content:center;min-height:100vh;padding:48px clamp(32px,5vw,80px);background:var(--a-canvas);box-shadow:inset 1px 0 0 var(--a-line);overflow:hidden;}
+.neutron-glimpse {width:100%;max-width:440px;}
+.neutron-glimpse__eyebrow {margin:0 0 10px;color:var(--a-brand);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
+.neutron-glimpse__title {margin:0;text-wrap:balance;color:var(--a-ink);font-size:28px;line-height:34px;font-weight:650;letter-spacing:-.025em;}
+.neutron-glimpse__lede {margin:10px 0 36px;color:var(--a-muted);font-size:15px;line-height:1.55;}
+.neutron-glimpse__stack {display:grid;gap:12px;}
+.neutron-glimpse__card {display:grid;gap:6px;padding:16px 18px;background:var(--a-surface);border-radius:12px;box-shadow:var(--a-e1);}
+.neutron-glimpse__card--offset {margin-left:28px;margin-right:-28px;box-shadow:var(--a-e2);}
+.neutron-glimpse__card strong {color:var(--a-ink);font-size:15px;font-weight:600;letter-spacing:-.01em;}
+.neutron-glimpse__row {display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.neutron-glimpse__row--end {align-items:flex-end;}
+.neutron-glimpse__row--end > div {display:grid;gap:2px;}
+.neutron-glimpse__label {color:var(--a-muted);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+.neutron-glimpse__meta {color:var(--a-faint);font-size:13px;}
+.neutron-glimpse__amount {font-size:18px!important;font-variant-numeric:tabular-nums;letter-spacing:.02em!important;}
+.neutron-glimpse__chip {display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600;}
+.neutron-glimpse__chip--ok {background:var(--a-ok-bg);color:var(--a-ok);box-shadow:inset 0 0 0 1px #abefc6;}
+.neutron-glimpse__ghost {display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--a-line-strong);border-radius:7px;color:var(--a-ink);font-size:13px;font-weight:550;}
+.neutron-glimpse__people {display:flex;align-items:center;margin-top:4px;}
+.neutron-glimpse__people i {display:grid;place-items:center;width:32px;height:32px;margin-right:-4px;border-radius:50%;background:var(--a-info-bg);color:var(--a-brand);font-size:11px;font-style:normal;font-weight:600;box-shadow:0 0 0 2px var(--a-surface);}
+.neutron-glimpse__people i:nth-child(2) {background:#e6f7f7;color:#1d7f82;}
+.neutron-glimpse__people i:nth-child(3) {background:#fdf3e1;color:#8a5a00;}
+.neutron-glimpse__people i:nth-child(4) {background:#f1f3f7;color:var(--a-text);}
+.neutron-glimpse__people span {margin-left:14px;color:var(--a-muted);font-size:13px;font-weight:550;}
+
+@media (max-width:1023px) {
+  .neutron-auth--split {display:block;}
+  .neutron-auth--split .neutron-auth__aside {display:none;}
+  .neutron-auth--split .neutron-auth__column {padding:24px 20px;}
+  .neutron-auth--split .neutron-auth__panel {padding:40px 0;}
+}
+@media (max-width:480px) {
+  .neutron-auth--centered {justify-content:flex-start;padding-top:40px;}
+  .neutron-auth--centered .neutron-auth__panel {padding:24px 20px 22px;}
+  .neutron-auth h1 {font-size:24px;line-height:30px;}
+}
+@media (prefers-reduced-motion:reduce) {.neutron-auth * {transition:none!important;animation:none!important;}}
+
+/* Public candidate pages (open roles). Same planes: canvas, a translucent top bar, z1 cards. */
+.neutron-auth.neutron-public {display:block;padding:0;}
+.neutron-public__bar {position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;height:56px;padding:0 24px;
+  background:rgba(236,238,242,.82);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);box-shadow:0 1px 0 rgba(15,23,42,.07);}
+.neutron-public__brand {display:flex;align-items:center;gap:10px;color:var(--a-ink);font-weight:600;font-size:14.5px;}
+.neutron-public__brand img {width:24px;height:24px;object-fit:contain;}
+.neutron-public__bar a {font-size:13.5px;}
+.neutron-public__main {max-width:880px;margin:0 auto;padding:40px 24px 64px;}
+.neutron-public__main > h1 {font-size:28px;line-height:34px;font-weight:700;letter-spacing:-.025em;}
+.neutron-public__main > .neutron-auth__lede {max-width:620px;margin:8px 0 28px;font-size:15px;}
+.neutron-public__count {color:var(--a-faint);font-weight:500;}
+.neutron-job {margin:0 0 12px;padding:20px 22px;background:var(--a-surface);border-radius:12px;box-shadow:var(--a-e2);}
+.neutron-job__head {display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+.neutron-job h2 {margin:0;font-size:17px;line-height:24px;font-weight:650;letter-spacing:-.01em;}
+.neutron-job__meta {display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:6px;color:var(--a-muted);font-size:13.5px;}
+.neutron-job__meta span + span::before {content:"·";margin-right:14px;color:var(--a-faint);}
+.neutron-job__tags {display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.neutron-job__tag {display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:999px;background:#f1f3f7;color:var(--a-text);font-size:12.5px;font-weight:500;box-shadow:inset 0 0 0 1px rgba(15,23,42,.06);}
+.neutron-job__apply {flex:none;width:auto;height:34px;margin:0;padding:0 14px;font-size:13.5px;}
+.neutron-job details {margin-top:14px;border-top:1px solid var(--a-line);padding-top:12px;}
+.neutron-job summary {display:inline-flex;align-items:center;gap:6px;color:var(--a-brand);font-size:13.5px;font-weight:550;cursor:pointer;list-style:none;}
+.neutron-job summary::-webkit-details-marker {display:none;}
+.neutron-job summary::after {content:"";width:6px;height:6px;margin-top:-3px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);transition:transform .15s;}
+.neutron-job details[open] summary::after {margin-top:3px;transform:rotate(-135deg);}
+.neutron-job__body {margin-top:10px;color:var(--a-text);font-size:14px;line-height:1.6;overflow-wrap:anywhere;}
+.neutron-job__body > :first-child {margin-top:0;}
+.neutron-job__progress {display:grid;gap:6px;margin-top:14px;max-width:280px;color:var(--a-muted);font-size:12.5px;}
+.neutron-job__progress div {height:4px;border-radius:999px;background:#e8ebf0;overflow:hidden;}
+.neutron-job__progress i {display:block;height:100%;border-radius:inherit;background:var(--a-brand);}
+.neutron-public__empty {padding:48px 24px;text-align:center;background:var(--a-surface);border-radius:12px;box-shadow:var(--a-e2);color:var(--a-muted);}
+.neutron-public__empty h2 {margin:0 0 4px;font-size:16px;color:var(--a-ink);}
+.neutron-public .neutron-auth__messages {max-width:880px;margin:16px auto 0;padding:0 24px;}
+@media (max-width:640px) {
+  .neutron-public__bar {padding:0 16px;}
+  .neutron-public__main {padding:28px 16px 48px;}
+  .neutron-job {padding:16px;}
+  .neutron-job__head {flex-direction:column;}
+  .neutron-job__apply {width:100%;}
+  .neutron-job__meta {gap:2px 12px;}
+  .neutron-job__meta span + span::before {display:none;}
+}
+
+/* Candidate application form: the legacy markup keeps its fields; this restyles it onto the Ledger planes. */
+body.neutron-apply {margin:0;background:#eceef2!important;color:#0b0d12;font-family:"Geist",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;font-size:14px;-webkit-font-smoothing:antialiased;}
+body.neutron-apply .neutron-apply__chrome {min-height:0;}
+body.neutron-apply .neutron-apply__wrap {background:transparent!important;}
+body.neutron-apply .neutron-apply__inner {max-width:1180px;margin:0 auto;padding:32px 24px 56px!important;}
+body.neutron-apply .neutron-apply__title {margin:0 0 20px;font-size:26px;line-height:32px;font-weight:700;letter-spacing:-.025em;text-align:left;}
+body.neutron-apply .neutron-apply__panel {background:#fff!important;border-radius:12px!important;box-shadow:0 0 0 1px rgba(15,23,42,.07),0 2px 4px rgba(15,23,42,.04),0 16px 40px -14px rgba(15,23,42,.22)!important;padding:24px!important;}
+body.neutron-apply .neutron-apply__section h2 {margin:0 0 8px;font-size:15px;font-weight:650;letter-spacing:-.01em;}
+body.neutron-apply .neutron-apply__panel .leading-relaxed {padding:0!important;color:#22262e;}
+body.neutron-apply .neutron-apply__panel .leading-relaxed p {font-size:14px!important;line-height:1.6;}
+body.neutron-apply .myform label {display:block;margin:0 0 6px;font-size:13px;font-weight:550;color:#22262e;}
+body.neutron-apply .myform :is(input[type=text],input[type=email],input[type=url],input[type=tel],input[type=number],input[type=date],select,textarea) {
+  width:100%;min-height:40px;border:1px solid #cdd2da!important;border-radius:8px!important;background:#fbfbfc!important;box-shadow:inset 0 1px 2px rgba(15,23,42,.07);color:#0b0d12;font:inherit;font-size:14px;}
+body.neutron-apply .myform textarea {padding-top:10px;}
+body.neutron-apply .myform :is(input,select,textarea):focus {outline:0;border-color:var(--primary-600,#051c97)!important;background:#fff!important;box-shadow:inset 0 1px 2px rgba(15,23,42,.07),0 0 0 3px color-mix(in srgb,var(--primary-600,#051c97) 14%,transparent);}
+body.neutron-apply .myform .select2-container--default .select2-selection--single {height:40px;border:1px solid #cdd2da;border-radius:8px;background:#fbfbfc;box-shadow:inset 0 1px 2px rgba(15,23,42,.07);}
+body.neutron-apply .myform .select2-container--default .select2-selection--single .select2-selection__rendered {line-height:38px;color:#0b0d12;}
+body.neutron-apply .myform .select2-container--default .select2-selection--single .select2-selection__arrow {height:38px;}
+body.neutron-apply .myform .relative > span i {color:#868c97;}
+body.neutron-apply .neutron-apply__uploads {background:#f6f7f9!important;border-radius:10px!important;box-shadow:inset 0 1px 2px rgba(15,23,42,.06);}
+body.neutron-apply .neutron-apply__uploads label[for] {border-color:#cdd2da!important;border-radius:10px!important;}
+body.neutron-apply .neutron-apply__submit {height:40px;padding:0 18px!important;border:1px solid var(--primary-700,#041778);border-radius:8px!important;font-weight:600;font-size:14px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 1px 2px color-mix(in srgb,var(--primary-600,#051c97) 30%,transparent),0 4px 10px -4px color-mix(in srgb,var(--primary-600,#051c97) 45%,transparent);}
+body.neutron-apply .errorlist {margin:6px 0 0;padding:0;list-style:none;color:#b42318;font-size:13px;font-weight:500;}
+body.neutron-apply .oh-alert-container {position:fixed;top:68px;right:16px;z-index:5;}
+@media (max-width:1024px) {body.neutron-apply .neutron-apply__inner {padding:24px 16px 40px!important;}}

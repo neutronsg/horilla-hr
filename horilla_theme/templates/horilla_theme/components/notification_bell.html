@@ -1,0 +1,56 @@
+{% load i18n notifications_tags neutron_ui %}
+{# Notification bell with unread badge; opens from the header with click and keyboard. #}
+<div class="relative dropdown-wrapper neutron-notify">
+    <button
+        id="notificationBell" type="button" class="neutron-icon-button group relative"
+        aria-expanded="false" aria-controls="notificationPanel" aria-haspopup="dialog"
+        aria-label="{% trans 'Notifications' %}" title="{% trans 'Notifications' %}"
+        hx-get="{% url 'notifications' %}"
+        hx-target="#notificationContainer"
+        hx-trigger="load"
+    >
+        {% neutron_icon "bell" 17 %}
+        {% notifications_unread as unread_count %}
+        <span
+            id="notifyBadgeCircle"
+            class="absolute w-7 h-7 rounded-full text-xs text-[white] font-semibold flex items-center justify-center border-2 border-white p-1 [right:-10px] [top:-7px]{% if not unread_count %} hidden{% endif %}"
+            style="background-color: var(--primary-600)"
+        >
+            {% live_notify_badge %}
+        </span>
+    </button>
+    <script>
+        // Hide the notification badge circle whenever the unread count is 0.
+        // The count element (.live_notify_badge) is rewritten in place by the
+        // notifications live-update JS, so we observe it and toggle the circle
+        // reactively — no page reload needed when the count changes.
+        (function () {
+            function syncNotifyBadge() {
+                var circle = document.getElementById("notifyBadgeCircle");
+                if (!circle) return;
+                var badge = circle.querySelector(".live_notify_badge");
+                var count = badge ? parseInt((badge.textContent || "").trim(), 10) : 0;
+                circle.classList.toggle("hidden", !count);
+            }
+            function initNotifyBadgeSync() {
+                var circle = document.getElementById("notifyBadgeCircle");
+                if (!circle) return;
+                syncNotifyBadge();
+                var badge = circle.querySelector(".live_notify_badge");
+                if (badge) {
+                    new MutationObserver(syncNotifyBadge).observe(badge, {
+                        childList: true,
+                        characterData: true,
+                        subtree: true,
+                    });
+                }
+            }
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", initNotifyBadgeSync);
+            } else {
+                initNotifyBadgeSync();
+            }
+        })();
+    </script>
+    {% include "notification/notification.html" %}
+</div>

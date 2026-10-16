@@ -30,16 +30,16 @@
     }
     .dark #srTabs .sr-tab { border-color: hsl(0, 0%, 25%); color: hsl(0, 0%, 85%); }
     #srTabs .sr-tab--active {
-        background-color: var(--primary-300, #fcedeb);
-        color: var(--primary-600, #E54F38);
-        border-color: var(--primary-600, #E54F38);
+        background-color: var(--primary-300, #eef1fb);
+        color: var(--primary-600, #051c97);
+        border-color: var(--primary-600, #051c97);
     }
-    .dark #srTabs .sr-tab--active { background-color: rgba(229, 79, 56, .16); }
+    .dark #srTabs .sr-tab--active { background-color: rgba(5, 28, 151, .16); }
     #srTabs .sr-tab__badge {
         min-width: 24px;
         height: 24px;
         padding: 0 4px;
-        background: var(--primary-600, #E54F38);
+        background: var(--primary-600, #051c97);
         border-radius: 999px;
         color: #fff;
         font-size: 12px;
@@ -134,7 +134,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    .sr-chip-item ion-icon { color: var(--primary-600, #E54F38); flex-shrink: 0; }
+    .sr-chip-item ion-icon { color: var(--primary-600, #051c97); flex-shrink: 0; }
     .sr-chip-empty { padding: 8px 10px; white-space: normal; font-size: 14px; color: #666; }
     .dark .sr-chip-empty { color: hsl(0, 0%, 65%); }
     .sr-chip-item:hover { background: hsl(0, 0%, 95%); }
@@ -223,8 +223,8 @@
     .sr-rail-link:hover { background: hsl(213, 22%, 93%); color: inherit; }
     .dark .sr-rail-link:hover { background: hsl(0, 0%, 20%); }
     .sr-rail-link--hidden { display: none; }
-    .sr-rail-link--active { background: var(--primary-100, #FFF5F1); color: var(--primary-600, #E54F38); }
-    .dark .sr-rail-link--active { background: rgba(229, 79, 56, .16); color: var(--primary-500, #F7C8C1); }
+    .sr-rail-link--active { background: var(--primary-100, #eef1fb); color: var(--primary-600, #051c97); }
+    .dark .sr-rail-link--active { background: rgba(5, 28, 151, .16); color: var(--primary-500, #cad5fc); }
     .sr-count-badge { font-size: 12px; color: #666; }
     .dark .sr-count-badge { color: hsl(0, 0%, 65%); }
     .sr-saved-view {
@@ -242,8 +242,8 @@
     .dark .sr-saved-view { color: hsl(0, 0%, 80%); }
     .sr-saved-view:hover { background: hsl(213, 22%, 93%); }
     .dark .sr-saved-view:hover { background: hsl(0, 0%, 20%); }
-    .sr-saved-view--active { background: var(--primary-100, #FFF5F1); color: var(--primary-600, #E54F38); }
-    .dark .sr-saved-view--active { background: rgba(229, 79, 56, .16); color: var(--primary-500, #F7C8C1); }
+    .sr-saved-view--active { background: var(--primary-100, #eef1fb); color: var(--primary-600, #051c97); }
+    .dark .sr-saved-view--active { background: rgba(5, 28, 151, .16); color: var(--primary-500, #cad5fc); }
     .sr-saved-view__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     /* "My favorites" is the one saved-view row with an icon -- a real icon
        (not the literal "★" text glyph this had before) sized/aligned to sit
@@ -272,7 +272,7 @@
     }
     .sr-saved-view:hover .sr-saved-view__del,
     .sr-saved-view:focus-within .sr-saved-view__del { opacity: 1; }
-    .sr-saved-view__del:hover { color: var(--primary-600, #E54F38); }
+    .sr-saved-view__del:hover { color: var(--primary-600, #051c97); }
     .oh-input--error { border-color: #B42318 !important; }
     .sr-save-view-btn {
         display: flex;
@@ -281,13 +281,13 @@
         padding: 7px 10px;
         font-size: 12px;
         font-weight: 600;
-        color: var(--primary-600, #E54F38);
+        color: var(--primary-600, #051c97);
         background: none;
         border: none;
         cursor: pointer;
         text-align: left;
     }
-    .sr-save-view-btn:hover { background: var(--primary-100, #FFF5F1); border-radius: 6px; }
+    .sr-save-view-btn:hover { background: var(--primary-100, #eef1fb); border-radius: 6px; }
 
     .sr-sections { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
     .sr-section--hidden { display: none; }
@@ -318,8 +318,8 @@
     .sr-row--hidden { display: none; }
     /* Selected-for-inspector state (list mode only) — coral instead of the
        mockup's blue. */
-    .sr-row.is-selected { background: var(--primary-100, #FFF5F1); }
-    .dark .sr-row.is-selected { background: rgba(229, 79, 56, .14); }
+    .sr-row.is-selected { background: var(--primary-100, #eef1fb); }
+    .dark .sr-row.is-selected { background: rgba(5, 28, 151, .14); }
     .sr-row__icon {
         width: 30px;
         height: 30px;
@@ -365,8 +365,8 @@
     /* Favorite/Subscribe are real oh-btn--sq-sm oh-btn--transparent icon
        buttons (see markup) — only the primary-color hover tint is added on
        top here, matching the same tint used on the report detail page. */
-    .sr-row__btn:hover { background: var(--primary-100, #FFF5F1); color: var(--primary-600, #E54F38); }
-    .sr-fav-btn.is-on { color: var(--primary-600, #E54F38); }
+    .sr-row__btn:hover { background: var(--primary-100, #eef1fb); color: var(--primary-600, #051c97); }
+    .sr-fav-btn.is-on { color: var(--primary-600, #051c97); }
 
     /* Grid view — same .sr-row elements/data, restyled via CSS Grid instead
        of duplicate markup. Tokens (border #ebebeb, .shadow-card box-shadow,
@@ -426,8 +426,8 @@
         border-color: hsl(0, 0%, 32%);
     }
     .sr-sections.sr-view--grid .sr-row.is-selected {
-        border-color: var(--primary-600, #E54F38);
-        box-shadow: 0 0 0 1px var(--primary-600, #E54F38);
+        border-color: var(--primary-600, #051c97);
+        box-shadow: 0 0 0 1px var(--primary-600, #051c97);
     }
     .dark .sr-sections.sr-view--grid .sr-row {
         background: #242424;
@@ -547,15 +547,15 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        background: var(--primary-100, #FFF5F1);
-        border: 1px solid var(--primary-500, #F7C8C1);
+        background: var(--primary-100, #eef1fb);
+        border: 1px solid var(--primary-500, #cad5fc);
         border-radius: 8px;
         padding: 10px 14px;
         margin-bottom: 14px;
     }
-    .dark .sr-bulk-bar { background: rgba(229, 79, 56, .14); border-color: rgba(229, 79, 56, .35); }
+    .dark .sr-bulk-bar { background: rgba(5, 28, 151, .14); border-color: rgba(5, 28, 151, .35); }
     .sr-bulk-bar[hidden] { display: none; }
-    .sr-bulk-bar__count { font-size: 13px; font-weight: 600; color: var(--primary-600, #E54F38); }
+    .sr-bulk-bar__count { font-size: 13px; font-weight: 600; color: var(--primary-600, #051c97); }
     .sr-bulk-bar__actions { display: flex; gap: 8px; }
 
     .sr-no-results { text-align: center; padding: 60px 0; font-size: 14px; color: #666; }
@@ -580,7 +580,7 @@
         font-size: 12px;
         font-weight: 700;
         letter-spacing: 0.05em;
-        color: var(--primary-600, #E54F38);
+        color: var(--primary-600, #051c97);
         margin-bottom: 6px;
     }
     .sr-inspector__title { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
@@ -826,7 +826,7 @@
         {% else %}
         <div class="oh-empty">
             <img src="{% static 'images/ui/search.svg' %}" class="oh-404__image" alt="">
-            <h1 class="oh-empty__title">{% trans "No Records found." %}</h1>
+            <h1 class="oh-empty__title">{% trans "No records found." %}</h1>
             <p class="oh-empty__subtitle">{% trans "No standard reports are available." %}</p>
         </div>
         {% endif %}
@@ -1366,7 +1366,7 @@ function initStandardCatalog() {
             document.body.appendChild(host);
         }
         var el = document.createElement("div");
-        var accent = kind === "error" ? "#dc2626" : "var(--primary-600, #E54F38)";
+        var accent = kind === "error" ? "#dc2626" : "var(--primary-600, #051c97)";
         el.style.cssText =
             "background:#fff;border:1px solid #ebebeb;border-left:3.4px solid " + accent +
             ";border-radius:6px;box-shadow:0px 2px 14px rgba(0,0,0,.12);padding:10px 14px;" +
