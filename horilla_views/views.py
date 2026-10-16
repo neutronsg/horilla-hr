@@ -1154,7 +1154,7 @@ def export_data(request, *args, **kwargs):
 
         total_columns = len(headers)
         center = Alignment(horizontal="center", vertical="center")
-        header_fill = PatternFill(start_color="FFD700", fill_type="solid")
+        header_fill = PatternFill(start_color="F8F9FB", fill_type="solid")
         header_font = Font(bold=True)
         thin = Side(style="thin")
         border = Border(left=thin, right=thin, top=thin, bottom=thin)
@@ -1173,7 +1173,7 @@ def export_data(request, *args, **kwargs):
 
         ws.merge_cells(start_row=2, start_column=1, end_row=3, end_column=total_columns)
         ws.cell(row=2, column=1).value = file_name
-        ws.cell(row=2, column=1).font = Font(size=14, bold=True, color="FF0000")
+        ws.cell(row=2, column=1).font = Font(size=14, bold=True, color="051C97")
         ws.cell(row=2, column=1).alignment = center
 
         ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=total_columns)

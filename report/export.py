@@ -1,7 +1,7 @@
 """
 Server-side Excel / CSV export for standard report payloads.
 
-Workbook layout (aligned with Horilla explorer exports):
+Workbook layout (aligned with the report explorer exports):
   1. Cover   — company letterhead, report title, metadata, filters, KPIs
   2. Data    — letterhead + primary tabular result set, print-ready
   3. Charts  — native openpyxl chart objects + their source data (when present)
@@ -19,19 +19,21 @@ from django.http import HttpResponse
 from django.utils import timezone
 
 # ---------------------------------------------------------------------------
-# Style tokens — Horilla primary (coral / #051c97)
+# Style tokens — Neutron Ledger (horilla_theme/static/.../neutron.css)
 # ---------------------------------------------------------------------------
-COLOR_PRIMARY = "E54F38"
-COLOR_PRIMARY_DARK = "CE4732"
-COLOR_PRIMARY_SOFT = "FCEDEB"
-COLOR_SLATE = "595959"
-COLOR_TEXT = "333333"
-COLOR_ROW_ALT = "FEF6F5"
+COLOR_PRIMARY = "051C97"
+COLOR_PRIMARY_DARK = "041778"
+COLOR_PRIMARY_SOFT = "EEF1FB"
+COLOR_SLATE = "5A606B"
+COLOR_TEXT = "22262E"
+COLOR_INK = "0B0D12"
+COLOR_HEAD = "F8F9FB"
+COLOR_ROW_ALT = "F8F9FB"
 COLOR_WHITE = "FFFFFF"
-COLOR_BORDER = "F7C8C1"
-COLOR_KPI_VALUE = "AC3B2A"
-COLOR_FILTER_BG = "FFF4CE"
-COLOR_FILTER_BORDER = "E8B84B"
+COLOR_BORDER = "E3E6EA"
+COLOR_KPI_VALUE = "0B0D12"
+COLOR_FILTER_BG = "F8F9FB"
+COLOR_FILTER_BORDER = "CDD2DA"
 
 
 def _table_from_payload(
@@ -353,12 +355,12 @@ def _styles():
         "company_name_font": Font(name="Calibri", size=14, bold=True, color=COLOR_TEXT),
         "company_meta_font": Font(name="Calibri", size=10, color=COLOR_TEXT),
         "product_font": Font(name="Calibri", size=9, color=COLOR_SLATE),
-        "title_font": Font(name="Calibri", size=16, bold=True, color=COLOR_PRIMARY),
+        "title_font": Font(name="Calibri", size=16, bold=True, color=COLOR_INK),
         "subtitle_font": Font(name="Calibri", size=11, color=COLOR_SLATE),
-        "section_font": Font(name="Calibri", size=11, bold=True, color=COLOR_PRIMARY),
+        "section_font": Font(name="Calibri", size=11, bold=True, color=COLOR_INK),
         "label_font": Font(name="Calibri", size=10, bold=True, color=COLOR_SLATE),
         "meta_font": Font(name="Calibri", size=10, color=COLOR_TEXT),
-        "header_font": Font(name="Calibri", size=11, bold=True, color=COLOR_WHITE),
+        "header_font": Font(name="Calibri", size=11, bold=True, color=COLOR_TEXT),
         "kpi_label_font": Font(name="Calibri", size=10, color=COLOR_SLATE),
         "kpi_value_font": Font(
             name="Calibri", size=13, bold=True, color=COLOR_KPI_VALUE
@@ -367,9 +369,9 @@ def _styles():
         "footer_font": Font(name="Calibri", size=8, italic=True, color=COLOR_SLATE),
         "filter_font": Font(name="Calibri", size=10, color=COLOR_TEXT),
         "filter_bold": Font(name="Calibri", size=10, bold=True, color=COLOR_TEXT),
-        "section_fill": PatternFill("solid", fgColor=COLOR_PRIMARY_SOFT),
-        "header_fill": PatternFill("solid", fgColor=COLOR_PRIMARY),
-        "kpi_fill": PatternFill("solid", fgColor="FEF6F5"),
+        "section_fill": PatternFill("solid", fgColor=COLOR_HEAD),
+        "header_fill": PatternFill("solid", fgColor=COLOR_HEAD),
+        "kpi_fill": PatternFill("solid", fgColor=COLOR_HEAD),
         "alt_fill": PatternFill("solid", fgColor=COLOR_ROW_ALT),
         "filter_fill": PatternFill("solid", fgColor=COLOR_FILTER_BG),
         "border": border,
@@ -402,7 +404,7 @@ def _apply_print_setup(ws, meta: Optional[dict] = None, landscape: bool = False)
     ws.page_setup.fitToHeight = 0
     ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
 
-    product = meta.get("product_name") or "Horilla HR"
+    product = meta.get("product_name") or "Neutron HR"
     generated = timezone.now().strftime("%Y-%m-%d %H:%M")
     ws.oddFooter.left.text = f"{product}"
     ws.oddFooter.left.size = 8
@@ -461,7 +463,7 @@ def _write_letterhead(ws, company: dict, styles, meta: dict, col_span: int = 6) 
     product = ws.cell(
         row=1,
         column=col_span,
-        value=meta.get("product_name") or "Horilla HR · Standard Reports",
+        value=meta.get("product_name") or "Neutron HR · Standard reports",
     )
     product.font = styles["product_font"]
     product.alignment = styles["right"]
@@ -773,7 +775,7 @@ def _write_cover(wb, payload: dict[str, Any], meta: Optional[dict] = None):
         column=1,
         value=(
             "Confidential — for internal use only. "
-            "Figures are aggregated server-side from Horilla HR source data."
+            "Figures are aggregated server-side from Neutron HR source data."
         ),
     )
     footer.font = styles["footer_font"]
@@ -881,7 +883,7 @@ def _write_data_sheet(wb, payload: dict[str, Any], meta: Optional[dict] = None):
         from openpyxl.styles import Font as XLFont
 
         total_row = header_row + 1 + len(rows)
-        total_font = XLFont(name="Calibri", size=10, bold=True, color=COLOR_PRIMARY)
+        total_font = XLFont(name="Calibri", size=10, bold=True, color=COLOR_INK)
         ws.cell(row=total_row, column=1, value="Total / Count").font = total_font
         ws.cell(row=total_row, column=1).fill = styles["section_fill"]
         ws.cell(row=total_row, column=1).border = styles["border"]
@@ -926,7 +928,7 @@ def _write_data_sheet(wb, payload: dict[str, Any], meta: Optional[dict] = None):
 
 # Same brand hues as report/chart_render.py's PALETTE (plain hex — openpyxl
 # graphicalProperties.solidFill wants strings, not reportlab Color objects).
-_CHART_PALETTE_HEX = ["E54F38", "2563EB", "15803D", "7C3AED", "0D9488", "F59E0B"]
+_CHART_PALETTE_HEX = ["051C97", "617BE3", "2AA9AC", "D98E04", "9CACFA", "60CFD2"]
 
 
 def _add_native_chart(
@@ -1059,9 +1061,9 @@ def export_xlsx(
     _write_chart_sheet(wb, payload, meta=meta)
 
     props = wb.properties
-    props.title = str(payload.get("title") or "Horilla Report")
+    props.title = str(payload.get("title") or "Neutron HR report")
     company = _company_from_meta(meta)
-    props.creator = company.get("name") or "Horilla HR"
+    props.creator = company.get("name") or "Neutron HR"
     props.description = (
         f"Standard report export · {(payload.get('slug') or '')} · "
         f"{_period_label(payload.get('period') or {})}"
@@ -1269,7 +1271,7 @@ def export_pdf(
                 "dense": len(headers) > 8,
                 "report_ref": payload.get("slug") or meta.get("slug") or "",
                 "product_name": meta.get("product_name")
-                or "Horilla HR · Standard Reports",
+                or "Neutron HR · Standard reports",
                 "generated_at": generated_str,
                 "generated_by": meta.get("user") or "",
             },

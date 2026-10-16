@@ -596,13 +596,13 @@ class RosterTemplateDownloadView(View):
         ws = wb.active
         ws.title = "Roster"
 
-        header_fill = PatternFill("solid", fgColor="5C6BC0")
-        weekend_fill = PatternFill("solid", fgColor="ECEEF6")
+        header_fill = PatternFill("solid", fgColor="051C97")
+        weekend_fill = PatternFill("solid", fgColor="EEF1FB")
         off_fill = PatternFill("solid", fgColor="E0E0E0")
-        meta_fill = PatternFill("solid", fgColor="F0F2F8")
+        meta_fill = PatternFill("solid", fgColor="F8F9FB")
         even_fill = PatternFill("solid", fgColor="FAFBFF")
         white_font = Font(bold=True, color="FFFFFF", size=10)
-        meta_font = Font(bold=True, color="4A5173", size=10)
+        meta_font = Font(bold=True, color="3A3F49", size=10)
         off_font = Font(bold=False, color="000000", size=10)
         center = Alignment(horizontal="center", vertical="center")
         left = Alignment(horizontal="left", vertical="center")
@@ -624,7 +624,7 @@ class RosterTemplateDownloadView(View):
                 c.font = Font(bold=True, color="757575", size=10)
             elif d.weekday() >= 5:
                 c.fill = weekend_fill
-                c.font = Font(bold=True, color="8B91B0", size=10)
+                c.font = Font(bold=True, color="868C97", size=10)
             else:
                 c.fill = header_fill
                 c.font = white_font
@@ -662,12 +662,12 @@ class RosterTemplateDownloadView(View):
                     c.fill = off_fill
                     c.font = off_font
                     if off_reason != "Weekly Off Day":
-                        c.comment = Comment(f"Holiday: {off_reason}", "Horilla")
+                        c.comment = Comment(f"Holiday: {off_reason}", "Neutron HR")
                 elif d.weekday() >= 5:
                     c.fill = weekend_fill
 
         ws2 = wb.create_sheet("Available Shifts")
-        ws2.cell(1, 1, "Shift Name").font = Font(bold=True, color="4A5173", size=10)
+        ws2.cell(1, 1, "Shift Name").font = Font(bold=True, color="3A3F49", size=10)
         ws2.cell(2, 1, "OFF").font = Font(bold=True, color="E65100", size=10)
         for i, s in enumerate(shifts, start=3):
             ws2.cell(i, 1, s).font = Font(size=10)

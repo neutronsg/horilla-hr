@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+{% load static horillafilters i18n %}
+{% comment %}
+  Neutron override of horilla_views/templates/generic/export_pdf.html (list
+  "Export → PDF"). xhtml2pdf ignores flexbox, so the letterhead is a table,
+  and colours are the Ledger tokens from neutron.css written out as hex.
+{% endcomment %}
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>{{ report_title }}</title>
+  <style>
+  @page {
+    size: A4 {% if landscape or headers|length > 5 %}landscape{% else %}portrait{% endif %};
+    margin: 12mm 10mm 16mm 10mm;
+    @frame footer_frame {
+      -pdf-frame-content: footerContent;
+      bottom: 6mm;
+      margin-left: 10mm;
+      margin-right: 10mm;
+      height: 8mm;
+    }
+  }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 9px; color: #22262e; }
+  .letterhead { width: 100%; border-collapse: collapse; border-bottom: 1px solid #cdd2da; margin-bottom: 8px; }
+  .letterhead td { vertical-align: middle; padding: 0 0 6px; }
+  .letterhead td.logo-col { width: 14mm; }
+  .letterhead img { max-width: 36px; max-height: 36px; }
+  .company-name { font-size: 9px; font-weight: bold; color: #5a606b; text-transform: uppercase; letter-spacing: 0.4px; }
+  .report-title { font-size: 15px; font-weight: bold; color: #0b0d12; margin-top: 2px; }
+  .date-range { font-size: 9px; color: #5a606b; text-align: right; }
+  table.data { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  table.data th, table.data td {
+    border: 1px solid #e3e6ea;
+    padding: 3px 4px;
+    font-size: 8.5px;
+    vertical-align: top;
+    text-align: left;
+    word-wrap: break-word;
+  }
+  table.data th { background-color: #f8f9fb; color: #3a3f49; font-weight: bold; border-bottom: 1px solid #cdd2da; }
+  table.data tr { page-break-inside: avoid; }
+  td.sn, th.sn { width: 22px; color: #868c97; }
+  ul { margin: 0; padding-left: 12px; }
+  ul li { margin: 0; padding: 0; }
+  #footerContent { font-size: 7.5px; color: #868c97; border-top: 1px solid #e3e6ea; padding-top: 3px; text-align: center; }
+  </style>
+</head>
+<body>
+  <table class="letterhead">
+    <tr>
+      {% if logo_path %}
+      <td class="logo-col"><img src="{{ logo_path }}" alt="{% trans 'Company Logo' %}" /></td>
+      {% endif %}
+      <td>
+        {% if company_name %}<div class="company-name">{{ company_name }}</div>{% endif %}
+        <div class="report-title">{{ report_title|default:"Export" }}</div>
+      </td>
+      <td class="date-range">{{ date_range }}</td>
+    </tr>
+  </table>
+
+  <table class="data" repeat="1">
+    <thead>
+      <tr>
+        <th class="sn">#</th>
+        {% for header in headers %}
+          <th>{{ header }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td class="sn">{{ forloop.counter }}</td>
+        {% for header in headers %}
+          <td>
+            {% with cell=row|get_item:header %}
+              {% if cell is iterable and not cell|stringformat:'s' == cell %}
+                <ul>
+                  {% for item in cell %}
+                    <li>{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                {{ cell }}
+              {% endif %}
+            {% endwith %}
+          </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div id="footerContent">
+    Neutron HR &nbsp;·&nbsp; {% trans "Confidential — for internal use only" %} &nbsp;·&nbsp;
+    {% trans "Page" %} <pdf:pagenumber /> {% trans "of" %} <pdf:pagecount />
+  </div>
+</body>
+</html>

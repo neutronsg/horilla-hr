@@ -1,6 +1,7 @@
 """One Neutron email frame for built-in, automated and HR-composed messages."""
 
 import logging
+import re
 from email.mime.image import MIMEImage
 
 from bs4 import BeautifulSoup
@@ -12,19 +13,45 @@ logger = logging.getLogger(__name__)
 BRAND_MARKER = 'data-neutron-email="true"'
 
 
+PARAGRAPH_TAGS = ("p", "h1", "h2", "h3", "h4", "h5", "h6", "table", "ul", "ol", "blockquote")
+LINE_TAGS = ("div", "tr", "td", "th", "li", "section", "header", "footer")
+HIDDEN_STYLE = re.compile(r"display\s*:\s*none", re.IGNORECASE)
+
+
 def html_to_plain(html):
-    """Retain action URLs in the accessible plain-text version."""
+    """Readable text alternative: one line per block, URLs kept beside their labels."""
     soup = BeautifulSoup(html, "html.parser")
-    for element in soup.find_all(["head", "style", "script"]):
+    for element in soup.find_all(["head", "style", "script", "title"]):
+        element.decompose()
+    # Preheaders and other hidden helpers would otherwise lead the message.
+    for element in soup.find_all(style=HIDDEN_STYLE):
         element.decompose()
     for link in soup.find_all("a", href=True):
-        href = link["href"]
-        label = link.get_text(" ", strip=True)
-        if href.startswith(("https://", "http://")):
+        href = link["href"].strip()
+        if not href.startswith(("https://", "http://")):
+            continue
+        label = " ".join(link.get_text(" ", strip=True).split())
+        bare = href.split("://", 1)[1].rstrip("/")
+        if not label:
+            link.decompose()  # image-only links such as the logo
+        elif label.rstrip("/") in (href.rstrip("/"), bare):
+            link.replace_with(href)
+        else:
             link.replace_with(f"{label}: {href}")
-    return "\n".join(
-        line.strip() for line in soup.get_text("\n").splitlines() if line.strip()
-    )
+    for br in soup.find_all("br"):
+        br.replace_with("\n")
+    for block in soup.find_all(PARAGRAPH_TAGS):
+        block.insert_before("\n\n")
+        block.insert_after("\n\n")
+    for block in soup.find_all(LINE_TAGS):
+        block.insert_before("\n")
+        block.insert_after("\n")
+    lines = []
+    for line in soup.get_text("").splitlines():
+        line = " ".join(line.split())
+        if line or (lines and lines[-1]):
+            lines.append(line)
+    return "\n".join(lines).strip()
 
 
 def prepare_neutron_email(message):

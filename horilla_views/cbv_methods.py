@@ -680,7 +680,7 @@ def export_xlsx(json_data, columns, file_name="quick_export", extra_info=None):
 
     # --- Styles ---
     header_font_big = Font(size=14, bold=True)
-    title_font = Font(size=14, bold=True, color="FF0000")
+    title_font = Font(size=14, bold=True, color="051C97")
     center_align = Alignment(horizontal="center", vertical="center")
 
     # --- 1️⃣ Company Name Row ---
@@ -725,7 +725,7 @@ def export_xlsx(json_data, columns, file_name="quick_export", extra_info=None):
     header_row_index = start_data_row
 
     header_fill = PatternFill(
-        start_color="FFD700", end_color="FFD700", fill_type="solid"
+        start_color="F8F9FB", end_color="F8F9FB", fill_type="solid"
     )
     bold_font = Font(bold=True)
     thin_border = Border(
@@ -842,7 +842,7 @@ def generate_import_excel(
 
     # Style definitions
     header_fill = PatternFill(
-        start_color="FFD700", end_color="FFD700", fill_type="solid"
+        start_color="F8F9FB", end_color="F8F9FB", fill_type="solid"
     )
     bold_font = Font(bold=True)
     wrap_alignment = Alignment(wrap_text=True, vertical="center", horizontal="center")

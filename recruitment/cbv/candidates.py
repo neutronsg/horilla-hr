@@ -469,7 +469,7 @@ class ListCandidates(HorillaListView):
 
         # Styling
         header_fill = PatternFill(
-            start_color="FFD700", end_color="FFD700", fill_type="solid"
+            start_color="F8F9FB", end_color="F8F9FB", fill_type="solid"
         )
         bold_font = Font(bold=True)
         thin_border = Border(

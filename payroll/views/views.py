@@ -1276,7 +1276,8 @@ def payslip_export(request):
             "font_size": 14,
             "align": "center",
             "valign": "vcenter",
-            "bg_color": "#eb7968",
+            "bg_color": "#F8F9FB",
+            "font_color": "#0B0D12",
             "font_size": 20,
         }
     )
@@ -1296,7 +1297,7 @@ def payslip_export(request):
     )
 
     header_format = workbook.add_format(
-        {"bg_color": "#eb7968", "bold": True, "text_wrap": True}
+        {"bg_color": "#F8F9FB", "bold": True, "text_wrap": True}
     )
 
     for col_num, value in enumerate(df_table1.columns.values):

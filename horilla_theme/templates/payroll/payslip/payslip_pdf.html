@@ -1,0 +1,238 @@
+{% load static i18n horillafilters %}<!DOCTYPE html>
+{% comment %}
+  Neutron override of payroll/templates/payroll/payslip/payslip_pdf.html.
+
+  Rendered by wkhtmltopdf (pdfkit, zoom 1.3) for the payslip download and mail
+  attachment, and served as HTML by /payroll/view-payslip-pdf/<id>/. QtWebKit
+  has no flexbox, grid, CSS variables or woff2, so layout is tables, colours are
+  the Ledger tokens from neutron.css written out as hex, and Geist is loaded as
+  static TTF instances (the runtime image ships no TrueType fonts).
+{% endcomment %}
+{% with company_obj=employee.employee_work_info.company_id|default:company %}
+{% static 'fonts/geist/geist-regular.ttf' as geist_regular %}
+{% static 'fonts/geist/geist-semibold.ttf' as geist_semibold %}
+{% static 'images/brand/neutron-email-logo.png' as neutron_wordmark %}
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>{% trans "Payslip" %} · {{ employee.get_full_name }} · {{ month_start_name }} {% trans "to" %} {{ month_end_name }}</title>
+        <style>
+            @font-face { font-family: 'NeutronGeist'; src: url('{{ geist_regular|absolute_url:request }}') format('truetype'); font-weight: 400; font-style: normal; }
+            @font-face { font-family: 'NeutronGeist'; src: url('{{ geist_semibold|absolute_url:request }}') format('truetype'); font-weight: 600; font-style: normal; }
+            @font-face { font-family: 'NeutronGeist'; src: url('{{ geist_semibold|absolute_url:request }}') format('truetype'); font-weight: 700; font-style: normal; }
+            @page { size: A4; margin: 8mm; }
+            html, body { margin: 0; padding: 0; background: #ffffff; }
+            body {
+                font-family: 'NeutronGeist', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10px;
+                line-height: 1.45;
+                color: #22262e;
+                -webkit-print-color-adjust: exact;
+            }
+            .sheet { max-width: 760px; margin: 0 auto; padding: 4px 2px; }
+            table { width: 100%; border-collapse: collapse; border-spacing: 0; }
+            td, th { padding: 0; text-align: left; vertical-align: top; }
+            tr { page-break-inside: avoid; }
+            .num { text-align: right; white-space: nowrap; }
+            .muted { color: #5a606b; }
+            .faint { color: #868c97; }
+            .eyebrow { font-size: 8px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: #868c97; }
+
+            /* Letterhead */
+            .letterhead td { vertical-align: middle; padding-bottom: 14px; }
+            .letterhead img { max-height: 30px; max-width: 150px; }
+            .letterhead .company { padding-top: 8px; font-size: 11px; font-weight: 600; color: #0b0d12; }
+            .letterhead .address { font-size: 9px; color: #5a606b; }
+            .letterhead .title { font-size: 18px; font-weight: 600; color: #0b0d12; letter-spacing: -0.2px; }
+            .letterhead .period { font-size: 10px; color: #5a606b; }
+            .rule { border-top: 1px solid #cdd2da; height: 0; line-height: 0; font-size: 0; }
+
+            /* Employee details */
+            .details { margin: 14px 0 16px; }
+            .details td { width: 25%; padding: 0 12px 10px 0; }
+            .details .value { font-size: 10.5px; font-weight: 600; color: #0b0d12; margin-top: 2px; }
+
+            /* Net pay summary plane */
+            .summary { border: 1px solid #e3e6ea; background: #f8f9fb; }
+            .summary td { padding: 12px 14px; vertical-align: middle; border-left: 1px solid #e3e6ea; }
+            .summary td.primary { width: 40%; border-left: 0; }
+            .summary .amount { font-size: 15px; font-weight: 600; color: #0b0d12; margin-top: 3px; }
+            .summary td.primary .amount { font-size: 20px; color: #051c97; }
+            .summary .hint { font-size: 8.5px; color: #868c97; margin-top: 2px; }
+
+            /* Breakdown tables */
+            .columns { margin-top: 18px; }
+            .columns > tbody > tr > td.col { width: 50%; }
+            .columns > tbody > tr > td.col-left { padding-right: 9px; }
+            .columns > tbody > tr > td.col-right { padding-left: 9px; }
+            .lines { border: 1px solid #e3e6ea; }
+            .lines th { background: #f8f9fb; color: #5a606b; font-size: 8px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; padding: 7px 10px; border-bottom: 1px solid #cdd2da; }
+            .lines td { padding: 7px 10px; border-bottom: 1px solid #e3e6ea; }
+            .lines tr.sub td { padding-left: 20px; color: #a15c00; font-size: 9px; }
+            .lines tr.sub td .note { display: block; color: #868c97; font-size: 8.5px; }
+            .lines tr.total td { border-bottom: 0; border-top: 1px solid #cdd2da; font-weight: 600; color: #0b0d12; background: #f8f9fb; }
+            .lines tr.empty td { color: #868c97; }
+            .section { margin-top: 18px; }
+            .proration { margin-top: 12px; font-size: 9px; color: #5a606b; }
+
+            /* Net payable */
+            .payable { margin-top: 18px; border-top: 1px solid #cdd2da; }
+            .payable td { padding-top: 12px; vertical-align: middle; }
+            .payable .label { font-size: 11px; font-weight: 600; color: #0b0d12; }
+            .payable .amount { font-size: 18px; font-weight: 600; color: #051c97; }
+            .footnote { margin-top: 26px; font-size: 8px; color: #868c97; }
+        </style>
+    </head>
+    <body id="printDiv">
+        <div class="sheet" id="download_section">
+            <table class="letterhead">
+                <tr>
+                    <td style="width: 55%;">
+                        {% if company_obj.icon %}
+                            <img src="{{ company_obj.icon.url|absolute_url:request }}" alt="{{ company_obj }}">
+                        {% else %}
+                            <img src="{{ neutron_wordmark|absolute_url:request }}" alt="Neutron">
+                        {% endif %}
+                        {% if company_obj %}
+                            <div class="company">{{ company_obj }}</div>
+                            <div class="address">
+                                {% if company_obj.address %}{{ company_obj.address }}<br>{% endif %}
+                                {% if company_obj.city %}{{ company_obj.city }}, {% endif %}{% if company_obj.state %}{{ company_obj.state }}, {% endif %}{{ company_obj.country|default_if_none:"" }} {{ company_obj.zip|default_if_none:"" }}
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td class="num" style="width: 45%;">
+                        <div class="eyebrow">{% trans "Payslip" %}</div>
+                        <div class="title">{{ employee.get_full_name }}</div>
+                        <div class="period">{{ month_start_name }} {% trans "to" %} {{ month_end_name }}</div>
+                    </td>
+                </tr>
+            </table>
+            <div class="rule">&nbsp;</div>
+
+            <table class="details">
+                <tr>
+                    <td>
+                        <div class="eyebrow">{% trans "Employee ID" %}</div>
+                        <div class="value">{{ employee.badge_id|default:"—" }}</div>
+                    </td>
+                    <td>
+                        <div class="eyebrow">{% trans "Department" %}</div>
+                        <div class="value">{{ employee.employee_work_info.department_id.department|default:"—" }}</div>
+                    </td>
+                    <td>
+                        <div class="eyebrow">{% trans "Job position" %}</div>
+                        <div class="value">{{ employee.employee_work_info.job_position_id.job_position|default:"—" }}</div>
+                    </td>
+                    <td>
+                        <div class="eyebrow">{% trans "Payment date" %}</div>
+                        <div class="value">{{ payment_date|date:"d M Y"|default:"—" }}</div>
+                    </td>
+                </tr>
+                {% with account=employee.employee_bank_details.account_number %}
+                {% if account %}
+                <tr>
+                    <td colspan="2">
+                        <div class="eyebrow">{% trans "Bank account" %}</div>
+                        <div class="value">{{ employee.employee_bank_details.bank_name|default:"" }} •••• {{ account|slice:"-4:" }}</div>
+                    </td>
+                    <td colspan="2"></td>
+                </tr>
+                {% endif %}
+                {% endwith %}
+            </table>
+
+            <table class="summary">
+                <tr>
+                    <td class="primary">
+                        <div class="eyebrow">{% trans "Net pay" %}</div>
+                        <div class="amount">{{ net_pay|floatformat:"2g"|currency_symbol_position }}</div>
+                        <div class="hint">{% trans "Gross earnings less total deductions" %}</div>
+                    </td>
+                    <td>
+                        <div class="eyebrow">{% trans "Gross earnings" %}</div>
+                        <div class="amount">{{ gross_pay|floatformat:"2g"|currency_symbol_position }}</div>
+                    </td>
+                    <td>
+                        <div class="eyebrow">{% trans "Total deductions" %}</div>
+                        <div class="amount">{{ total_deductions|floatformat:"2g"|currency_symbol_position }}</div>
+                    </td>
+                </tr>
+            </table>
+
+            <table class="columns">
+                <tr>
+                    <td class="col col-left">
+                        <table class="lines">
+                            <tr><th>{% trans "Earnings" %}</th><th class="num">{% trans "Amount" %}</th></tr>
+                            <tr><td>{% trans "Basic pay" %}</td><td class="num">{{ basic_pay|floatformat:"2g"|currency_symbol_position }}</td></tr>
+                            {% for allowance in all_allowances %}
+                                <tr><td>{{ allowance.title }}</td><td class="num">{{ allowance.amount|floatformat:"2g"|currency_symbol_position }}</td></tr>
+                            {% endfor %}
+                            <tr class="total"><td>{% trans "Total gross pay" %}</td><td class="num">{{ gross_pay|floatformat:"2g"|currency_symbol_position }}</td></tr>
+                        </table>
+                    </td>
+                    <td class="col col-right">
+                        <table class="lines">
+                            <tr><th>{% trans "Deductions" %}</th><th class="num">{% trans "Amount" %}</th></tr>
+                            {% if loss_of_pay %}
+                                <tr><td>{% trans "Loss of pay" %}</td><td class="num">{{ loss_of_pay|floatformat:"2g"|currency_symbol_position }}</td></tr>
+                            {% endif %}
+                            {% if custom_leave_deduction %}
+                                <tr class="sub">
+                                    <td>↳ {% trans "Leave payment reduction" %}<span class="note">{% blocktrans %}Partial deduction — {{ partial_pay_days }} day(s) on a partially paid leave type{% endblocktrans %}</span></td>
+                                    <td class="num">{{ custom_leave_deduction|floatformat:"2g"|currency_symbol_position }}</td>
+                                </tr>
+                            {% endif %}
+                            {% for deduction in basic_pay_deductions %}<tr><td>{{ deduction.title }}</td><td class="num">{{ deduction.amount|floatformat:"2g"|currency_symbol_position }}</td></tr>{% endfor %}
+                            {% for deduction in gross_pay_deductions %}<tr><td>{{ deduction.title }}</td><td class="num">{{ deduction.amount|floatformat:"2g"|currency_symbol_position }}</td></tr>{% endfor %}
+                            {% for deduction in pretax_deductions %}<tr><td>{{ deduction.title }}</td><td class="num">{{ deduction.amount|floatformat:"2g"|currency_symbol_position }}</td></tr>{% endfor %}
+                            {% for deduction in post_tax_deductions %}<tr><td>{{ deduction.title }}</td><td class="num">{{ deduction.amount|floatformat:"2g"|currency_symbol_position }}</td></tr>{% endfor %}
+                            {% if federal_tax %}
+                                <tr><td>{% trans "Income tax" %}</td><td class="num">{{ federal_tax|floatformat:"2g"|currency_symbol_position }}</td></tr>
+                            {% endif %}
+                            {% for deduction in tax_deductions %}<tr><td>{{ deduction.title }}</td><td class="num">{{ deduction.amount|floatformat:"2g"|currency_symbol_position }}</td></tr>{% endfor %}
+                            {% for deduction in net_deductions %}<tr><td>{{ deduction.title }}</td><td class="num">{{ deduction.amount|floatformat:"2g"|currency_symbol_position }}</td></tr>{% endfor %}
+                            {% if not loss_of_pay and not custom_leave_deduction and not federal_tax and not basic_pay_deductions and not gross_pay_deductions and not pretax_deductions and not post_tax_deductions and not tax_deductions and not net_deductions %}
+                                <tr class="empty"><td>{% trans "No deductions" %}</td><td class="num">—</td></tr>
+                            {% endif %}
+                            <tr class="total"><td>{% trans "Total deductions" %}</td><td class="num">{{ total_deductions|floatformat:"2g"|currency_symbol_position }}</td></tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            {% if employer_contributions or payslip.sdl_display %}
+                <table class="lines section">
+                    <tr><th>{% trans "Employer contributions" %} <span style="text-transform: none; letter-spacing: 0; font-weight: 400;">· {% trans "Not deducted from net pay" %}</span></th><th class="num">{% trans "Amount" %}</th></tr>
+                    {% for contribution in employer_contributions %}
+                        <tr><td>{% trans "Employer" %} {{ contribution.title }}</td><td class="num">{{ contribution.employer_contribution_amount|floatformat:"2g"|currency_symbol_position }}</td></tr>
+                    {% endfor %}
+                    {% if payslip.sdl_display %}
+                        <tr><td>{% trans "SDL" %}</td><td class="num">{{ payslip.sdl_display|floatformat:"2g"|currency_symbol_position }}</td></tr>
+                    {% endif %}
+                    <tr class="total"><td>{% trans "Total employer contributions" %}</td><td class="num">{{ employer_contributions_total|floatformat:"2g"|currency_symbol_position }}</td></tr>
+                </table>
+            {% endif %}
+
+            {% if proration and wage_type == "monthly" %}
+                <div class="proration">
+                    {% for month in proration %}{% trans "Salary proration" %}: {{ month.working_days_on_period }} / {{ month.working_days_on_month }} {% trans "working days" %} ({{ month.start_date }} – {{ month.end_date }}){% if not forloop.last %}<br>{% endif %}{% endfor %}
+                </div>
+            {% endif %}
+
+            <table class="payable">
+                <tr>
+                    <td>
+                        <div class="label">{% trans "Total net payable" %}</div>
+                        <div class="faint">{% trans "Gross earnings less total deductions" %}</div>
+                    </td>
+                    <td class="num amount">{{ net_pay|floatformat:"2g"|currency_symbol_position }}</td>
+                </tr>
+            </table>
+
+            <div class="footnote">{% trans "This payslip is system-generated by Neutron HR and does not require a signature. Keep it confidential." %}</div>
+        </div>
+    </body>
+</html>
+{% endwith %}

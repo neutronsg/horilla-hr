@@ -17,13 +17,13 @@ class Bot:
         self.__str__()
 
     def __str__(self) -> str:
-        return "Horilla Bot"
+        return "Neutron HR"
 
     def get_avatar(self):
         """
         Get avatar
         """
-        return "/avatar/initials.svg?name=Horilla+Bot&background=random"
+        return "/avatar/initials.svg?name=Neutron+HR&background=random"
 
 
 def _check_and_delete(entry1, entry2, dry_run=False):

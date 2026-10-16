@@ -14,53 +14,54 @@
             body {
                 margin: 0;
                 padding: 0;
-                color: #333;
+                color: #22262e;
                 font-size: 12px;
                 line-height: 1.2;
                 font-family: Arial, sans-serif;
             }
 
-            .header-section {
-                display: table;
+            .letterhead {
                 width: 100%;
-                margin-bottom: 5px;
+                border-collapse: collapse;
+                border-bottom: 1px solid #cdd2da;
+                margin-bottom: 10px;
             }
 
-            .logo-cell {
-                display: table-cell;
-                width: 80px;
-                vertical-align: top;
+            .letterhead td {
+                padding: 0 0 6px;
+                border: none;
+                text-align: left;
+                vertical-align: middle;
             }
 
-            .info-cell {
-                display: table-cell;
-                padding-left: 5px;
-                vertical-align: top;
-            }
-
-            .year-info {
-                margin-bottom: 2px;
-                font-weight: bold;
-                text-align: right;
-            }
-
-            .company-info div {
-                margin-bottom: 1px;
+            .letterhead .logo-cell {
+                width: 50px;
             }
 
             .company-logo {
-                width: 70px;
-                height: 70px;
-                object-fit: contain;
+                width: 40px;
+                height: 40px;
+            }
+
+            .company-name {
+                color: #5a606b;
+                font-size: 9px;
+                font-weight: bold;
+                letter-spacing: 0.4px;
+                text-transform: uppercase;
             }
 
             .report-title {
-                margin: 8px 0 10px 0;
-                padding: 5px 0;
-                background-color: #6c757d;
-                color: white;
-                font-size: 12px;
-                text-align: center;
+                margin-top: 2px;
+                color: #0b0d12;
+                font-size: 16px;
+                font-weight: bold;
+            }
+
+            .letterhead .address-cell {
+                color: #5a606b;
+                font-size: 9px;
+                text-align: right;
             }
 
             .table-container {
@@ -79,13 +80,14 @@
             th, td {
                 padding: 4px 2px;
                 overflow: hidden;
-                border: 1px solid #ddd;
+                border: 1px solid #e3e6ea;
                 text-align: center;
                 word-break: break-word;
             }
 
             th {
-                background-color: #f2f2f2;
+                background-color: #f8f9fb;
+                color: #3a3f49;
                 font-weight: bold;
             }
 
@@ -111,24 +113,24 @@
 
             .periods-header {
                 padding: 4px;
-                border: 2px solid #000;
+                border: 1px solid #cdd2da;
                 vertical-align: middle;
             }
 
             .other-cell {
-                border: 2px solid #000;
+                border: 1px solid #cdd2da;
             }
 
             .period-cell-l {
-                border-top: 2px solid #000;
-                border-bottom: 2px solid #000;
-                border-left: 2px solid #000;
+                border-top: 1px solid #cdd2da;
+                border-bottom: 1px solid #cdd2da;
+                border-left: 1px solid #cdd2da;
             }
 
             .period-cell-r {
-                border-top: 2px solid #000;
-                border-right: 2px solid #000;
-                border-bottom: 2px solid #000;
+                border-top: 1px solid #cdd2da;
+                border-right: 1px solid #cdd2da;
+                border-bottom: 1px solid #cdd2da;
             }
 
             .footer {
@@ -162,29 +164,28 @@
         </style>
     </head>
     <body>
-        <div class="header-section">
-            <div class="logo-cell">
-                <img
-                    class="company-logo"
-                    src="{{ request.scheme }}://{{ request.get_host }}{{ company_data.icon.url }}"
-                    alt="{% trans 'Company Logo' %}"
-                >
-            </div>
-            <div class="info-cell">
-                <div class="year-info">YEAR: {{ report_creation_date|date:"Y" }}</div>
-                <div class="company-info">
-                    <div><strong>{% trans "COMPANY:" %}</strong> {{ company_data.company }}</div>
-                    <div><strong>{% trans "ADDRESS:" %}</strong> {{ company_data.address }}</div>
-                    <div><strong>{% trans "CITY:" %}</strong> {{ company_data.city }}</div>
-                    <div><strong>{% trans "STATE:" %}</strong> {{ company_data.state }}</div>
-                    <div><strong>{% trans "ZIP:" %}</strong> {{ company_data.zip }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="report-title">
-            <h1>{% trans "LEAVE REPORT" %}</h1>
-        </div>
+        <table class="letterhead">
+            <tr>
+                {% if company_data.icon %}
+                <td class="logo-cell">
+                    <img
+                        class="company-logo"
+                        src="{% if company_data.icon.url|slice:':4' == 'http' %}{{ company_data.icon.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ company_data.icon.url }}{% endif %}"
+                        alt="{% trans 'Company Logo' %}"
+                    >
+                </td>
+                {% endif %}
+                <td class="title-cell">
+                    <div class="company-name">{{ company_data.company }}</div>
+                    <div class="report-title">{% trans "Leave report" %} · {{ report_creation_date|date:"Y" }}</div>
+                </td>
+                <td class="address-cell">
+                    {% if company_data.address %}<div>{{ company_data.address }}</div>{% endif %}
+                    <div>{% if company_data.city %}{{ company_data.city }}{% endif %}{% if company_data.state %}, {{ company_data.state }}{% endif %}{% if company_data.zip %} {{ company_data.zip }}{% endif %}</div>
+                    <div>{% trans "Generated" %} {{ report_creation_date|date:"Y-m-d" }}</div>
+                </td>
+            </tr>
+        </table>
 
         <div class="table-container">
             <table>

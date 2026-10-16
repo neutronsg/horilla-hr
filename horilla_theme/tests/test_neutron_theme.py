@@ -50,3 +50,36 @@ class ThemeVariablesTests(SimpleTestCase):
 
     def test_no_theme_emits_nothing(self):
         self.assertEqual(neutron_theme_vars(None), "")
+
+
+class NeutronDocumentTemplateTests(TestCase):
+    """Generated documents (PDF/Excel) use the Ledger palette, not Horilla's."""
+
+    def test_payslip_pdf_falls_back_to_wordmark_and_dashes(self):
+        from django.template.loader import render_to_string
+        from django.test import RequestFactory
+
+        employee = SimpleNamespace(
+            get_full_name="Alex Morgan", badge_id=None, employee_work_info=None,
+            employee_bank_details=None,
+        )
+        html = render_to_string(
+            "payroll/payslip/payslip_pdf.html",
+            {
+                "employee": employee, "company": None, "request": RequestFactory().get("/"),
+                "net_pay": 3200, "gross_pay": 4000, "basic_pay": 4000, "total_deductions": 800,
+                "month_start_name": "September 01, 2026", "month_end_name": "September 30, 2026",
+            },
+        )
+        self.assertIn("neutron-email-logo.png", html)
+        self.assertIn("http://testserver/", html)  # wkhtmltopdf needs absolute asset URLs
+        self.assertIn("4,000.00", html)
+        self.assertNotIn("None", html)
+        self.assertIn("No deductions", html)
+
+    def test_report_exports_use_ledger_tokens(self):
+        from report import chart_render, export
+
+        self.assertEqual(export.COLOR_PRIMARY, "051C97")
+        self.assertNotIn("E54F38", export._CHART_PALETTE_HEX)
+        self.assertEqual(chart_render.PALETTE[0].hexval().lower(), "0x051c97")

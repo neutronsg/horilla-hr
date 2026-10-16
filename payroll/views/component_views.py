@@ -2790,13 +2790,13 @@ def payslip_detailed_export(request):
     deduction_cols = len(deductions_header)
 
     merged_sections = [
-        (1, basic_cols, "Employee Details", "0000FF"),
-        (basic_cols + 1, basic_cols + allowance_cols, "Allowances", "008000"),
+        (1, basic_cols, "Employee Details", "051C97"),
+        (basic_cols + 1, basic_cols + allowance_cols, "Allowances", "17794A"),
         (
             basic_cols + allowance_cols + 1,
             basic_cols + allowance_cols + deduction_cols,
             "Deductions",
-            "FF0000",
+            "B42318",
         ),
     ]
 
@@ -2823,9 +2823,9 @@ def payslip_detailed_export(request):
     ws.row_dimensions[last_row].height = 25
 
     subheaders = [
-        (header_row[:basic_cols], Font(bold=True, color="0000FF")),
-        (allowances_header, Font(bold=True, color="008000")),
-        (deductions_header, Font(bold=True, color="FF0000")),
+        (header_row[:basic_cols], Font(bold=True, color="051C97")),
+        (allowances_header, Font(bold=True, color="17794A")),
+        (deductions_header, Font(bold=True, color="B42318")),
     ]
 
     col_num = 1
