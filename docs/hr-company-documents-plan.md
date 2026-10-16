@@ -1,12 +1,12 @@
 # Company documents implementation plan
 
-Status: Draft for review. Requirements and sources checked on 16 October 2026. Feature implementation has not started.
+Status: Implemented locally on the feature branch. Requirements and sources checked on 16 October 2026. Production rollout and publication of HR manuals remain separate deployment steps.
 
 Create a central **Company documents** library where HR publishes the insurance manual and other documents for all employees of the company. HR uploads each document once. Current employees and new hires can find the same published edition, with quick access from their personal dashboard.
 
 Extend the existing Policies feature and its attachments, company scope and permissions. The first release covers shared reference material: insurance and benefits guides, handbooks, policies, forms and instructions. Individual insurance records, employee-editor uploads, coverage calculations, claims processing, signatures and read acknowledgements are outside this release.
 
-Planning remains on `codex/employee-insurance-documents`, based on `codex/neutron-brand-polish` at `e2ee280ec`, in `/private/tmp/horilla-employee-insurance`. The original checkout remains available for the other session.
+Work remains isolated on `codex/employee-insurance-documents`, based on `codex/neutron-brand-polish` at `e2ee280ec`, in `/private/tmp/horilla-employee-insurance`. The original checkout remains available for the other session.
 
 ## Employee experience
 
@@ -20,7 +20,7 @@ An entry can contain several related files, such as the insurance manual, claims
 
 ### Dashboard quick access
 
-Place a compact **Company documents** card near the My HR shortcuts on `/my/`, before the large calendar. Show up to three published entries, pinned entries first, with title, updated date and a **View** action. A single supported file opens its preview; entries with several files or text content open their detail page. **View all documents** opens the full library.
+Place a compact **Company documents** card near the My HR shortcuts on `/my/`, before the large calendar. Show up to three published entries, pinned entries first, with title, updated date and a **View** action. The View action opens the document entry, with protected previews and downloads for its files. **View all documents** opens the full library.
 
 HR pins the insurance manual so it stays easy to find. The card can also surface a handbook or important form. Use the same Ledger cards, buttons and typography as the existing dashboard, including mobile and dark mode. With no published documents, show “Company documents will appear here when HR publishes them.”
 
@@ -117,4 +117,12 @@ Proposed upload defaults are **20 MB per file**, accepting PDF, JPEG, PNG, DOCX,
 - Migration preserves scoped policy audiences, body-only articles and existing links. Unscoped legacy records receive an explicit audience before release. Old policy endpoints cannot bypass the new rules.
 - The library, upload form and dashboard card work by keyboard at 390, 1024 and 1440 px in light and dark mode. Category/action popovers remain clickable and do not clip; no horizontal overflow or console errors.
 
-Run focused model, permission, migration and view tests plus the relevant existing policy/dashboard regressions. Run migration-drift and UI build checks when implementation changes their inputs. This planning revision changes documentation only.
+Run focused model, permission, migration and view tests plus the relevant existing policy/dashboard regressions. Run migration-drift and UI build checks when implementation changes their inputs.
+
+## Local use and validation
+
+Apply the included employee migration before running the feature branch. Employees open **Employees → Company documents** or the **Company documents** card on **My dashboard**. HR uses **Add document**, selects **Insurance and benefits**, uploads the employee-facing manual, pins it if needed, and chooses **Publish**. Drafts and archived documents are available through the HR status filter. Only administrators can map legacy records that have no company audience; these are held as drafts until assigned explicitly.
+
+The employee and base regression suites passed 194 tests. The final Company documents suite passed 21 tests, including JWT downloads and failed-upload retries. Browser checks cover employees, HR and administrators at 390, 1024 and 1440 px in light and dark mode, keyboard access to filters, sidebar HTMX navigation and the publish/replace/unpublish/archive lifecycle. PDF preview was inspected in Chrome. Migration drift, Django system checks, UI compilation and line-ending checks also passed.
+
+Reproduce the browser checks with the repository's synthetic preview. Set `HR_UI_COMPANY_DOCUMENT_FIXTURES=1`, `HR_UI_DB=/private/tmp/hr-interface/company-documents.sqlite3`, `HR_UI_PORT=8791` and `HR_UI_STATE=/private/tmp/hr-interface/company-documents-state.json` when running `tools/interface/preview.py`. Then run `tools/interface/company-documents.cjs` with Playwright available. The preview uses local synthetic files and an in-memory email backend.

@@ -359,10 +359,12 @@ def _resolve_group_permissions(config):
     for app_label in app_labels:
         actions = app_actions.get(app_label, default_actions)
         content_types = ContentType.objects.filter(app_label=app_label)
-        # Restricted HR data requires deliberate grants, never app-wide defaults.
+        # Private HR data requires deliberate grants. Shared documents retain
+        # existing Policy grants while generic data access stays blocked.
         restricted_ids = [
             ct.pk for ct in content_types
             if getattr(ct.model_class(), "restricted_hr_model", False)
+            and not getattr(ct.model_class(), "reuse_existing_permissions", False)
         ]
         content_types = content_types.exclude(pk__in=restricted_ids)
         if not content_types.exists():

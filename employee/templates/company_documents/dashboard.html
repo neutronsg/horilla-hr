@@ -1,0 +1,6 @@
+{% load static i18n %}
+<link rel="stylesheet" href="{% static 'horilla_theme/assets/css/company-documents.css' %}">
+<section class="cd-dashboard ess-chart-card" aria-labelledby="cd-dashboard-title">
+  <div class="cd-heading"><div><h2 id="cd-dashboard-title">{% trans "Company documents" %}</h2><p>{% trans "Insurance guides, policies and useful forms." %}</p></div><a href="{% url 'company-documents' %}">{% trans "View all documents" %} &rarr;</a></div>
+  <div class="cd-dashboard-list">{% for document in company_documents %}<a class="cd-dashboard-item" href="{% url 'company-document-detail' document.pk %}"><ion-icon name="{% if document.pinned %}pin-outline{% else %}document-text-outline{% endif %}" aria-hidden="true"></ion-icon><div><strong>{{ document.title }}</strong><span>{{ document.get_category_display }} · {% trans "Updated" %} {{ document.published_at|default:document.created_at|date:"d M Y" }}</span></div><ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon></a>{% empty %}<p class="cd-help">{% trans "Company documents will appear here when HR publishes them." %}</p>{% endfor %}</div>
+</section>

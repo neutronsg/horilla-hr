@@ -58,12 +58,14 @@ def ess_dashboard(request):
         return HorillaRedirect(request)
 
     from base.company_leave_calendar import _today
+    from employee.company_document_access import published_documents
 
     return render(
         request,
         "base/ess_dashboard.html",
         {
             "employee": employee,
+            "company_documents": published_documents(request.user)[:3],
             "today": date.today(),
             "company_calendar_today": _today().isoformat(),
         },

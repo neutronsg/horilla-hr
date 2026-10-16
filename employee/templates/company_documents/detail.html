@@ -1,0 +1,19 @@
+{% extends "index.html" %}
+{% load static i18n %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'horilla_theme/assets/css/company-documents.css' %}">
+<div class="cd-page cd-detail">
+  <a class="cd-back" href="{% url 'company-documents' %}"><ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>{% trans "Company documents" %}</a>
+  <header class="cd-heading"><div><div class="cd-category">{{ document.get_category_display }}</div><h1>{{ document.title }}</h1><p>{{ document.publication_status }}{% if document.published_at %} · {% trans "Updated" %} {{ document.published_at|date:"d M Y" }}{% endif %}</p></div>{% if can_edit %}<a class="oh-btn neutron-secondary-action" href="{% url 'company-document-edit' document.pk %}">{% trans "Edit document" %}</a>{% endif %}</header>
+  <section class="cd-card">
+    {% if document.body %}<div class="cd-body">{{ document.body|striptags|linebreaksbr }}</div>{% endif %}
+    <h2>{% trans "Files" %}</h2>{% include "company_documents/files.html" %}
+  </section>
+  {% if can_edit or can_archive %}<section class="cd-card cd-management"><h2>{% trans "Publishing" %}</h2><p>{% trans "Audience:" %} {% for company in document.company_id.all %}{{ company.company }}{% if not forloop.last %}, {% endif %}{% empty %}{% trans "Choose a company before publishing." %}{% endfor %}</p><div class="cd-card-actions">
+    {% if can_edit and document.is_visible_to_all and document.is_active %}<form method="post" action="{% url 'company-document-transition' document.pk %}">{% csrf_token %}<input type="hidden" name="revision" value="{{ document_revision }}"><button class="oh-btn neutron-secondary-action" name="action" value="unpublish">{% trans "Unpublish" %}</button></form>{% endif %}
+    {% if can_archive and document.is_active %}<form method="post" action="{% url 'company-document-transition' document.pk %}">{% csrf_token %}<input type="hidden" name="revision" value="{{ document_revision }}"><button class="oh-btn neutron-secondary-action" name="action" value="archive">{% trans "Archive" %}</button></form>{% endif %}
+  </div></section>{% endif %}
+  {% if previous_files %}<section class="cd-card"><h2>{% trans "Previous file editions" %}</h2><p>{% trans "Available to authorised HR only." %}</p><ul class="cd-files">{% for file in previous_files %}<li><div class="cd-file-name"><strong>{{ file.display_name }}</strong><span>{{ file.created_at|date:"d M Y H:i" }}</span></div><a class="oh-btn neutron-secondary-action" href="{% url 'company-document-file' document.pk file.pk %}?download=1">{% trans "Download previous edition" %}</a></li>{% endfor %}</ul></section>{% endif %}
+  {% if history %}<section class="cd-card"><h2>{% trans "Recent changes" %}</h2><ul class="cd-history">{% for event in history %}<li><span>{{ event.timestamp|date:"d M Y H:i" }}</span><strong>{{ event.actor|default:_("System") }}</strong><span>{{ event.additional_data.label }}</span></li>{% endfor %}</ul></section>{% endif %}
+</div>
+{% endblock %}

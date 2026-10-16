@@ -28,6 +28,7 @@
             {% if "leave"|app_installed %}<a href="{% url 'user-request-view' %}"><ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>{% trans "Leave requests" %}<ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon></a>{% endif %}
             {% if "payroll"|app_installed %}<a href="{% url 'view-reimbursement' %}"><ion-icon name="receipt-outline" aria-hidden="true"></ion-icon>{% trans "Expense claims" %}<ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon></a><a href="{% url 'view-payslip' %}"><ion-icon name="document-text-outline" aria-hidden="true"></ion-icon>{% trans "Payslips" %}<ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon></a>{% endif %}
         </div></section>
+        {% include "company_documents/dashboard.html" %}
         <div class="ess-kpi-grid" id="essKpiGrid">
             <div class="ess-skeleton ess-skeleton--kpi"></div>
             <div class="ess-skeleton ess-skeleton--kpi"></div>

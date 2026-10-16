@@ -12,6 +12,7 @@ from base.templatetags.horillafilters import app_installed
 from base.views import object_delete, object_duplicate
 from employee import dashboard as emp_dashboard
 from employee import (
+    company_documents,
     employee_settings,
     not_in_out_dashboard,
     policies,
@@ -27,7 +28,6 @@ from employee.cbv import (
     employee_profile,
     employee_tags,
     employees,
-    policy_cbv,
     requests_nav,
 )
 from employee.forms import DisciplinaryActionForm
@@ -35,6 +35,12 @@ from employee.models import DisciplinaryAction, Employee, EmployeeTag
 from horilla_documents.models import DocumentRequest
 
 urlpatterns = [
+    path("company-documents/", company_documents.library, name="company-documents"),
+    path("company-documents/new/", company_documents.edit, name="company-document-create"),
+    path("company-documents/<int:pk>/", company_documents.detail, name="company-document-detail"),
+    path("company-documents/<int:pk>/edit/", company_documents.edit, name="company-document-edit"),
+    path("company-documents/<int:pk>/state/", company_documents.transition, name="company-document-transition"),
+    path("company-documents/<int:pk>/files/<int:file_id>/", company_documents.file_response, name="company-document-file"),
     path("singapore-details/<int:pk>/", singapore_details, name="singapore-employee-details"),
     path("singapore-contributions/<int:pk>/", singapore_contributions, name="singapore-employee-contributions"),
     path(
@@ -556,13 +562,13 @@ urlpatterns = [
     ),
     path("search-policies/", policies.search_policies, name="search-policies"),
     # path("create-policy/", policies.create_policy, name="create-policy"),
-    path("create-policy/", policy_cbv.PolicyFormView.as_view(), name="create-policy"),
+    path("create-policy/", company_documents.legacy_edit, name="create-policy"),
     path(
         "create-policy/<int:pk>/",
-        policy_cbv.PolicyFormView.as_view(),
+        company_documents.legacy_edit,
         name="create-policy",
     ),
-    path("policy-nav/", policy_cbv.PoliciesNav.as_view(), name="policy-nav"),
+    path("policy-nav/", company_documents.legacy_nav, name="policy-nav"),
     path("view-policy/", policies.view_policy, name="view-policy"),
     path(
         "add-attachment-policy/", policies.add_attachment, name="add-attachment-policy"
