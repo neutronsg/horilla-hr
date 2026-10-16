@@ -16,6 +16,10 @@ from leave.models import AvailableLeave, LeaveRequest, LeaveType
 @override_settings(COMPANY_SCOPED_PERMISSIONS=True)
 class CompanyLeaveCalendarTests(TestCase):
     def setUp(self):
+        _thread_locals.request = None
+        set_selected_company(None)
+        self.addCleanup(setattr, _thread_locals, "request", None)
+        self.addCleanup(set_selected_company, None)
         self.company = make_company("Calendar A")
         self.other = make_company("Calendar B")
         self.department = Department.objects.create(department="Engineering")
@@ -27,8 +31,6 @@ class CompanyLeaveCalendarTests(TestCase):
             AvailableLeave.objects.create(employee_id=employee, leave_type_id=self.kind, available_days=10)
         self.item = self.leave(self.colleague)
         self.leave(self.outsider)
-        self.addCleanup(setattr, _thread_locals, "request", None)
-        self.addCleanup(set_selected_company, None)
 
     def leave(self, employee, status="approved", start=date(2026, 10, 12), end=None, **values):
         item = LeaveRequest.objects.create(employee_id=employee, leave_type_id=self.kind, start_date=start, end_date=end or start, description="CONFIDENTIAL medical reason", **values)
