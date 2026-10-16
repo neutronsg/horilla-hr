@@ -21,7 +21,12 @@ def primary_profile_tab(value):
 
 
 @register.filter
-def workspace_label(value):
+def workspace_label(value, keep_case=False):
+    """
+    Navigation label for display. ``keep_case`` is for names that are data, not
+    labels (a record shown in the breadcrumb, the company): they are mapped but
+    never re-cased, so "Alex Morgan" stays "Alex Morgan".
+    """
     labels = {
         "Horilla": "Neutron HR", "employee-view": "Employees",
         "employee-view-update": "Edit employee", "employee-profile": "Employee profile",
@@ -63,7 +68,7 @@ def workspace_label(value):
         return " ".join(words).capitalize() if words else text
     # Presentation only: labels are already translated, so preserve acronyms and
     # proper nouns while bringing English title-case navigation into sentence case.
-    if text and text.isascii():
+    if text and text.isascii() and not keep_case:
         words = text.split()
         text = " ".join(word if i == 0 or word.isupper() else word.lower() for i, word in enumerate(words))
     return text
@@ -240,3 +245,25 @@ def neutron_home_url(context):
         return reverse("dashboard")
 
     return request_value(request, "neutron.home_url", compute)
+
+
+@register.filter
+def breadcrumb_items(breadcrumbs):
+    """
+    Breadcrumbs with their display label. Records (an employee, a payslip) and the
+    company are names shown as written; navigation crumbs use the shared label
+    wording. When a module and its list read the same ("Employees > Employees"),
+    only the later, more specific crumb is kept.
+    """
+    items = []
+    for index, crumb in enumerate(breadcrumbs or []):
+        name = crumb.get("name", "")
+        if crumb.get("record"):
+            label = str(name)
+        else:
+            label = str(workspace_label(name, keep_case=index == 0))
+        items.append({**crumb, "label": label})
+    return [
+        item for index, item in enumerate(items)
+        if index + 1 >= len(items) or item["label"] != items[index + 1]["label"]
+    ]

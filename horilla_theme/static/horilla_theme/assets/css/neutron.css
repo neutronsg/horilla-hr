@@ -913,3 +913,10 @@ body.dark.neutron-app .hcl-circle-active {border-color:var(--primary-400)!import
 .neutron-app #ohMainContent td .oh-btn--danger.oh-btn--sq-sm:hover {background:#fff1f0!important;color:var(--neutron-bad)!important;}
 .neutron-app #ohMainContent :is(#ngbToolbarPanel,.ngb-leaf-table) {background:var(--neutron-surface)!important;}
 .neutron-app #ohMainContent .ngb-hscroll::-webkit-scrollbar-corner {background:var(--neutron-surface);}
+/* Company switcher: an initial when the company has no logo uploaded. */
+.neutron-company-initial {display:grid;place-items:center;width:100%;height:100%;background:var(--primary-100);color:var(--primary-700);font-size:10.5px;font-weight:650;}
+/* Dark mode: brand navy is too dark for text on dark surfaces; text uses of it switch to a light brand tint.
+ * Filled primary buttons keep navy backgrounds with white text. */
+body.dark.neutron-app {--neutron-brand-text:#9cacfa;}
+body.dark.neutron-app :is(#ohMainContent,#mainHeader,.oh-modal,.dropdown-content) :is(.neutron-review-action,.text-primary-600,.text-primary-700,.text-brand-600):not([class*="bg-primary"]):not([class*="bg-brand"]):not(.neutron-primary-action) {color:var(--neutron-brand-text)!important;}
+body.dark.neutron-app #ohMainContent img[src*="neutron-email-logo"] {filter:brightness(0) invert(1);}

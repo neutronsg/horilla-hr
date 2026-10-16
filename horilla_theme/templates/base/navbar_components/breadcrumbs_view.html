@@ -1,26 +1,14 @@
 {% load static i18n neutron_ui %}
 <ul class="breadcrumb neutron-breadcrumb">
-    {% for breadcrumb in breadcrumbs %}
-        {% if forloop.last %}
-            <li>
-                {% if breadcrumb.clickable and breadcrumb.found %}
-                    <a href="{{breadcrumb.url}}">{{ breadcrumb.name|workspace_label }}</a>
-                {% elif not breadcrumb.clickable %}
-                    <span>{{ breadcrumb.name|workspace_label }}</span>
-                {% else %}
-                    <a href="#">{{ breadcrumb.name|workspace_label }}</a>
-                {% endif %}
-            </li>
-        {% else %}
-            <li>
-                {% if breadcrumb.clickable and breadcrumb.found %}
-                    <a href="{{breadcrumb.url}}">{{ breadcrumb.name|workspace_label }}</a>
-                {% elif not breadcrumb.clickable %}
-                    <span>{{ breadcrumb.name|workspace_label }}</span>
-                {% else %}
-                    <a href="#">{{ breadcrumb.name|workspace_label }}</a>
-                {% endif %}
-            </li>
-        {% endif %}
+    {% for breadcrumb in breadcrumbs|breadcrumb_items %}
+        <li>
+            {% if breadcrumb.clickable and breadcrumb.found %}
+                <a href="{{ breadcrumb.url }}">{{ breadcrumb.label }}</a>
+            {% elif not breadcrumb.clickable %}
+                <span>{{ breadcrumb.label }}</span>
+            {% else %}
+                <a href="#">{{ breadcrumb.label }}</a>
+            {% endif %}
+        </li>
     {% endfor %}
 </ul>

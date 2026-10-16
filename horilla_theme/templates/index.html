@@ -124,7 +124,7 @@
 
                 <div id="ohMainContent" tabindex="-1" role="main" class="p-6 pt-24">
                     {% comment %}Page heading from the sidebar label, for views that only render section titles; hidden by CSS when the page has its own h1.{% endcomment %}
-                    {% if breadcrumbs|length > 1 %}{% with page_crumb=breadcrumbs|last %}<h1 class="neutron-auto-title">{{ page_crumb.name|workspace_label }}</h1>{% endwith %}{% endif %}
+                    {% if breadcrumbs|length > 1 %}{% with page_crumb=breadcrumbs|last %}<h1 class="neutron-auto-title">{% if page_crumb.record %}{{ page_crumb.name }}{% else %}{{ page_crumb.name|workspace_label }}{% endif %}</h1>{% endwith %}{% endif %}
                     {% block content %}
                         {% include "horilla_theme/components/dashboard.html" %}
                     {% endblock %}

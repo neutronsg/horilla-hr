@@ -27,7 +27,7 @@
                     title="{{ company.1 }}"
                 >
                     <span class="rounded-full overflow-hidden shrink-0 w-5 h-5 flex items-center justify-center">
-                        <img src="{{ company.2 }}" alt="" class="w-5 h-5 object-cover">
+                        {% if company.2 %}<img src="{{ company.2 }}" alt="" class="w-5 h-5 object-cover">{% else %}<span class="neutron-company-initial" aria-hidden="true">{{ company.1|first|upper }}</span>{% endif %}
                     </span>
                     <span class="truncate flex-1">{{ company.1 }}</span>
 

@@ -50,6 +50,11 @@ class AllMyCompanies(AllCompany):
     text = "All my companies"
 
 
+def _company_icon_url(company):
+    """The company logo URL, or "" when none is uploaded (FieldFile.url would give /404/)."""
+    return company.icon.url if company.icon else ""
+
+
 @per_request
 def get_companies(request):
     """
@@ -76,7 +81,8 @@ def get_companies(request):
     if scoped:
         company_qs = company_qs.filter(id__in=allowed_ids or [])
     companies = list(
-        [company.id, company.company, company.icon.url, False] for company in company_qs
+        [company.id, company.company, _company_icon_url(company), False]
+        for company in company_qs
     )
     if scoped and assigned_ids and len(assigned_ids) >= 2:
         companies = [
@@ -186,7 +192,7 @@ def update_selected_company(request):
 
     company = {
         "company": company.company,
-        "icon": company.icon.url,
+        "icon": _company_icon_url(company),
         "text": text,
         "id": company.id,
     }

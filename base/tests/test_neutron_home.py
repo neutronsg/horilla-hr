@@ -74,3 +74,41 @@ class NeutronHomeTests(TestCase):
         request.session = {}
         html = Template("{% load neutron_ui %}{% neutron_home_url %}").render(Context({"request": request}))
         self.assertEqual(html, "/my/")
+
+
+class BreadcrumbCasingTests(TestCase):
+    def render(self, crumbs):
+        from django.template.loader import render_to_string
+
+        return render_to_string("base/navbar_components/breadcrumbs_view.html", {"breadcrumbs": crumbs})
+
+    def test_record_and_company_names_keep_their_case(self):
+        html = self.render([
+            {"name": "Acme Holdings", "url": "/", "found": True, "clickable": True},
+            {"name": "Leave Requests", "url": "/leave/request-view/", "found": True, "clickable": True},
+            {"name": "Payslip for Low Jung Xuan - Period: 2026-09-01", "url": "/payroll/view-payslip/1/",
+             "found": True, "clickable": True, "record": True},
+        ])
+        self.assertIn("Acme Holdings", html)
+        self.assertIn("Leave requests", html)
+        self.assertIn("Payslip for Low Jung Xuan - Period: 2026-09-01", html)
+
+    def test_company_crumb_still_maps_the_product_name(self):
+        html = self.render([{"name": "Horilla", "url": "/", "found": True, "clickable": True}])
+        self.assertIn("Neutron HR", html)
+
+    def test_keep_case_skips_sentence_casing_only(self):
+        from horilla_theme.templatetags.neutron_ui import workspace_label
+
+        self.assertEqual(workspace_label("Alex Morgan"), "Alex morgan")  # label rule, by design
+        self.assertEqual(workspace_label("Alex Morgan", True), "Alex Morgan")
+
+    def test_module_and_list_with_the_same_label_collapse(self):
+        html = self.render([
+            {"name": "Neutron HR", "url": "/", "found": True, "clickable": True},
+            {"name": "Employee", "url": "/employee/", "found": True, "clickable": True},
+            {"name": "employee-view", "url": "/employee/employee-view/", "found": True, "clickable": True},
+            {"name": "Alex Morgan", "url": "/employee/employee-view/1/", "found": True, "clickable": True, "record": True},
+        ])
+        self.assertEqual(html.count(">Employees<"), 1)
+        self.assertIn('href="/employee/employee-view/">Employees<', html)

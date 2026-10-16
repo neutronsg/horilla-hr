@@ -419,7 +419,17 @@ def breadcrumbs(request):
             "HTTP_HX_REQUEST" not in request.META
             or request.META.get("HTTP_HX_SIDEBAR_NAV") == "true"
         )
-        if destination and is_navigation:
+        # A trail only continues within one module: moving to another module, or
+        # to a page outside every module (account, settings), starts a fresh one.
+        trail_section = breadcrumbs[1].get("name") if len(breadcrumbs) > 1 else None
+        expected_section = (
+            section_override["name"] if section_override
+            else current_section[0] if current_section else None
+        )
+        left_module = parts and trail_section is not None and (
+            expected_section is None or str(trail_section) != str(expected_section)
+        )
+        if (destination or left_module) and is_navigation:
             first_path = breadcrumbs[0]
             request.session["breadcrumbs"].clear()
             request.session["breadcrumbs"].append(first_path)
@@ -493,6 +503,8 @@ def breadcrumbs(request):
                     try:
                         obj = model_value.objects.get(id=item)  # completed
                         new_dict["name"] = str(obj)
+                        # A record's own name (an employee, a payslip): shown as written.
+                        new_dict["record"] = True
                     except:
                         pass
 
