@@ -396,6 +396,10 @@
         function scheduleFlyoutClose() {
           clearTimeout(flyoutCloseTimer);
           flyoutCloseTimer = setTimeout(function () {
+            // Focus can leave a menu after its mouseenter cancels an earlier
+            // close. Recheck pointer ownership when the new timer fires too.
+            var owner = currentFlyoutBtn?.closest(".sidebar-item");
+            if (flyoutEl.matches(":hover") || owner?.matches(":hover")) return;
             if (flyoutEl?.contains(document.activeElement) || currentFlyoutBtn === document.activeElement) return;
             hideFlyout();
           }, 120);

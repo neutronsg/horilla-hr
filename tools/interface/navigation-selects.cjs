@@ -13,12 +13,14 @@ fs.mkdirSync(output, {recursive: true});
   try {
     const page = await browser.newPage({viewport: {width: 768, height: 950}, extraHTTPHeaders: {'X-HR-UI-Actor': 'zeyu+ui-admin@neutron.sg'}});
     page.on('pageerror', error => errors.push(error.message));
-    for (const width of [768, 991, 1440]) {
+    const sidebarCases = [768, 991, 1440].flatMap(width =>
+      ['Employee', 'Recruitment', 'Reports'].map(menu => ({width, menu})));
+    for (const {width, menu} of sidebarCases) {
       await page.setViewportSize({width, height: 950});
       await page.goto(base + '/employee/company-documents/');
       await page.mouse.move(width - 10, 900);
       await page.waitForTimeout(250);
-      const owner = page.locator('.sideboxmain[data-menu="Employee"]');
+      const owner = page.locator(`.sideboxmain[data-menu="${menu}"]`);
       await owner.hover();
       await page.waitForTimeout(250);
       const rail = await page.locator('#sidebar').boundingBox();
@@ -44,7 +46,20 @@ fs.mkdirSync(output, {recursive: true});
       assert.ok(frames.length > 5);
       assert.ok(frames.every(frame => frame.width === 232 && frame.labelsVisible), 'rail blink while entering flyout');
       assert.ok(await page.locator('#sidebarFlyout').isVisible());
-      results.push({name: 'gap crossing holds rail and labels', width, samples: frames.length, minimumWidth: Math.min(...frames.map(frame => frame.width))});
+      results.push({name: 'gap crossing holds rail and labels', menu, width, samples: frames.length, minimumWidth: Math.min(...frames.map(frame => frame.width))});
+
+      // Leaving keyboard focus must not close a menu still under the pointer.
+      // Focusout can schedule a fresh close after mouseenter has cancelled one.
+      const submenuLinks = page.locator('#sidebarFlyout a');
+      for (const index of [0, await submenuLinks.count() - 1]) {
+        await submenuLinks.nth(index).hover();
+        await submenuLinks.last().focus();
+        await page.keyboard.press('Tab');
+        await page.waitForTimeout(250);
+        assert.ok(await page.locator('#sidebarFlyout').isVisible(), 'focusout closed a hovered submenu');
+        assert.equal((await page.locator('#sidebar').boundingBox()).width, 232);
+      }
+      results.push({name: 'hovered submenu survives focus leaving its last link', menu, width});
       await page.mouse.move(width - 10, 900);
       await page.waitForTimeout(350);
       assert.equal(await page.locator('#sidebarFlyout').isVisible(), false);
