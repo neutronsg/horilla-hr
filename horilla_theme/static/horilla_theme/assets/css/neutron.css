@@ -323,8 +323,8 @@ body.dark.neutron-app .neutron-action-menu-content .neutron-danger {color:#fda29
 .neutron-profile-header :is(a,button).rounded-xl {border-radius:6px;box-shadow:none;font-size:13px;}
 .neutron-profile-header .emp-profile-meta-chip {display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--neutron-muted);background:transparent;padding:0;border:0;box-shadow:none;}
 .emp-profile-page .usertablist {display:flex;gap:24px;flex-wrap:wrap;}
-.emp-profile-page .usertablist button {border:0;border-bottom:2px solid transparent;padding:10px 0 12px;border-radius:0;font-size:13px;font-weight:500;color:var(--neutron-muted);white-space:nowrap;background:transparent;}
-.emp-profile-page .usertablist button.active {border-bottom-color:var(--primary-600);color:var(--primary-600);background:transparent;box-shadow:none;}
+.emp-profile-page .usertablist>li>button {border:0;border-bottom:2px solid transparent;padding:10px 0 12px;border-radius:0;font-size:13px;font-weight:500;color:var(--neutron-muted);white-space:nowrap;background:transparent;}
+.emp-profile-page .usertablist>li>button.active {border-bottom-color:var(--primary-600);color:var(--primary-600);background:transparent;box-shadow:none;}
 .neutron-app .emp-profile-page>nav {padding:0;background:transparent;border-radius:0;border-bottom:1px solid var(--neutron-border);box-shadow:none;}
 .neutron-profile-content {padding:24px;background:var(--neutron-surface);border:1px solid var(--neutron-border);border-radius:8px;}
 .neutron-profile-panel {min-height:320px;}
@@ -364,7 +364,7 @@ body.dark.neutron-app .neutron-action-menu-content .neutron-danger {color:#fda29
 .neutron-profile-overflow>summary {width:auto!important;min-height:42px;gap:8px;padding:8px 0;font-size:13px;}
 .neutron-profile-overflow-label {white-space:nowrap;}
 .neutron-profile-overflow .neutron-action-menu-content ul {display:block;}
-.neutron-app .emp-profile-page .usertablist li button.active,.neutron-app .emp-profile-page .usertablist li button:hover {background:transparent!important;border:0!important;border-bottom:2px solid var(--primary-600)!important;color:var(--primary-600)!important;}
+.neutron-app .emp-profile-page .usertablist>li>button.active,.neutron-app .emp-profile-page .usertablist>li>button:hover {background:transparent!important;border:0!important;border-bottom:2px solid var(--primary-600)!important;color:var(--primary-600)!important;}
 .neutron-app .neutron-row-actions [aria-disabled=true] {opacity:.45;pointer-events:none;}
 .neutron-document-brand {width:112px;margin-right:4px;}
 .neutron-app .neutron-document-brand img {width:112px;max-width:none;}
@@ -484,12 +484,13 @@ body.dark .neutron-status-label[data-status=confirmed] {color:var(--neutron-ink)
 .neutron-menu-item.neutron-success {color:var(--neutron-ok);}
 .neutron-menu-item-icon {width:14px;height:14px;opacity:.6;filter:grayscale(1);}
 .neutron-menu-divider {margin:4px -5px;border-top:1px solid var(--neutron-border);}
-/* Tabs float as z2 chrome while the profile scrolls */
-.neutron-app .emp-profile-page>nav {position:sticky;top:48px;z-index:20;margin:0 -28px;padding:0 28px;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);border-bottom:1px solid var(--neutron-border);}
+/* The tab glass is a separate plane so fixed overflow menus use viewport coordinates. */
+.neutron-app .emp-profile-page>nav {position:sticky;top:48px;z-index:20;margin:0 -28px;padding:0 28px;background:transparent;border-bottom:1px solid var(--neutron-border);}
+.neutron-app .emp-profile-page>nav::before {content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--neutron-material-strong);-webkit-backdrop-filter:var(--neutron-blur);backdrop-filter:var(--neutron-blur);}
 .emp-profile-page .usertablist {gap:22px;}
-.emp-profile-page .usertablist button {padding:10px 0 11px;font-size:14px;font-weight:500;color:var(--neutron-muted);}
-.neutron-app .emp-profile-page .usertablist li button.active,.neutron-app .emp-profile-page .usertablist li button:hover {border-bottom:2px solid var(--primary-600)!important;color:var(--neutron-ink)!important;}
-.neutron-app .emp-profile-page .usertablist li button:hover:not(.active) {border-bottom-color:transparent!important;}
+.emp-profile-page .usertablist>li>button {padding:10px 0 11px;font-size:14px;font-weight:500;color:var(--neutron-muted);}
+.neutron-app .emp-profile-page .usertablist>li>button.active,.neutron-app .emp-profile-page .usertablist>li>button:hover {border-bottom:2px solid var(--primary-600)!important;color:var(--neutron-ink)!important;}
+.neutron-app .emp-profile-page .usertablist>li>button:hover:not(.active) {border-bottom-color:transparent!important;}
 .neutron-profile-overflow>summary {min-height:0;padding:10px 0 11px;font-size:14px;font-weight:500;color:var(--neutron-muted);}
 .neutron-app .emp-profile-page>nav .oh-dropdown>button {border:0!important;box-shadow:none!important;background:transparent!important;color:var(--neutron-muted);}
 /* About: no card; sections stack, labels sit beside values */
@@ -790,7 +791,7 @@ body.dark .neutron-app #ohMainContent .accordion-btn-gp:hover,body.dark.neutron-
 .neutron-app .dropdown-wrapper.neutron-popover > .dropdown-content::before {display:none!important;}
 .neutron-app > .select2-container--open {z-index:10090;}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
- .neutron-app .dropdown-wrapper.neutron-popover > .dropdown-content,.neutron-app .oh-main-header::before {background:var(--neutron-surface)!important;}
+ .neutron-app .dropdown-wrapper.neutron-popover > .dropdown-content,.neutron-app .oh-main-header::before,.neutron-app .emp-profile-page>nav::before {background:var(--neutron-surface)!important;}
 }
 .neutron-app .neutron-notify {position:relative;}
 .neutron-app #mainHeader .neutron-notification-panel {position:absolute;top:calc(100% + 8px);right:0;left:auto;width:360px;min-width:0;padding:0;max-height:min(75vh,600px);overflow:auto;}

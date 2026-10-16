@@ -146,9 +146,16 @@
     function positionMenu(menu) {
         const content = menu.querySelector('.neutron-action-menu-content');
         const rect = menu.querySelector('summary').getBoundingClientRect();
-        content.style.left = Math.max(12, Math.min(innerWidth - 222, rect.right - 210)) + 'px';
+        const width = content.getBoundingClientRect().width;
+        const left = menu.matches('.neutron-profile-overflow') ? rect.left : rect.right - width;
+        content.style.left = Math.max(12, Math.min(innerWidth - width - 12, left)) + 'px';
+        const topEdge = Math.max(12, (document.querySelector('#mainHeader')?.getBoundingClientRect().bottom || 0) + 6);
+        const below = Math.max(0, innerHeight - rect.bottom - 18);
+        const above = Math.max(0, rect.top - topEdge - 6);
+        const openBelow = content.scrollHeight <= below || below >= above;
+        content.style.maxHeight = Math.max(0, openBelow ? below : above) + 'px';
         const height = content.getBoundingClientRect().height;
-        content.style.top = (rect.bottom + height + 12 > innerHeight ? Math.max(12, rect.top - height - 6) : rect.bottom + 6) + 'px';
+        content.style.top = (openBelow ? rect.bottom + 6 : Math.max(topEdge, rect.top - height - 6)) + 'px';
     }
     document.addEventListener('toggle', event => {
         const menu = event.target;

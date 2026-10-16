@@ -551,7 +551,7 @@
   gap: 10px;
 }
 
-.usertablist li button {
+.usertablist > li > button {
   border: 1px solid #e7e7e7;
   padding: 5px 15px;
   border-radius: 5px;
@@ -560,8 +560,8 @@
   color: #333;
 }
 
-.usertablist li button.active,
-.usertablist li button:hover {
+.usertablist > li > button.active,
+.usertablist > li > button:hover {
   background-color: #051c97;
   border: 1px solid #051c97;
   color: white;
